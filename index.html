@@ -20,10 +20,39 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 기본 파트 체크박스 (전체, 합창) */
         .part-checkbox:checked+div {
             background-color: #4f46e5;
             color: white;
             border-color: #4f46e5;
+        }
+
+        /* 소프라노 - 핑크 */
+        .part-checkbox-sop:checked+div {
+            background-color: #ec4899;
+            color: white;
+            border-color: #ec4899;
+        }
+
+        /* 알토 - 보라 */
+        .part-checkbox-alto:checked+div {
+            background-color: #8b5cf6;
+            color: white;
+            border-color: #8b5cf6;
+        }
+
+        /* 테너 - 초록 */
+        .part-checkbox-tenor:checked+div {
+            background-color: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        /* 베이스 - 주황 */
+        .part-checkbox-bass:checked+div {
+            background-color: #f97316;
+            color: white;
+            border-color: #f97316;
         }
 
         .toggle-checkbox:checked {
@@ -49,6 +78,19 @@
             border-radius: 9999px;
             transition: all 0.3s;
         }
+
+        /* 파트 배지 색상 */
+        .badge-soprano  { background-color: #fce7f3; color: #be185d; }
+        .badge-alto     { background-color: #ede9fe; color: #6d28d9; }
+        .badge-tenor    { background-color: #d1fae5; color: #065f46; }
+        .badge-bass     { background-color: #ffedd5; color: #c2410c; }
+        .badge-full     { background-color: #e0e7ff; color: #3730a3; }
+
+        /* 링크 설정 라벨 */
+        .label-soprano  { color: #be185d; font-weight: 700; }
+        .label-alto     { color: #6d28d9; font-weight: 700; }
+        .label-tenor    { color: #065f46; font-weight: 700; }
+        .label-bass     { color: #c2410c; font-weight: 700; }
     </style>
 </head>
 
@@ -79,31 +121,31 @@
                                 합창</div>
                         </label>
                         <label class="cursor-pointer">
-                            <input type="checkbox" value="소프라노" class="hidden part-checkbox"
+                            <input type="checkbox" value="소프라노" class="hidden part-checkbox part-checkbox-sop"
                                 onchange="handlePartSelection(this)">
                             <div
-                                class="px-4 py-2 rounded-full border border-gray-200 text-sm font-bold text-gray-600 transition-colors">
+                                class="px-4 py-2 rounded-full border border-pink-200 text-sm font-bold text-pink-500 transition-colors">
                                 소프라노</div>
                         </label>
                         <label class="cursor-pointer">
-                            <input type="checkbox" value="알토" class="hidden part-checkbox"
+                            <input type="checkbox" value="알토" class="hidden part-checkbox part-checkbox-alto"
                                 onchange="handlePartSelection(this)">
                             <div
-                                class="px-4 py-2 rounded-full border border-gray-200 text-sm font-bold text-gray-600 transition-colors">
+                                class="px-4 py-2 rounded-full border border-violet-200 text-sm font-bold text-violet-500 transition-colors">
                                 알토</div>
                         </label>
                         <label class="cursor-pointer">
-                            <input type="checkbox" value="테너" class="hidden part-checkbox"
+                            <input type="checkbox" value="테너" class="hidden part-checkbox part-checkbox-tenor"
                                 onchange="handlePartSelection(this)">
                             <div
-                                class="px-4 py-2 rounded-full border border-gray-200 text-sm font-bold text-gray-600 transition-colors">
+                                class="px-4 py-2 rounded-full border border-emerald-200 text-sm font-bold text-emerald-600 transition-colors">
                                 테너</div>
                         </label>
                         <label class="cursor-pointer">
-                            <input type="checkbox" value="베이스" class="hidden part-checkbox"
+                            <input type="checkbox" value="베이스" class="hidden part-checkbox part-checkbox-bass"
                                 onchange="handlePartSelection(this)">
                             <div
-                                class="px-4 py-2 rounded-full border border-gray-200 text-sm font-bold text-gray-600 transition-colors">
+                                class="px-4 py-2 rounded-full border border-orange-200 text-sm font-bold text-orange-500 transition-colors">
                                 베이스</div>
                         </label>
                     </div>
@@ -193,29 +235,29 @@
 
                         <div class="grid grid-cols-1 gap-3 pt-2 border-t border-dashed border-gray-200 mt-2">
                             <div class="flex items-center gap-2"><span
-                                    class="w-14 text-xs font-bold text-gray-600 text-right">합창</span><input type="text"
+                                    class="w-14 text-xs font-bold text-indigo-600 text-right">합창</span><input type="text"
                                     id="setupFull" placeholder="유튜브 링크"
                                     class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
                             </div>
                             <div class="flex items-center gap-2"><span
-                                    class="w-14 text-xs font-bold text-gray-600 text-right">소프라노</span><input
+                                    class="w-14 text-xs label-soprano text-right">소프라노</span><input
                                     type="text" id="setupSop" placeholder="유튜브 링크"
-                                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
+                                    class="flex-1 border border-pink-200 rounded-lg px-3 py-2 text-sm focus:border-pink-400 outline-none">
                             </div>
                             <div class="flex items-center gap-2"><span
-                                    class="w-14 text-xs font-bold text-gray-600 text-right">알토</span><input type="text"
+                                    class="w-14 text-xs label-alto text-right">알토</span><input type="text"
                                     id="setupAlto" placeholder="유튜브 링크"
-                                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
+                                    class="flex-1 border border-violet-200 rounded-lg px-3 py-2 text-sm focus:border-violet-400 outline-none">
                             </div>
                             <div class="flex items-center gap-2"><span
-                                    class="w-14 text-xs font-bold text-gray-600 text-right">테너</span><input type="text"
+                                    class="w-14 text-xs label-tenor text-right">테너</span><input type="text"
                                     id="setupTenor" placeholder="유튜브 링크"
-                                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
+                                    class="flex-1 border border-emerald-200 rounded-lg px-3 py-2 text-sm focus:border-emerald-400 outline-none">
                             </div>
                             <div class="flex items-center gap-2"><span
-                                    class="w-14 text-xs font-bold text-gray-600 text-right">베이스</span><input type="text"
+                                    class="w-14 text-xs label-bass text-right">베이스</span><input type="text"
                                     id="setupBass" placeholder="유튜브 링크"
-                                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
+                                    class="flex-1 border border-orange-200 rounded-lg px-3 py-2 text-sm focus:border-orange-400 outline-none">
                             </div>
                         </div>
 
@@ -237,29 +279,29 @@
                                     class="fas fa-caret-right"></i> 입례송</h4>
                             <div class="grid grid-cols-1 gap-2">
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">합창</span><input
+                                        class="w-12 text-[11px] font-bold text-indigo-600 text-right">합창</span><input
                                         type="text" id="setupIntroitFull"
                                         class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">소프라노</span><input
+                                        class="w-12 text-[11px] label-soprano text-right">소프라노</span><input
                                         type="text" id="setupIntroitSop"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-pink-200 rounded-md px-2 py-1.5 text-xs focus:border-pink-400 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">알토</span><input
+                                        class="w-12 text-[11px] label-alto text-right">알토</span><input
                                         type="text" id="setupIntroitAlto"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-violet-200 rounded-md px-2 py-1.5 text-xs focus:border-violet-400 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">테너</span><input
+                                        class="w-12 text-[11px] label-tenor text-right">테너</span><input
                                         type="text" id="setupIntroitTenor"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-emerald-200 rounded-md px-2 py-1.5 text-xs focus:border-emerald-400 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">베이스</span><input
+                                        class="w-12 text-[11px] label-bass text-right">베이스</span><input
                                         type="text" id="setupIntroitBass"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-orange-200 rounded-md px-2 py-1.5 text-xs focus:border-orange-400 outline-none">
                                 </div>
                             </div>
                         </div>
@@ -269,29 +311,29 @@
                                     class="fas fa-caret-right"></i> 기도송</h4>
                             <div class="grid grid-cols-1 gap-2">
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">합창</span><input
+                                        class="w-12 text-[11px] font-bold text-indigo-600 text-right">합창</span><input
                                         type="text" id="setupPrayerFull"
                                         class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">소프라노</span><input
+                                        class="w-12 text-[11px] label-soprano text-right">소프라노</span><input
                                         type="text" id="setupPrayerSop"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-pink-200 rounded-md px-2 py-1.5 text-xs focus:border-pink-400 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">알토</span><input
+                                        class="w-12 text-[11px] label-alto text-right">알토</span><input
                                         type="text" id="setupPrayerAlto"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-violet-200 rounded-md px-2 py-1.5 text-xs focus:border-violet-400 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">테너</span><input
+                                        class="w-12 text-[11px] label-tenor text-right">테너</span><input
                                         type="text" id="setupPrayerTenor"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-emerald-200 rounded-md px-2 py-1.5 text-xs focus:border-emerald-400 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">베이스</span><input
+                                        class="w-12 text-[11px] label-bass text-right">베이스</span><input
                                         type="text" id="setupPrayerBass"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-orange-200 rounded-md px-2 py-1.5 text-xs focus:border-orange-400 outline-none">
                                 </div>
                             </div>
                         </div>
@@ -301,29 +343,29 @@
                                     class="fas fa-caret-right"></i> 축도송</h4>
                             <div class="grid grid-cols-1 gap-2">
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">합창</span><input
+                                        class="w-12 text-[11px] font-bold text-indigo-600 text-right">합창</span><input
                                         type="text" id="setupBeneFull"
                                         class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">소프라노</span><input
+                                        class="w-12 text-[11px] label-soprano text-right">소프라노</span><input
                                         type="text" id="setupBeneSop"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-pink-200 rounded-md px-2 py-1.5 text-xs focus:border-pink-400 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">알토</span><input
+                                        class="w-12 text-[11px] label-alto text-right">알토</span><input
                                         type="text" id="setupBeneAlto"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-violet-200 rounded-md px-2 py-1.5 text-xs focus:border-violet-400 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">테너</span><input
+                                        class="w-12 text-[11px] label-tenor text-right">테너</span><input
                                         type="text" id="setupBeneTenor"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-emerald-200 rounded-md px-2 py-1.5 text-xs focus:border-emerald-400 outline-none">
                                 </div>
                                 <div class="flex items-center gap-2"><span
-                                        class="w-12 text-[11px] font-bold text-gray-500 text-right">베이스</span><input
+                                        class="w-12 text-[11px] label-bass text-right">베이스</span><input
                                         type="text" id="setupBeneBass"
-                                        class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none">
+                                        class="flex-1 border border-orange-200 rounded-md px-2 py-1.5 text-xs focus:border-orange-400 outline-none">
                                 </div>
                             </div>
                         </div>
@@ -440,13 +482,22 @@
             }
         };
 
+        function getPartBadgeClass(subtitle) {
+            if (subtitle === '소프라노') return 'badge-soprano';
+            if (subtitle === '알토')    return 'badge-alto';
+            if (subtitle === '테너')    return 'badge-tenor';
+            if (subtitle === '베이스')  return 'badge-bass';
+            return 'badge-full';
+        }
+
         function renderVideo(title, subtitle, videoId, partKey) {
             if (!videoId) return '';
+            const badgeClass = getPartBadgeClass(subtitle);
             return `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-4">
                     <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                         <div>
-                            <span class="text-xs font-bold text-indigo-500 bg-indigo-100 px-2 py-1 rounded">${subtitle}</span>
+                            <span class="text-xs font-bold px-2 py-1 rounded ${badgeClass}">${subtitle}</span>
                             <h3 class="font-bold text-gray-800 mt-1">${title}</h3>
                         </div>
                         <div class="flex items-center gap-2">
