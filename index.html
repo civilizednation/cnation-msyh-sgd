@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>무석연합교회 성가대 연습</title>
 
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./android-chrome-512x512.png">
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="성가대연습">
@@ -392,7 +399,6 @@
             document.getElementById('setupDate').value = getNextSunday();
             loadSetupForDate();
 
-            // 15개 고정곡 파트 로드
             try {
                 const docSnap = await getDoc(doc(db, FIXED_COL, "current"));
                 if (docSnap.exists()) {
@@ -422,7 +428,6 @@
             } catch (e) { console.error(e); }
         };
 
-        // 정규식
         function getYoutubeId(url) {
             if (!url) return null;
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -473,7 +478,6 @@
             return (new Date(d - offset)).toISOString().split('T')[0];
         }
 
-        // ================= 연습 화면 로직 =================
         window.openPractice = async (type) => {
             document.getElementById('homeView').classList.add('hidden');
             document.getElementById('practiceView').classList.remove('hidden');
@@ -495,7 +499,6 @@
                         const p = data.prayer || {};
                         const b = data.benediction || {};
 
-                        // 입례송 렌더링
                         html += `<h2 class="font-extrabold text-xl text-indigo-800 mt-6 mb-2 flex items-center gap-2"><i class="fas fa-church"></i> 입례송</h2>`;
                         if (isAll || parts.includes('합창')) html += renderVideo('입례송', '합창', getYoutubeId(i.full), 'i_full');
                         if (isAll || parts.includes('소프라노')) html += renderVideo('입례송', '소프라노', getYoutubeId(i.soprano), 'i_sop');
@@ -503,7 +506,6 @@
                         if (isAll || parts.includes('테너')) html += renderVideo('입례송', '테너', getYoutubeId(i.tenor), 'i_tenor');
                         if (isAll || parts.includes('베이스')) html += renderVideo('입례송', '베이스', getYoutubeId(i.bass), 'i_bass');
 
-                        // 기도송 렌더링
                         html += `<h2 class="font-extrabold text-xl text-indigo-800 mt-6 mb-2 flex items-center gap-2"><i class="fas fa-pray"></i> 기도송</h2>`;
                         if (isAll || parts.includes('합창')) html += renderVideo('기도송', '합창', getYoutubeId(p.full), 'p_full');
                         if (isAll || parts.includes('소프라노')) html += renderVideo('기도송', '소프라노', getYoutubeId(p.soprano), 'p_sop');
@@ -511,7 +513,6 @@
                         if (isAll || parts.includes('테너')) html += renderVideo('기도송', '테너', getYoutubeId(p.tenor), 'p_tenor');
                         if (isAll || parts.includes('베이스')) html += renderVideo('기도송', '베이스', getYoutubeId(p.bass), 'p_bass');
 
-                        // 축도송 렌더링
                         html += `<h2 class="font-extrabold text-xl text-indigo-800 mt-6 mb-2 flex items-center gap-2"><i class="fas fa-hands-blessing"></i> 축도송</h2>`;
                         if (isAll || parts.includes('합창')) html += renderVideo('축도송', '합창', getYoutubeId(b.full), 'b_full');
                         if (isAll || parts.includes('소프라노')) html += renderVideo('축도송', '소프라노', getYoutubeId(b.soprano), 'b_sop');
@@ -537,9 +538,7 @@
                         if (docSnap.exists()) {
                             const data = docSnap.data();
                             const title = data.title || `${date} 찬양`;
-
                             html += `<h2 class="font-extrabold text-xl text-indigo-800 mt-6 mb-2 flex items-center gap-2"><i class="fas fa-calendar-check"></i> ${date}</h2>`;
-
                             if (isAll || parts.includes('합창')) html += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`);
                             if (isAll || parts.includes('소프라노')) html += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`);
                             if (isAll || parts.includes('알토')) html += renderVideo(title, '알토', getYoutubeId(data.alto), `alto_${date}`);
@@ -550,9 +549,7 @@
                         }
                     }
                 }
-
                 container.innerHTML = html || '<p class="text-center text-gray-400 py-10">해당 파트에 등록된 영상이 없습니다.</p>';
-
             } catch (e) {
                 container.innerHTML = '<p class="text-center text-red-400 py-10">데이터를 불러오지 못했습니다.</p>';
             }
@@ -565,42 +562,34 @@
             document.getElementById('practiceTitle').innerText = '기존 곡 연습';
             const container = document.getElementById('practiceContainer');
             container.innerHTML = '<p class="text-center text-gray-400 py-10">위에서 날짜를 선택해주세요.</p>';
-
             const dropdown = document.getElementById('pastDateDropdown');
             dropdown.innerHTML = '<option value="">날짜 목록 불러오는 중...</option>';
-
             try {
                 const q = query(collection(db, WEEKLY_COL));
                 const snap = await getDocs(q);
                 let dates = [];
                 snap.forEach(doc => dates.push({ date: doc.id, title: doc.data().title || '' }));
                 dates.sort((a, b) => b.date.localeCompare(a.date));
-
                 dropdown.innerHTML = '<option value="">날짜(일요일)를 선택하세요</option>';
                 dates.forEach(item => {
                     dropdown.innerHTML += `<option value="${item.date}">${item.date} ${item.title ? '- ' + item.title : ''}</option>`;
                 });
-            } catch (e) {
-                dropdown.innerHTML = '<option value="">불러오기 실패</option>';
-            }
+            } catch (e) { dropdown.innerHTML = '<option value="">불러오기 실패</option>'; }
         };
 
         window.loadPastPractice = async () => {
             const date = document.getElementById('pastDateDropdown').value;
             const container = document.getElementById('practiceContainer');
             if (!date) { container.innerHTML = ''; return; }
-
             container.innerHTML = '<p class="text-center text-gray-400 py-10"><i class="fas fa-spinner fa-spin mr-2"></i>영상을 불러오는 중...</p>';
             const parts = getSelectedParts();
             const isAll = parts.includes('전체');
-
             try {
                 const docSnap = await getDoc(doc(db, WEEKLY_COL, date));
                 let html = '';
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     const title = data.title || `${date} 찬양`;
-
                     if (isAll || parts.includes('합창')) html += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`);
                     if (isAll || parts.includes('소프라노')) html += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`);
                     if (isAll || parts.includes('알토')) html += renderVideo(title, '알토', getYoutubeId(data.alto), `alto_${date}`);
@@ -608,16 +597,12 @@
                     if (isAll || parts.includes('베이스')) html += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`);
                 }
                 container.innerHTML = html || '<p class="text-center text-gray-400 py-10">해당 파트에 등록된 영상이 없습니다.</p>';
-            } catch (e) {
-                container.innerHTML = '<p class="text-center text-red-400 py-10">데이터 로드 실패.</p>';
-            }
+            } catch (e) { container.innerHTML = '<p class="text-center text-red-400 py-10">데이터 로드 실패.</p>'; }
         };
 
-        // ================= 링크 설정 저장 로직 =================
         window.loadSetupForDate = async () => {
             const date = document.getElementById('setupDate').value;
             if (!date) return;
-
             try {
                 const docSnap = await getDoc(doc(db, WEEKLY_COL, date));
                 if (docSnap.exists()) {
@@ -642,11 +627,9 @@
         window.saveWeeklyLinks = async () => {
             const date = document.getElementById('setupDate').value;
             if (!date) { alert("날짜를 선택해주세요."); return; }
-
             const btn = document.getElementById('saveWeeklyBtn');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 저장중...';
             btn.disabled = true;
-
             try {
                 await setDoc(doc(db, WEEKLY_COL, date), {
                     title: document.getElementById('setupTitle').value,
@@ -657,21 +640,15 @@
                     bass: document.getElementById('setupBass').value
                 });
                 alert(`${date} 링크가 성공적으로 저장되었습니다.`);
-            } catch (e) {
-                alert("저장 실패. 네트워크를 확인해주세요.");
-            } finally {
-                btn.innerHTML = '주일 찬양 저장';
-                btn.disabled = false;
-            }
+            } catch (e) { alert("저장 실패. 네트워크를 확인해주세요."); }
+            finally { btn.innerHTML = '주일 찬양 저장'; btn.disabled = false; }
         };
 
         window.saveFixedLinks = async () => {
             const btn = document.getElementById('saveFixedBtn');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 저장중...';
             btn.disabled = true;
-
             try {
-                // 15개 데이터를 카테고리별로 객체화하여 저장
                 await setDoc(doc(db, FIXED_COL, "current"), {
                     introit: {
                         full: document.getElementById('setupIntroitFull').value,
@@ -696,14 +673,9 @@
                     }
                 });
                 alert(`고정곡 15개 파트 링크가 성공적으로 저장되었습니다.`);
-            } catch (e) {
-                alert("저장 실패. 네트워크를 확인해주세요.");
-            } finally {
-                btn.innerHTML = '고정곡 저장';
-                btn.disabled = false;
-            }
+            } catch (e) { alert("저장 실패. 네트워크를 확인해주세요."); }
+            finally { btn.innerHTML = '고정곡 저장'; btn.disabled = false; }
         };
-
     </script>
 </body>
 
