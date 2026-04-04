@@ -19,36 +19,35 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
     <style>
-        /* 기본 파트 체크박스 (전체, 합창) */
+        /* 파트 체크박스 등 기존 스타일 유지 */
         .part-checkbox:checked+div {
             background-color: #4f46e5;
             color: white;
             border-color: #4f46e5;
         }
 
-        /* 소프라노 - 핑크 */
         .part-checkbox-sop:checked+div {
             background-color: #ec4899;
             color: white;
             border-color: #ec4899;
         }
 
-        /* 알토 - 보라 */
         .part-checkbox-alto:checked+div {
             background-color: #8b5cf6;
             color: white;
             border-color: #8b5cf6;
         }
 
-        /* 테너 - 초록 */
         .part-checkbox-tenor:checked+div {
             background-color: #10b981;
             color: white;
             border-color: #10b981;
         }
 
-        /* 베이스 - 주황 */
         .part-checkbox-bass:checked+div {
             background-color: #f97316;
             color: white;
@@ -79,7 +78,6 @@
             transition: all 0.3s;
         }
 
-        /* 파트 배지 색상 */
         .badge-soprano {
             background-color: #fce7f3;
             color: #be185d;
@@ -105,7 +103,6 @@
             color: #3730a3;
         }
 
-        /* 링크 설정 라벨 */
         .label-soprano {
             color: #be185d;
             font-weight: 700;
@@ -130,7 +127,7 @@
 
 <body class="bg-gray-100 font-sans text-gray-800 pb-20">
 
-    <div class="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative overflow-hidden">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
 
         <div id="homeView" class="flex flex-col min-h-screen bg-indigo-50 p-6 relative">
             <div class="flex-1 flex flex-col items-center justify-center">
@@ -420,6 +417,16 @@
             </div>
         </div>
 
+        <div id="pdfModal" class="hidden fixed inset-0 z-50 bg-gray-900 flex flex-col">
+            <div class="bg-gray-800 text-white p-4 flex items-center justify-between shadow-md">
+                <h3 id="pdfModalTitle" class="font-bold text-sm tracking-wide flex-1 truncate pr-4">악보 크게보기</h3>
+                <button onclick="closePdfModal()" class="text-white text-2xl px-2"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="pdfModalContent"
+                class="flex-1 overflow-y-auto overflow-x-auto p-2 bg-gray-900 flex flex-col items-center gap-2">
+            </div>
+        </div>
+
     </div>
 
     <script type="module">
@@ -439,11 +446,15 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const storage = getStorage(app); // Storage 초기화
+        const storage = getStorage(app);
+
+        // 💡 PDF.js Worker 설정
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         const WEEKLY_COL = "cnation-msyh-sgd-weekly";
         const FIXED_COL = "cnation-msyh-sgd-fixed";
-        let currentSheetMusicUrl = ''; // 현재 날짜의 악보 URL 임시 저장
+        let currentSheetMusicUrl = '';
 
         // 파트 선택 로직
         window.handlePartSelection = (checkbox) => {
@@ -453,7 +464,6 @@
             } else if (checkbox.checked) {
                 document.querySelector('.part-checkbox[value="전체"]').checked = false;
             }
-
             const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
             if (!anyChecked) document.querySelector('.part-checkbox[value="전체"]').checked = true;
         };
@@ -463,7 +473,6 @@
             return Array.from(checkboxes).map(cb => cb.value);
         }
 
-        // 화면 전환
         window.goHome = () => {
             document.getElementById('practiceView').classList.add('hidden');
             document.getElementById('setupView').classList.add('hidden');
@@ -475,7 +484,6 @@
         window.openSetup = async () => {
             document.getElementById('homeView').classList.add('hidden');
             document.getElementById('setupView').classList.remove('hidden');
-
             document.getElementById('setupDate').value = getNextSunday();
             loadSetupForDate();
 
@@ -533,7 +541,6 @@
             return 'badge-full';
         }
 
-        // 비디오 렌더링
         function renderVideo(title, subtitle, videoId, partKey) {
             if (!videoId) return '';
             const badgeClass = getPartBadgeClass(subtitle);
@@ -559,23 +566,87 @@
             `;
         }
 
-        // 💡 악보(PDF) 렌더링 함수
-        function renderPdf(title, date, url) {
+        // 💡 악보를 감쌀 HTML 뼈대 생성 (안의 캔버스는 나중에 JS로 주입)
+        function renderPdfContainer(title, date, url, index) {
             if (!url) return '';
+            const containerId = `pdf-container-${index}`;
             return `
-                <div class="bg-white rounded-2xl shadow-sm border border-indigo-200 overflow-hidden mb-6 mt-4">
-                    <div class="p-4 border-b border-indigo-100 bg-indigo-50 flex justify-between items-center">
-                        <h3 class="font-bold text-indigo-800"><i class="fas fa-file-pdf text-red-500 mr-2"></i>[${date}] ${title} 악보</h3>
-                        <a href="${url}" target="_blank" class="text-[11px] font-bold text-indigo-600 bg-white px-3 py-1.5 rounded border border-indigo-200 hover:bg-indigo-100 transition">
-                            <i class="fas fa-external-link-alt mr-1"></i>크게보기
-                        </a>
+                <div class="bg-white rounded-2xl shadow-md border border-indigo-200 overflow-hidden mb-8 mt-4">
+                    <div class="p-4 border-b border-indigo-100 bg-indigo-50 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+                        <h3 class="font-bold text-indigo-800 text-sm truncate pr-2"><i class="fas fa-file-pdf text-red-500 mr-2"></i>[${date}] ${title}</h3>
+                        <button onclick="openPdfModal('${containerId}', '[${date}] ${title}')" class="text-[11px] font-bold text-indigo-700 bg-white px-3 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition shadow-sm whitespace-nowrap">
+                            <i class="fas fa-expand mr-1"></i>크게보기
+                        </button>
                     </div>
-                    <div class="w-full h-96 bg-gray-200 relative">
-                        <iframe src="${url}#view=FitH" class="absolute inset-0 w-full h-full" frameborder="0"></iframe>
-                    </div>
+                    <div id="${containerId}" data-pdf-url="${url}" class="pdf-viewer w-full bg-gray-200 p-2 flex flex-col gap-2 min-h-[200px]">
+                        </div>
                 </div>
             `;
         }
+
+        // 💡 PDF.js를 이용해 PDF를 캔버스로 그려내는 핵심 함수
+        async function loadPdfToCanvas(url, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<p class="text-indigo-500 py-10 text-center text-sm font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>악보를 페이지별로 그리는 중...</p>';
+
+            try {
+                const loadingTask = pdfjsLib.getDocument(url);
+                const pdf = await loadingTask.promise;
+                container.innerHTML = ''; // 로딩 메시지 삭제
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    // 모바일에서 선명하게 보이기 위해 scale을 1.5배로 그립니다.
+                    const viewport = page.getViewport({ scale: 1.5 });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    // w-full을 통해 가로 폭을 핸드폰 화면에 꽉 차게 맞춤
+                    canvas.className = 'w-full h-auto bg-white shadow-sm border border-gray-300 rounded';
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    container.appendChild(canvas);
+                }
+            } catch (error) {
+                console.error('PDF Load Error:', error);
+                container.innerHTML = '<p class="text-red-500 py-10 text-center text-xs">악보를 불러올 수 없습니다.<br>(Firebase Storage의 CORS 설정이 필요할 수 있습니다)</p>';
+            }
+        }
+
+        // 💡 팝업창 열기 (캔버스를 본문에서 팝업창으로 "이동"시킵니다. 유튜브는 멈추지 않습니다.)
+        window.openPdfModal = (containerId, title) => {
+            const srcContainer = document.getElementById(containerId);
+            const modalContent = document.getElementById('pdfModalContent');
+
+            document.getElementById('pdfModalTitle').innerText = title;
+            modalContent.innerHTML = ''; // 팝업창 초기화
+
+            // 기존 캔버스들을 모달로 이사시킴
+            while (srcContainer.firstChild) {
+                modalContent.appendChild(srcContainer.firstChild);
+            }
+
+            // 나중에 원래 자리로 돌려놓기 위해 출신지 저장
+            modalContent.dataset.srcContainerId = containerId;
+            document.getElementById('pdfModal').classList.remove('hidden');
+        };
+
+        // 💡 팝업창 닫기 (캔버스를 다시 본문으로 돌려보냅니다.)
+        window.closePdfModal = () => {
+            const modalContent = document.getElementById('pdfModalContent');
+            const srcContainerId = modalContent.dataset.srcContainerId;
+            const srcContainer = document.getElementById(srcContainerId);
+
+            if (srcContainer) {
+                while (modalContent.firstChild) {
+                    srcContainer.appendChild(modalContent.firstChild);
+                }
+            }
+            document.getElementById('pdfModal').classList.add('hidden');
+        };
 
         function getNextSunday(baseDate = new Date()) {
             const d = new Date(baseDate);
@@ -596,8 +667,9 @@
             const isAll = parts.includes('전체');
 
             try {
-                let videosHtml = '<div class="space-y-6">'; // 영상들 담을 곳
-                let pdfsHtml = '<div class="mt-8 pt-4 border-t-2 border-dashed border-gray-300">'; // 악보들 담을 곳
+                let videosHtml = '<div class="space-y-6">';
+                let pdfsHtml = '<div class="mt-8 pt-4 border-t-2 border-dashed border-gray-300">';
+                let pdfCount = 0; // PDF 컨테이너 ID 부여용
 
                 if (type === '고정') {
                     document.getElementById('practiceTitle').innerText = '입례/기도/축도송 연습';
@@ -630,7 +702,7 @@
                         if (isAll || parts.includes('베이스')) videosHtml += renderVideo('축도송', '베이스', getYoutubeId(b.bass), 'b_bass');
                     }
                     videosHtml += '</div>';
-                    container.innerHTML = videosHtml; // 고정곡은 악보가 없으므로 영상만
+                    container.innerHTML = videosHtml;
                 }
                 else {
                     const thisSunday = getNextSunday();
@@ -653,7 +725,7 @@
                             const data = docSnap.data();
                             const title = data.title || `${date} 찬양`;
 
-                            // 1. 영상 조립
+                            // 1. 영상 먼저 조립
                             videosHtml += `<div class="mb-8"><h2 class="font-extrabold text-xl text-indigo-800 mb-3 flex items-center gap-2"><i class="fas fa-calendar-check"></i> ${date}</h2>`;
                             if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); hasVideos = true; }
                             if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); hasVideos = true; }
@@ -662,12 +734,11 @@
                             if (isAll || parts.includes('베이스')) { videosHtml += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`); hasVideos = true; }
                             videosHtml += `</div>`;
 
-                            // 2. 악보 조립 (나중에 최하단에 붙이기 위함)
+                            // 2. 악보 조립 (순서대로 하단에 배치됨)
                             if (data.sheetMusicUrl) {
-                                pdfsHtml += renderPdf(title, date, data.sheetMusicUrl);
+                                pdfsHtml += renderPdfContainer(title, date, data.sheetMusicUrl, pdfCount++);
                                 hasPdfs = true;
                             }
-
                         } else {
                             videosHtml += `<div class="bg-gray-100 p-6 rounded-xl text-center text-gray-500 mb-6 border border-gray-200"><i class="fas fa-exclamation-circle mb-2 text-xl"></i><br>${date} 곡이 아직 등록되지 않았습니다.</div>`;
                         }
@@ -675,11 +746,19 @@
                     videosHtml += '</div>';
                     pdfsHtml += '</div>';
 
-                    // 💡 최종 결합: 영상 먼저, 그 아래에 악보 디스플레이
+                    // 💡 최종 결합 및 렌더링 시작
                     if (!hasVideos && !hasPdfs) {
                         container.innerHTML = '<p class="text-center text-gray-400 py-10">등록된 영상이나 악보가 없습니다.</p>';
                     } else {
                         container.innerHTML = videosHtml + (hasPdfs ? pdfsHtml : '');
+
+                        // DOM이 그려진 후 PDF 그리기 명령 실행
+                        setTimeout(() => {
+                            const viewers = document.querySelectorAll('.pdf-viewer');
+                            viewers.forEach(viewer => {
+                                loadPdfToCanvas(viewer.getAttribute('data-pdf-url'), viewer.id);
+                            });
+                        }, 100);
                     }
                 }
             } catch (e) {
@@ -735,21 +814,28 @@
                     if (isAll || parts.includes('베이스')) { videosHtml += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`); hasData = true; }
 
                     if (data.sheetMusicUrl) {
-                        pdfsHtml += renderPdf(title, date, data.sheetMusicUrl);
+                        pdfsHtml += renderPdfContainer(title, date, data.sheetMusicUrl, 'past');
                         hasData = true;
                     }
                 }
                 videosHtml += '</div>';
                 pdfsHtml += '</div>';
 
-                container.innerHTML = hasData ? (videosHtml + (docSnap.data().sheetMusicUrl ? pdfsHtml : '')) : '<p class="text-center text-gray-400 py-10">해당 파트에 등록된 영상이나 악보가 없습니다.</p>';
+                if (hasData) {
+                    container.innerHTML = videosHtml + (docSnap.data().sheetMusicUrl ? pdfsHtml : '');
+                    if (docSnap.data().sheetMusicUrl) {
+                        setTimeout(() => loadPdfToCanvas(docSnap.data().sheetMusicUrl, 'pdf-container-past'), 100);
+                    }
+                } else {
+                    container.innerHTML = '<p class="text-center text-gray-400 py-10">해당 파트에 등록된 영상이나 악보가 없습니다.</p>';
+                }
             } catch (e) { container.innerHTML = '<p class="text-center text-red-400 py-10">데이터 로드 실패.</p>'; }
         };
 
         window.loadSetupForDate = async () => {
             const date = document.getElementById('setupDate').value;
             const statusEl = document.getElementById('currentSheetMusicStatus');
-            document.getElementById('setupSheetMusic').value = ''; // 파일 인풋 초기화
+            document.getElementById('setupSheetMusic').value = '';
             currentSheetMusicUrl = '';
 
             if (!date) return;
@@ -764,10 +850,9 @@
                     document.getElementById('setupTenor').value = data.tenor || '';
                     document.getElementById('setupBass').value = data.bass || '';
 
-                    // 기존 악보가 있는 경우 상태 업데이트
                     if (data.sheetMusicUrl) {
                         currentSheetMusicUrl = data.sheetMusicUrl;
-                        statusEl.innerHTML = `<span class="text-indigo-600 font-bold"><i class="fas fa-check-circle mr-1"></i>기존 악보가 등록되어 있습니다.</span> (새 파일을 첨부하면 덮어씁니다)`;
+                        statusEl.innerHTML = `<span class="text-indigo-600 font-bold"><i class="fas fa-check-circle mr-1"></i>기존 악보가 등록되어 있습니다.</span> (새 파일 첨부시 덮어씀)`;
                     } else {
                         statusEl.innerHTML = `등록된 악보가 없습니다.`;
                     }
@@ -783,7 +868,6 @@
             } catch (e) { console.error(e); }
         };
 
-        // 💡 주일 찬양 및 악보 (Storage) 통합 저장 로직
         window.saveWeeklyLinks = async () => {
             const date = document.getElementById('setupDate').value;
             if (!date) { alert("날짜를 선택해주세요."); return; }
@@ -794,17 +878,15 @@
 
             try {
                 const fileInput = document.getElementById('setupSheetMusic');
-                let finalSheetMusicUrl = currentSheetMusicUrl; // 기본은 기존 URL 유지
+                let finalSheetMusicUrl = currentSheetMusicUrl;
 
-                // 1. 새로운 파일이 첨부되었다면 Storage에 업로드
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
                     const storageRef = ref(storage, `sheet_music/${date}_${file.name}`);
                     await uploadBytes(storageRef, file);
-                    finalSheetMusicUrl = await getDownloadURL(storageRef); // 다운로드 주소 획득
+                    finalSheetMusicUrl = await getDownloadURL(storageRef);
                 }
 
-                // 2. Firestore에 링크들과 악보 주소를 함께 저장
                 await setDoc(doc(db, WEEKLY_COL, date), {
                     title: document.getElementById('setupTitle').value,
                     full: document.getElementById('setupFull').value,
@@ -812,11 +894,11 @@
                     alto: document.getElementById('setupAlto').value,
                     tenor: document.getElementById('setupTenor').value,
                     bass: document.getElementById('setupBass').value,
-                    sheetMusicUrl: finalSheetMusicUrl // 악보 URL 추가!
+                    sheetMusicUrl: finalSheetMusicUrl
                 });
 
                 alert(`${date} 찬양 링크 및 악보가 성공적으로 저장되었습니다.`);
-                loadSetupForDate(); // 화면 새로고침
+                loadSetupForDate();
             } catch (e) {
                 console.error(e);
                 alert("저장 실패. 네트워크 또는 파일 크기를 확인해주세요.");
