@@ -121,10 +121,48 @@
             color: #c2410c;
             font-weight: 700;
         }
+
+        /* 위챗 화살표 둥둥거리는 애니메이션 */
+        @keyframes bounce-up-right {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(10px, -10px);
+            }
+        }
+
+        .animate-bounce-custom {
+            animation: bounce-up-right 1s infinite;
+        }
     </style>
 </head>
 
-<body class="bg-gray-100 font-sans text-gray-800 pb-20">
+<body class="bg-gray-100 font-sans text-gray-800 pb-20 relative">
+
+    <div id="wechatOverlay"
+        class="hidden fixed inset-0 z-[9999] bg-gray-900/95 flex flex-col items-end pt-8 pr-6 backdrop-blur-sm">
+        <div class="text-white text-right">
+            <div class="flex justify-end mb-4">
+                <i class="fas fa-arrow-up text-6xl text-yellow-400 animate-bounce-custom"
+                    style="transform: rotate(45deg);"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-3 leading-tight">화면 우측 상단의<br><span
+                    class="bg-gray-700 px-3 py-1 rounded-lg inline-block my-1 tracking-widest">···</span> 버튼을 눌러주세요</h2>
+            <p
+                class="text-lg font-bold text-yellow-400 mb-6 bg-yellow-900/30 inline-block px-4 py-2 rounded-xl border border-yellow-400/50">
+                그리고 '브라우저에서 열기' 선택!</p>
+            <div class="bg-gray-800 p-4 rounded-xl text-left inline-block">
+                <p class="text-sm text-gray-300 font-bold mb-2"><i
+                        class="fas fa-exclamation-triangle text-red-400 mr-2"></i>위챗 내부 브라우저 경고</p>
+                <p class="text-xs text-gray-400">위챗 화면에서 그대로 연습을 진행하시면<br>악보가 안 보이거나 앱이 멈출 수 있습니다.<br>반드시 사파리나 크롬으로
+                    이동해주세요.</p>
+            </div>
+        </div>
+    </div>
 
     <div class="w-full max-w-5xl mx-auto bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
 
@@ -435,6 +473,15 @@
     </div>
 
     <script type="module">
+        // 💡 위챗 브라우저 감지 로직 추가
+        document.addEventListener("DOMContentLoaded", function () {
+            const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+            if (isWeChat) {
+                document.getElementById('wechatOverlay').classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // 뒤쪽 스크롤 방지
+            }
+        });
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
@@ -547,7 +594,6 @@
         function renderVideo(title, subtitle, videoId, partKey) {
             if (!videoId) return '';
             const badgeClass = getPartBadgeClass(subtitle);
-            // 💡 mb-4 제거 및 h-full 추가로 그리드 환경에서 높이 맞춤
             return `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full hover:shadow-md transition">
                     <div class="p-3 md:p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
@@ -582,7 +628,7 @@
                         </button>
                     </div>
                     <div id="${containerId}" data-pdf-url="${url}" class="pdf-viewer w-full bg-gray-200 p-2 md:p-6 flex flex-col gap-2 min-h-[200px]">
-                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -628,7 +674,7 @@
 
             modalContent.dataset.srcContainerId = containerId;
             document.getElementById('pdfModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // 모달 떴을 때 배경 스크롤 방지
+            document.body.style.overflow = 'hidden';
         };
 
         window.closePdfModal = () => {
@@ -642,7 +688,7 @@
                 }
             }
             document.getElementById('pdfModal').classList.add('hidden');
-            document.body.style.overflow = ''; // 스크롤 방지 해제
+            document.body.style.overflow = '';
         };
 
         function getNextSunday(baseDate = new Date()) {
@@ -664,7 +710,7 @@
             const isAll = parts.includes('전체');
 
             try {
-                let videosHtml = '<div class="space-y-10">'; // 각 날짜 덩어리 간 간격
+                let videosHtml = '<div class="space-y-10">';
                 let pdfsHtml = '<div class="mt-12 pt-8 border-t-2 border-dashed border-gray-300">';
                 let pdfCount = 0;
 
@@ -677,7 +723,6 @@
                         const p = data.prayer || {};
                         const b = data.benediction || {};
 
-                        // 💡 고정곡도 반응형 그리드 적용
                         videosHtml += `<div><h2 class="font-extrabold text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-church"></i> 입례송</h2>`;
                         videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
                         if (isAll || parts.includes('합창')) videosHtml += renderVideo('입례송', '합창', getYoutubeId(i.full), 'i_full');
@@ -729,7 +774,6 @@
                             const data = docSnap.data();
                             const title = data.title || `${date} 찬양`;
 
-                            // 💡 유튜브 영상 반응형 그리드 묶기
                             videosHtml += `<div><h2 class="font-extrabold text-xl md:text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-calendar-check"></i> ${date}</h2>`;
                             videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">`;
 
