@@ -22,6 +22,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         .part-checkbox:checked+div {
             background-color: #4f46e5;
@@ -122,7 +126,6 @@
             font-weight: 700;
         }
 
-        /* 위챗 화살표 둥둥거리는 애니메이션 */
         @keyframes bounce-up-right {
 
             0%,
@@ -138,6 +141,85 @@
         .animate-bounce-custom {
             animation: bounce-up-right 1s infinite;
         }
+
+        /* AI 해설 본문(Markdown) CSS */
+        #introContent h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+
+        #introContent h2 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2563eb;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        #introContent h3 {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-top: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #introContent p {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+            color: #374151;
+        }
+
+        #introContent ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        #introContent li {
+            margin-bottom: 0.3rem;
+            line-height: 1.6;
+        }
+
+        #introContent blockquote {
+            border-left: 4px solid #93c5fd;
+            padding: 1rem;
+            color: #4b5563;
+            font-style: italic;
+            background-color: #eff6ff;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        #introContent table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #introContent th,
+        #introContent td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        #introContent th {
+            background-color: #f8fafc;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        #introContent strong {
+            color: #111827;
+        }
     </style>
 </head>
 
@@ -150,7 +232,6 @@
                 <i class="fas fa-arrow-up text-5xl text-yellow-400 animate-bounce-custom"
                     style="transform: rotate(45deg);"></i>
             </div>
-
             <h2 class="text-2xl font-black mb-2 leading-tight text-white">화면 우측 상단의<br><span
                     class="bg-gray-700 px-3 py-1 rounded-lg inline-block my-1 tracking-widest text-white">···</span> 버튼을
                 눌러주세요</h2>
@@ -158,10 +239,8 @@
                 class="text-[17px] font-bold text-yellow-400 mb-5 bg-yellow-900/30 inline-block px-4 py-2 rounded-xl border border-yellow-400/50">
                 그리고 <span class="text-white">'기본 브라우저에서 열기'</span> 선택!
             </p>
-
             <img src="./wc.jpg" alt="위챗 기본 브라우저 열기 안내"
                 class="w-full rounded-xl shadow-2xl border-2 border-gray-600 mb-6 object-contain">
-
             <div class="bg-gray-800 p-4 rounded-xl text-left w-full mb-6 border border-gray-700">
                 <p class="text-sm text-gray-200 font-bold mb-2"><i
                         class="fas fa-exclamation-triangle text-red-400 mr-2"></i>속도 저하 경고</p>
@@ -170,7 +249,6 @@
                     기본 브라우저(크롬, 사파리 등)를 이용해 주세요.
                 </p>
             </div>
-
             <div class="border-t border-gray-700 pt-5">
                 <p class="text-[12px] text-gray-400 mb-3">속도가 좀 느려지더라도 위챗에서 열기를 원하시면<br>아래 버튼을 눌러주세요.</p>
                 <button onclick="closeWechatOverlay()"
@@ -260,12 +338,54 @@
                         </button>
                     </div>
 
-                    <div class="pt-4 border-t border-indigo-200 mt-6">
+                    <div class="pt-4 border-t border-indigo-200 mt-6 flex gap-3">
                         <button onclick="openSetup()"
-                            class="w-full py-4 bg-gray-800 rounded-xl shadow-md text-white font-bold hover:bg-gray-900 transition flex items-center justify-center gap-2">
-                            <i class="fas fa-link"></i> 관리자 설정 (링크 및 악보)
+                            class="w-1/2 py-4 bg-gray-800 rounded-xl shadow-md text-white font-bold hover:bg-gray-900 transition flex items-center justify-center gap-2 text-sm md:text-base">
+                            <i class="fas fa-cog"></i> 링크/악보 설정
+                        </button>
+                        <button onclick="openSongIntro()"
+                            class="w-1/2 py-4 bg-blue-600 rounded-xl shadow-md text-white font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2 text-sm md:text-base">
+                            <i class="fas fa-robot text-blue-200"></i> AI 곡 해설
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="introView" class="hidden flex flex-col min-h-screen bg-gray-50 pb-20">
+            <div class="bg-blue-600 text-white p-4 flex items-center justify-between shadow-md sticky top-0 z-10">
+                <button onclick="goHome()" class="text-xl px-2 hover:scale-110 transition-transform"><i
+                        class="fas fa-arrow-left"></i></button>
+                <h2 class="font-bold text-lg tracking-wide"><i class="fas fa-music mr-2 text-blue-200"></i>AI 성가곡 해설
+                </h2>
+                <div class="w-8"></div>
+            </div>
+
+            <div class="p-4 md:p-6 max-w-4xl mx-auto w-full flex-1 flex flex-col">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100 mb-6">
+                    <label class="block text-sm font-bold text-blue-800 mb-3"><i class="fas fa-search mr-1"></i>해설을 듣고
+                        싶은 곡을 선택하세요</label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <select id="introSongSelect"
+                            class="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm font-bold text-gray-700 focus:outline-none focus:border-blue-500 bg-gray-50">
+                            <option value="">곡 목록을 불러오는 중...</option>
+                        </select>
+                        <button onclick="generateIntro()"
+                            class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-md whitespace-nowrap flex items-center justify-center gap-2">
+                            <i class="fas fa-magic"></i> 해설 요청
+                        </button>
+                    </div>
+                </div>
+
+                <div id="introLoading"
+                    class="hidden flex-1 flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <i class="fas fa-spinner fa-spin text-5xl text-blue-500 mb-5"></i>
+                    <p class="text-blue-700 font-bold text-lg">Qwen AI가 곡을 분석하고 있습니다...</p>
+                    <p class="text-gray-400 text-sm mt-2">전문적이고 은혜로운 해설 작성을 위해 10~15초 소요될 수 있습니다.</p>
+                </div>
+
+                <div id="introContent"
+                    class="hidden bg-white p-6 md:p-8 rounded-2xl shadow-md border border-gray-200 w-full overflow-x-auto">
                 </div>
             </div>
         </div>
@@ -277,7 +397,6 @@
                 <h2 id="practiceTitle" class="font-bold text-lg tracking-wide">곡 연습</h2>
                 <div class="w-8"></div>
             </div>
-
             <div id="pastDateSelector" class="hidden p-4 bg-white shadow-sm z-0 relative border-b border-gray-100">
                 <div class="max-w-2xl mx-auto">
                     <select id="pastDateDropdown"
@@ -287,9 +406,7 @@
                     </select>
                 </div>
             </div>
-
-            <div id="practiceContainer" class="flex-1 p-4 md:p-6 overflow-y-auto">
-            </div>
+            <div id="practiceContainer" class="flex-1 p-4 md:p-6 overflow-y-auto"></div>
         </div>
 
         <div id="setupView" class="hidden flex flex-col min-h-screen bg-gray-50 pb-20">
@@ -357,11 +474,9 @@
                                     class="flex-1 border border-orange-200 rounded-lg px-3 py-2 text-sm focus:border-orange-400 outline-none">
                             </div>
                         </div>
-
                         <button onclick="saveWeeklyLinks()" id="saveWeeklyBtn"
-                            class="w-full mt-6 py-4 bg-indigo-600 text-white text-lg font-bold rounded-xl shadow-md hover:bg-indigo-700 transition">
-                            주일 찬양 및 악보 저장
-                        </button>
+                            class="w-full mt-6 py-4 bg-indigo-600 text-white text-lg font-bold rounded-xl shadow-md hover:bg-indigo-700 transition">주일
+                            찬양 및 악보 저장</button>
                     </div>
                 </div>
 
@@ -467,9 +582,8 @@
                             </div>
                         </div>
                         <button onclick="saveFixedLinks()" id="saveFixedBtn"
-                            class="w-full mt-6 py-4 bg-gray-800 text-white text-lg font-bold rounded-xl shadow-md hover:bg-gray-900 transition">
-                            고정곡 저장
-                        </button>
+                            class="w-full mt-6 py-4 bg-gray-800 text-white text-lg font-bold rounded-xl shadow-md hover:bg-gray-900 transition">고정곡
+                            저장</button>
                     </div>
                 </div>
             </div>
@@ -490,21 +604,21 @@
     </div>
 
     <script type="module">
-        // 💡 위챗 브라우저 감지 및 오버레이 처리 로직
+        // 위챗 감지
         document.addEventListener("DOMContentLoaded", function () {
             const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
             if (isWeChat) {
                 document.getElementById('wechatOverlay').classList.remove('hidden');
-                document.body.style.overflow = 'hidden'; // 뒤쪽 스크롤 잠금
+                document.body.style.overflow = 'hidden';
             }
         });
 
-        // 💡 위챗 오버레이 닫기 기능 (그냥 계속하기 버튼 용)
         window.closeWechatOverlay = () => {
             document.getElementById('wechatOverlay').classList.add('hidden');
-            document.body.style.overflow = ''; // 스크롤 잠금 해제
+            document.body.style.overflow = '';
         };
 
+        // Firebase 설정
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
@@ -523,8 +637,32 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
+        // PDF.js 설정
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // 💡 Supabase 설정 및 Qwen API 키 자동 로드 로직
+        const SUPABASE_URL = 'https://nydnthkqvpajufbycxjq.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_LWqTdLhSkspLke1HvFsmVA_KOYnGGaY';
+        // HTML <head>에서 불러온 supabase 객체를 사용하여 클라이언트 생성
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let cnation_QWEN_API_KEY = ""; // Supabase에서 가져와서 담아둘 변수
+
+        async function loadCnationApiKeys() {
+            try {
+                const { data, error } = await _supabase.from('cnation_api_keys').select('engine_name, api_key');
+                if (data) {
+                    const qwenItem = data.find(item => item.engine_name === "Qwen");
+                    if (qwenItem) cnation_QWEN_API_KEY = qwenItem.api_key;
+                }
+            } catch (e) {
+                console.error("API 키 로드 에러", e);
+            }
+        }
+
+        // 앱이 켜지자마자 몰래 뒤에서 키를 가져오도록 실행
+        loadCnationApiKeys();
 
         const WEEKLY_COL = "cnation-msyh-sgd-weekly";
         const FIXED_COL = "cnation-msyh-sgd-fixed";
@@ -549,42 +687,133 @@
         window.goHome = () => {
             document.getElementById('practiceView').classList.add('hidden');
             document.getElementById('setupView').classList.add('hidden');
+            document.getElementById('introView').classList.add('hidden');
             document.getElementById('pastDateSelector').classList.add('hidden');
             document.getElementById('practiceContainer').innerHTML = '';
             document.getElementById('homeView').classList.remove('hidden');
         };
 
+        // AI 곡 해설 화면 열기
+        window.openSongIntro = async () => {
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('introView').classList.remove('hidden');
+            document.getElementById('introContent').classList.add('hidden');
+            document.getElementById('introContent').innerHTML = '';
+
+            const select = document.getElementById('introSongSelect');
+            select.innerHTML = '<option value="">곡 목록을 불러오는 중...</option>';
+
+            try {
+                const q = query(collection(db, WEEKLY_COL));
+                const snap = await getDocs(q);
+                let songSet = new Set();
+
+                songSet.add("입례송");
+                songSet.add("기도송");
+                songSet.add("축도송");
+
+                snap.forEach(doc => {
+                    const title = doc.data().title;
+                    if (title && title.trim() !== '') songSet.add(title.trim());
+                });
+
+                let sortedSongs = Array.from(songSet).sort();
+                select.innerHTML = '<option value="">해설을 들을 곡을 선택하세요</option>';
+                sortedSongs.forEach(song => {
+                    select.innerHTML += `<option value="${song}">${song}</option>`;
+                });
+            } catch (e) {
+                console.error(e);
+                select.innerHTML = '<option value="">곡 목록 불러오기 실패</option>';
+            }
+        };
+
+        // 💡 Qwen API 호출 및 해설 생성 (Supabase 키 사용 적용)
+        window.generateIntro = async () => {
+            const select = document.getElementById('introSongSelect');
+            const songName = select.value;
+
+            if (!songName) {
+                alert("목록에서 해설을 원하시는 곡을 먼저 선택해주세요.");
+                return;
+            }
+
+            // 💡 만약 사용자가 너무 빨리 눌러서 Supabase에서 키를 아직 못 가져왔다면
+            if (!cnation_QWEN_API_KEY) {
+                alert("AI 엔진 연결을 준비하고 있습니다. 잠시 후 다시 시도해주세요.\n(또는 네트워크를 확인해주세요.)");
+                return;
+            }
+
+            document.getElementById('introContent').classList.add('hidden');
+            const loadingEl = document.getElementById('introLoading');
+            loadingEl.classList.remove('hidden');
+            loadingEl.classList.add('flex');
+
+            const prompt = `너는 교회 성가대 지휘자이자 신학자야. '${songName}' 이라는 기독교 성가곡(합창곡)에 대해 아주 상세하고 전문적인 해설을 작성해줘. 
+형식은 반드시 마크다운(Markdown)으로 작성하고, 다음 항목들을 포함해줘:
+1. 기본 정보 (곡명, 작곡가, 장르, 사용 시기, 편성 등 표 형식으로)
+2. 가사 주제와 신학적 의미 (관련 성경 구절 포함)
+3. 음악적 특징
+4. 사용 추천 시기
+5. 묵상 포인트
+
+(만약 한국어 성가곡이라면 한국 교회 환경에 맞춰 설명하고, 외국 곡이라면 원제와 한국어 번역제를 함께 설명해줘. 대원들이 부르기 전 은혜를 받을 수 있도록 아주 전문적이고 은혜롭게 작성해줘.)`;
+
+            try {
+                // 💡 이제 하드코딩된 키 대신 Supabase에서 가져온 cnation_QWEN_API_KEY 변수를 사용합니다.
+                const response = await fetch("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${cnation_QWEN_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "qwen-plus",
+                        messages: [
+                            { role: "system", content: "You are a professional Christian music theologian and choir conductor. Write beautiful and profound song explanations in Korean Markdown format." },
+                            { role: "user", content: prompt }
+                        ],
+                        temperature: 0.6
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error?.message || "Qwen API 통신 오류");
+                }
+
+                const data = await response.json();
+                const markdownText = data.choices[0].message.content;
+
+                const introContent = document.getElementById('introContent');
+                introContent.innerHTML = marked.parse(markdownText);
+
+                loadingEl.classList.add('hidden');
+                loadingEl.classList.remove('flex');
+                introContent.classList.remove('hidden');
+
+            } catch (err) {
+                alert("해설을 생성하는 중 오류가 발생했습니다. API 키나 인터넷 연결을 확인해주세요.\n\n에러 내용: " + err.message);
+                console.error(err);
+                loadingEl.classList.add('hidden');
+                loadingEl.classList.remove('flex');
+            }
+        };
+
+        // (이하 기존 연습, 설정, 팝업 관련 코드는 동일하게 유지)
         window.openSetup = async () => {
             document.getElementById('homeView').classList.add('hidden');
             document.getElementById('setupView').classList.remove('hidden');
             document.getElementById('setupDate').value = getNextSunday();
             loadSetupForDate();
-
             try {
                 const docSnap = await getDoc(doc(db, FIXED_COL, "current"));
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    const i = data.introit || {};
-                    const p = data.prayer || {};
-                    const b = data.benediction || {};
-
-                    document.getElementById('setupIntroitFull').value = i.full || '';
-                    document.getElementById('setupIntroitSop').value = i.soprano || '';
-                    document.getElementById('setupIntroitAlto').value = i.alto || '';
-                    document.getElementById('setupIntroitTenor').value = i.tenor || '';
-                    document.getElementById('setupIntroitBass').value = i.bass || '';
-
-                    document.getElementById('setupPrayerFull').value = p.full || '';
-                    document.getElementById('setupPrayerSop').value = p.soprano || '';
-                    document.getElementById('setupPrayerAlto').value = p.alto || '';
-                    document.getElementById('setupPrayerTenor').value = p.tenor || '';
-                    document.getElementById('setupPrayerBass').value = p.bass || '';
-
-                    document.getElementById('setupBeneFull').value = b.full || '';
-                    document.getElementById('setupBeneSop').value = b.soprano || '';
-                    document.getElementById('setupBeneAlto').value = b.alto || '';
-                    document.getElementById('setupBeneTenor').value = b.tenor || '';
-                    document.getElementById('setupBeneBass').value = b.bass || '';
+                    const i = data.introit || {}; const p = data.prayer || {}; const b = data.benediction || {};
+                    document.getElementById('setupIntroitFull').value = i.full || ''; document.getElementById('setupIntroitSop').value = i.soprano || ''; document.getElementById('setupIntroitAlto').value = i.alto || ''; document.getElementById('setupIntroitTenor').value = i.tenor || ''; document.getElementById('setupIntroitBass').value = i.bass || '';
+                    document.getElementById('setupPrayerFull').value = p.full || ''; document.getElementById('setupPrayerSop').value = p.soprano || ''; document.getElementById('setupPrayerAlto').value = p.alto || ''; document.getElementById('setupPrayerTenor').value = p.tenor || ''; document.getElementById('setupPrayerBass').value = p.bass || '';
+                    document.getElementById('setupBeneFull').value = b.full || ''; document.getElementById('setupBeneSop').value = b.soprano || ''; document.getElementById('setupBeneAlto').value = b.alto || ''; document.getElementById('setupBeneTenor').value = b.tenor || ''; document.getElementById('setupBeneBass').value = b.bass || '';
                 }
             } catch (e) { console.error(e); }
         };
@@ -668,13 +897,11 @@
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     const page = await pdf.getPage(pageNum);
                     const viewport = page.getViewport({ scale: 1.5 });
-
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
                     canvas.width = viewport.width;
                     canvas.height = viewport.height;
                     canvas.className = 'w-full h-auto bg-white shadow-md border border-gray-300 rounded mb-4 max-w-full';
-
                     await page.render({ canvasContext: context, viewport: viewport }).promise;
                     container.appendChild(canvas);
                 }
@@ -687,14 +914,9 @@
         window.openPdfModal = (containerId, title) => {
             const srcContainer = document.getElementById(containerId);
             const modalContent = document.getElementById('pdfModalContent');
-
             document.getElementById('pdfModalTitle').innerText = title;
             modalContent.innerHTML = '';
-
-            while (srcContainer.firstChild) {
-                modalContent.appendChild(srcContainer.firstChild);
-            }
-
+            while (srcContainer.firstChild) { modalContent.appendChild(srcContainer.firstChild); }
             modalContent.dataset.srcContainerId = containerId;
             document.getElementById('pdfModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -704,12 +926,7 @@
             const modalContent = document.getElementById('pdfModalContent');
             const srcContainerId = modalContent.dataset.srcContainerId;
             const srcContainer = document.getElementById(srcContainerId);
-
-            if (srcContainer) {
-                while (modalContent.firstChild) {
-                    srcContainer.appendChild(modalContent.firstChild);
-                }
-            }
+            if (srcContainer) { while (modalContent.firstChild) { srcContainer.appendChild(modalContent.firstChild); } }
             document.getElementById('pdfModal').classList.add('hidden');
             document.body.style.overflow = '';
         };
@@ -742,12 +959,9 @@
                     const docSnap = await getDoc(doc(db, FIXED_COL, "current"));
                     if (docSnap.exists()) {
                         const data = docSnap.data();
-                        const i = data.introit || {};
-                        const p = data.prayer || {};
-                        const b = data.benediction || {};
+                        const i = data.introit || {}; const p = data.prayer || {}; const b = data.benediction || {};
 
-                        videosHtml += `<div><h2 class="font-extrabold text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-church"></i> 입례송</h2>`;
-                        videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+                        videosHtml += `<div><h2 class="font-extrabold text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-church"></i> 입례송</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
                         if (isAll || parts.includes('합창')) videosHtml += renderVideo('입례송', '합창', getYoutubeId(i.full), 'i_full');
                         if (isAll || parts.includes('소프라노')) videosHtml += renderVideo('입례송', '소프라노', getYoutubeId(i.soprano), 'i_sop');
                         if (isAll || parts.includes('알토')) videosHtml += renderVideo('입례송', '알토', getYoutubeId(i.alto), 'i_alto');
@@ -755,8 +969,7 @@
                         if (isAll || parts.includes('베이스')) videosHtml += renderVideo('입례송', '베이스', getYoutubeId(i.bass), 'i_bass');
                         videosHtml += `</div></div>`;
 
-                        videosHtml += `<div><h2 class="font-extrabold text-2xl text-indigo-800 mt-6 mb-4 flex items-center gap-2"><i class="fas fa-pray"></i> 기도송</h2>`;
-                        videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+                        videosHtml += `<div><h2 class="font-extrabold text-2xl text-indigo-800 mt-6 mb-4 flex items-center gap-2"><i class="fas fa-pray"></i> 기도송</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
                         if (isAll || parts.includes('합창')) videosHtml += renderVideo('기도송', '합창', getYoutubeId(p.full), 'p_full');
                         if (isAll || parts.includes('소프라노')) videosHtml += renderVideo('기도송', '소프라노', getYoutubeId(p.soprano), 'p_sop');
                         if (isAll || parts.includes('알토')) videosHtml += renderVideo('기도송', '알토', getYoutubeId(p.alto), 'p_alto');
@@ -764,8 +977,7 @@
                         if (isAll || parts.includes('베이스')) videosHtml += renderVideo('기도송', '베이스', getYoutubeId(p.bass), 'p_bass');
                         videosHtml += `</div></div>`;
 
-                        videosHtml += `<div><h2 class="font-extrabold text-2xl text-indigo-800 mt-6 mb-4 flex items-center gap-2"><i class="fas fa-hands-blessing"></i> 축도송</h2>`;
-                        videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+                        videosHtml += `<div><h2 class="font-extrabold text-2xl text-indigo-800 mt-6 mb-4 flex items-center gap-2"><i class="fas fa-hands-blessing"></i> 축도송</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
                         if (isAll || parts.includes('합창')) videosHtml += renderVideo('축도송', '합창', getYoutubeId(b.full), 'b_full');
                         if (isAll || parts.includes('소프라노')) videosHtml += renderVideo('축도송', '소프라노', getYoutubeId(b.soprano), 'b_sop');
                         if (isAll || parts.includes('알토')) videosHtml += renderVideo('축도송', '알토', getYoutubeId(b.alto), 'b_alto');
@@ -778,34 +990,25 @@
                 }
                 else {
                     const thisSunday = getNextSunday();
-                    const d = new Date(thisSunday);
-                    d.setDate(d.getDate() + 7);
-                    const nextSunday = d.toISOString().split('T')[0];
-
+                    const d = new Date(thisSunday); d.setDate(d.getDate() + 7); const nextSunday = d.toISOString().split('T')[0];
                     const datesToFetch = [];
                     if (type === '이번주' || type === '이번주_다음주') datesToFetch.push(thisSunday);
                     if (type === '다음주' || type === '이번주_다음주') datesToFetch.push(nextSunday);
 
                     document.getElementById('practiceTitle').innerText = type.replace('_', ', ') + ' 곡 연습';
-
-                    let hasVideos = false;
-                    let hasPdfs = false;
+                    let hasVideos = false; let hasPdfs = false;
 
                     for (const date of datesToFetch) {
                         const docSnap = await getDoc(doc(db, WEEKLY_COL, date));
                         if (docSnap.exists()) {
-                            const data = docSnap.data();
-                            const title = data.title || `${date} 찬양`;
+                            const data = docSnap.data(); const title = data.title || `${date} 찬양`;
 
-                            videosHtml += `<div><h2 class="font-extrabold text-xl md:text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-calendar-check"></i> ${date}</h2>`;
-                            videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">`;
-
+                            videosHtml += `<div><h2 class="font-extrabold text-xl md:text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-calendar-check"></i> ${date}</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">`;
                             if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); hasVideos = true; }
                             if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); hasVideos = true; }
                             if (isAll || parts.includes('알토')) { videosHtml += renderVideo(title, '알토', getYoutubeId(data.alto), `alto_${date}`); hasVideos = true; }
                             if (isAll || parts.includes('테너')) { videosHtml += renderVideo(title, '테너', getYoutubeId(data.tenor), `tenor_${date}`); hasVideos = true; }
                             if (isAll || parts.includes('베이스')) { videosHtml += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`); hasVideos = true; }
-
                             videosHtml += `</div></div>`;
 
                             if (data.sheetMusicUrl) {
@@ -816,25 +1019,18 @@
                             videosHtml += `<div class="bg-gray-100 p-8 rounded-2xl text-center text-gray-500 mb-6 border border-gray-200"><i class="fas fa-exclamation-circle mb-3 text-3xl opacity-50"></i><br><span class="font-bold text-lg">${date}</span><br>곡이 아직 등록되지 않았습니다.</div>`;
                         }
                     }
-                    videosHtml += '</div>';
-                    pdfsHtml += '</div>';
+                    videosHtml += '</div>'; pdfsHtml += '</div>';
 
                     if (!hasVideos && !hasPdfs) {
                         container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-gray-400 font-bold">등록된 영상이나 악보가 없습니다.</p></div>';
                     } else {
                         container.innerHTML = videosHtml + (hasPdfs ? pdfsHtml : '');
-
                         setTimeout(() => {
-                            const viewers = document.querySelectorAll('.pdf-viewer');
-                            viewers.forEach(viewer => {
-                                loadPdfToCanvas(viewer.getAttribute('data-pdf-url'), viewer.id);
-                            });
+                            document.querySelectorAll('.pdf-viewer').forEach(viewer => { loadPdfToCanvas(viewer.getAttribute('data-pdf-url'), viewer.id); });
                         }, 100);
                     }
                 }
-            } catch (e) {
-                container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-red-400 font-bold">데이터를 불러오지 못했습니다.</p></div>';
-            }
+            } catch (e) { container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-red-400 font-bold">데이터를 불러오지 못했습니다.</p></div>'; }
         };
 
         window.openPastPractice = async () => {
@@ -853,9 +1049,7 @@
                 snap.forEach(doc => dates.push({ date: doc.id, title: doc.data().title || '' }));
                 dates.sort((a, b) => b.date.localeCompare(a.date));
                 dropdown.innerHTML = '<option value="">날짜(일요일)를 선택하세요</option>';
-                dates.forEach(item => {
-                    dropdown.innerHTML += `<option value="${item.date}">${item.date} ${item.title ? '- ' + item.title : ''}</option>`;
-                });
+                dates.forEach(item => { dropdown.innerHTML += `<option value="${item.date}">${item.date} ${item.title ? '- ' + item.title : ''}</option>`; });
             } catch (e) { dropdown.innerHTML = '<option value="">불러오기 실패</option>'; }
         };
 
@@ -865,28 +1059,21 @@
             if (!date) { container.innerHTML = ''; return; }
             container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-gray-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>불러오는 중...</p></div>';
 
-            const parts = getSelectedParts();
-            const isAll = parts.includes('전체');
+            const parts = getSelectedParts(); const isAll = parts.includes('전체');
 
             try {
                 const docSnap = await getDoc(doc(db, WEEKLY_COL, date));
-                let videosHtml = '<div class="space-y-6">';
-                let pdfsHtml = '<div class="mt-8 pt-4 border-t-2 border-dashed border-gray-300">';
-                let hasData = false;
+                let videosHtml = '<div class="space-y-6">'; let pdfsHtml = '<div class="mt-8 pt-4 border-t-2 border-dashed border-gray-300">'; let hasData = false;
 
                 if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    const title = data.title || `${date} 찬양`;
+                    const data = docSnap.data(); const title = data.title || `${date} 찬양`;
 
-                    videosHtml += `<div><h2 class="font-extrabold text-xl md:text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-calendar-check"></i> ${date}</h2>`;
-                    videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">`;
-
+                    videosHtml += `<div><h2 class="font-extrabold text-xl md:text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-calendar-check"></i> ${date}</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">`;
                     if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); hasData = true; }
                     if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); hasData = true; }
                     if (isAll || parts.includes('알토')) { videosHtml += renderVideo(title, '알토', getYoutubeId(data.alto), `alto_${date}`); hasData = true; }
                     if (isAll || parts.includes('테너')) { videosHtml += renderVideo(title, '테너', getYoutubeId(data.tenor), `tenor_${date}`); hasData = true; }
                     if (isAll || parts.includes('베이스')) { videosHtml += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`); hasData = true; }
-
                     videosHtml += `</div></div>`;
 
                     if (data.sheetMusicUrl) {
@@ -894,14 +1081,11 @@
                         hasData = true;
                     }
                 }
-                videosHtml += '</div>';
-                pdfsHtml += '</div>';
+                videosHtml += '</div>'; pdfsHtml += '</div>';
 
                 if (hasData) {
                     container.innerHTML = videosHtml + (docSnap.data().sheetMusicUrl ? pdfsHtml : '');
-                    if (docSnap.data().sheetMusicUrl) {
-                        setTimeout(() => loadPdfToCanvas(docSnap.data().sheetMusicUrl, 'pdf-container-past'), 100);
-                    }
+                    if (docSnap.data().sheetMusicUrl) { setTimeout(() => loadPdfToCanvas(docSnap.data().sheetMusicUrl, 'pdf-container-past'), 100); }
                 } else {
                     container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-gray-400 font-bold">해당 파트에 등록된 영상이나 악보가 없습니다.</p></div>';
                 }
@@ -919,26 +1103,13 @@
                 const docSnap = await getDoc(doc(db, WEEKLY_COL, date));
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    document.getElementById('setupTitle').value = data.title || '';
-                    document.getElementById('setupFull').value = data.full || '';
-                    document.getElementById('setupSop').value = data.soprano || '';
-                    document.getElementById('setupAlto').value = data.alto || '';
-                    document.getElementById('setupTenor').value = data.tenor || '';
-                    document.getElementById('setupBass').value = data.bass || '';
-
+                    document.getElementById('setupTitle').value = data.title || ''; document.getElementById('setupFull').value = data.full || ''; document.getElementById('setupSop').value = data.soprano || ''; document.getElementById('setupAlto').value = data.alto || ''; document.getElementById('setupTenor').value = data.tenor || ''; document.getElementById('setupBass').value = data.bass || '';
                     if (data.sheetMusicUrl) {
                         currentSheetMusicUrl = data.sheetMusicUrl;
                         statusEl.innerHTML = `<span class="text-indigo-600 font-bold"><i class="fas fa-check-circle mr-1"></i>기존 악보가 등록되어 있습니다.</span> (새 파일 첨부시 덮어씀)`;
-                    } else {
-                        statusEl.innerHTML = `등록된 악보가 없습니다.`;
-                    }
+                    } else { statusEl.innerHTML = `등록된 악보가 없습니다.`; }
                 } else {
-                    document.getElementById('setupTitle').value = '';
-                    document.getElementById('setupFull').value = '';
-                    document.getElementById('setupSop').value = '';
-                    document.getElementById('setupAlto').value = '';
-                    document.getElementById('setupTenor').value = '';
-                    document.getElementById('setupBass').value = '';
+                    document.getElementById('setupTitle').value = ''; document.getElementById('setupFull').value = ''; document.getElementById('setupSop').value = ''; document.getElementById('setupAlto').value = ''; document.getElementById('setupTenor').value = ''; document.getElementById('setupBass').value = '';
                     statusEl.innerHTML = `등록된 악보가 없습니다.`;
                 }
             } catch (e) { console.error(e); }
@@ -949,69 +1120,33 @@
             if (!date) { alert("날짜를 선택해주세요."); return; }
 
             const btn = document.getElementById('saveWeeklyBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 파일 업로드 및 저장중...';
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 파일 업로드 및 저장중...'; btn.disabled = true;
 
             try {
                 const fileInput = document.getElementById('setupSheetMusic');
                 let finalSheetMusicUrl = currentSheetMusicUrl;
-
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
                     const storageRef = ref(storage, `sheet_music/${date}_${file.name}`);
                     await uploadBytes(storageRef, file);
                     finalSheetMusicUrl = await getDownloadURL(storageRef);
                 }
-
                 await setDoc(doc(db, WEEKLY_COL, date), {
-                    title: document.getElementById('setupTitle').value,
-                    full: document.getElementById('setupFull').value,
-                    soprano: document.getElementById('setupSop').value,
-                    alto: document.getElementById('setupAlto').value,
-                    tenor: document.getElementById('setupTenor').value,
-                    bass: document.getElementById('setupBass').value,
-                    sheetMusicUrl: finalSheetMusicUrl
+                    title: document.getElementById('setupTitle').value, full: document.getElementById('setupFull').value, soprano: document.getElementById('setupSop').value, alto: document.getElementById('setupAlto').value, tenor: document.getElementById('setupTenor').value, bass: document.getElementById('setupBass').value, sheetMusicUrl: finalSheetMusicUrl
                 });
-
-                alert(`${date} 찬양 링크 및 악보가 성공적으로 저장되었습니다.`);
-                loadSetupForDate();
-            } catch (e) {
-                console.error(e);
-                alert("저장 실패. 네트워크 또는 파일 크기를 확인해주세요.");
-            }
-            finally {
-                btn.innerHTML = '주일 찬양 및 악보 저장';
-                btn.disabled = false;
-            }
+                alert(`${date} 찬양 링크 및 악보가 성공적으로 저장되었습니다.`); loadSetupForDate();
+            } catch (e) { console.error(e); alert("저장 실패. 네트워크 또는 파일 크기를 확인해주세요."); }
+            finally { btn.innerHTML = '주일 찬양 및 악보 저장'; btn.disabled = false; }
         };
 
         window.saveFixedLinks = async () => {
             const btn = document.getElementById('saveFixedBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 저장중...';
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 저장중...'; btn.disabled = true;
             try {
                 await setDoc(doc(db, FIXED_COL, "current"), {
-                    introit: {
-                        full: document.getElementById('setupIntroitFull').value,
-                        soprano: document.getElementById('setupIntroitSop').value,
-                        alto: document.getElementById('setupIntroitAlto').value,
-                        tenor: document.getElementById('setupIntroitTenor').value,
-                        bass: document.getElementById('setupIntroitBass').value
-                    },
-                    prayer: {
-                        full: document.getElementById('setupPrayerFull').value,
-                        soprano: document.getElementById('setupPrayerSop').value,
-                        alto: document.getElementById('setupPrayerAlto').value,
-                        tenor: document.getElementById('setupPrayerTenor').value,
-                        bass: document.getElementById('setupPrayerBass').value
-                    },
-                    benediction: {
-                        full: document.getElementById('setupBeneFull').value,
-                        soprano: document.getElementById('setupBeneSop').value,
-                        alto: document.getElementById('setupBeneAlto').value,
-                        tenor: document.getElementById('setupBeneTenor').value,
-                        bass: document.getElementById('setupBeneBass').value
-                    }
+                    introit: { full: document.getElementById('setupIntroitFull').value, soprano: document.getElementById('setupIntroitSop').value, alto: document.getElementById('setupIntroitAlto').value, tenor: document.getElementById('setupIntroitTenor').value, bass: document.getElementById('setupIntroitBass').value },
+                    prayer: { full: document.getElementById('setupPrayerFull').value, soprano: document.getElementById('setupPrayerSop').value, alto: document.getElementById('setupPrayerAlto').value, tenor: document.getElementById('setupPrayerTenor').value, bass: document.getElementById('setupPrayerBass').value },
+                    benediction: { full: document.getElementById('setupBeneFull').value, soprano: document.getElementById('setupBeneSop').value, alto: document.getElementById('setupBeneAlto').value, tenor: document.getElementById('setupBeneTenor').value, bass: document.getElementById('setupBeneBass').value }
                 });
                 alert(`고정곡 15개 파트 링크가 성공적으로 저장되었습니다.`);
             } catch (e) { alert("저장 실패. 네트워크를 확인해주세요."); }
