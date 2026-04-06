@@ -144,22 +144,39 @@
 <body class="bg-gray-100 font-sans text-gray-800 pb-20 relative">
 
     <div id="wechatOverlay"
-        class="hidden fixed inset-0 z-[9999] bg-gray-900/95 flex flex-col items-end pt-8 pr-6 backdrop-blur-sm">
-        <div class="text-white text-right">
-            <div class="flex justify-end mb-4">
-                <i class="fas fa-arrow-up text-6xl text-yellow-400 animate-bounce-custom"
+        class="hidden fixed inset-0 z-[9999] bg-gray-900/95 flex flex-col items-center pt-8 px-6 backdrop-blur-sm overflow-y-auto pb-10">
+        <div class="w-full max-w-sm text-center mt-2">
+            <div class="flex justify-end mb-2 pr-2">
+                <i class="fas fa-arrow-up text-5xl text-yellow-400 animate-bounce-custom"
                     style="transform: rotate(45deg);"></i>
             </div>
-            <h2 class="text-2xl font-black mb-3 leading-tight">화면 우측 상단의<br><span
-                    class="bg-gray-700 px-3 py-1 rounded-lg inline-block my-1 tracking-widest">···</span> 버튼을 눌러주세요</h2>
+
+            <h2 class="text-2xl font-black mb-2 leading-tight text-white">화면 우측 상단의<br><span
+                    class="bg-gray-700 px-3 py-1 rounded-lg inline-block my-1 tracking-widest text-white">···</span> 버튼을
+                눌러주세요</h2>
             <p
-                class="text-lg font-bold text-yellow-400 mb-6 bg-yellow-900/30 inline-block px-4 py-2 rounded-xl border border-yellow-400/50">
-                그리고 '브라우저에서 열기' 선택!</p>
-            <div class="bg-gray-800 p-4 rounded-xl text-left inline-block">
-                <p class="text-sm text-gray-300 font-bold mb-2"><i
-                        class="fas fa-exclamation-triangle text-red-400 mr-2"></i>위챗 내부 브라우저 경고</p>
-                <p class="text-xs text-gray-400">위챗 화면에서 그대로 연습을 진행하시면<br>악보가 안 보이거나 앱이 멈출 수 있습니다.<br>반드시 사파리나 크롬으로
-                    이동해주세요.</p>
+                class="text-[17px] font-bold text-yellow-400 mb-5 bg-yellow-900/30 inline-block px-4 py-2 rounded-xl border border-yellow-400/50">
+                그리고 <span class="text-white">'기본 브라우저에서 열기'</span> 선택!
+            </p>
+
+            <img src="./wc.jpg" alt="위챗 기본 브라우저 열기 안내"
+                class="w-full rounded-xl shadow-2xl border-2 border-gray-600 mb-6 object-contain">
+
+            <div class="bg-gray-800 p-4 rounded-xl text-left w-full mb-6 border border-gray-700">
+                <p class="text-sm text-gray-200 font-bold mb-2"><i
+                        class="fas fa-exclamation-triangle text-red-400 mr-2"></i>속도 저하 경고</p>
+                <p class="text-[13px] text-gray-400 leading-relaxed">
+                    위챗에서 직접 열기를 하면 앱 구동 <strong>속도가 현저히 느려지거나 악보가 정상적으로 보이지 않는 현상</strong>이 발생할 수 있습니다. 쾌적한 사용을 위해 가급적
+                    기본 브라우저(크롬, 사파리 등)를 이용해 주세요.
+                </p>
+            </div>
+
+            <div class="border-t border-gray-700 pt-5">
+                <p class="text-[12px] text-gray-400 mb-3">속도가 좀 느려지더라도 위챗에서 열기를 원하시면<br>아래 버튼을 눌러주세요.</p>
+                <button onclick="closeWechatOverlay()"
+                    class="w-full px-5 py-3.5 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-gray-200 text-sm font-bold rounded-xl transition shadow-md border border-gray-600">
+                    <i class="fab fa-weixin mr-2 text-green-400"></i>그냥 위챗에서 계속하기
+                </button>
             </div>
         </div>
     </div>
@@ -473,14 +490,20 @@
     </div>
 
     <script type="module">
-        // 💡 위챗 브라우저 감지 로직 추가
+        // 💡 위챗 브라우저 감지 및 오버레이 처리 로직
         document.addEventListener("DOMContentLoaded", function () {
             const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
             if (isWeChat) {
                 document.getElementById('wechatOverlay').classList.remove('hidden');
-                document.body.style.overflow = 'hidden'; // 뒤쪽 스크롤 방지
+                document.body.style.overflow = 'hidden'; // 뒤쪽 스크롤 잠금
             }
         });
+
+        // 💡 위챗 오버레이 닫기 기능 (그냥 계속하기 버튼 용)
+        window.closeWechatOverlay = () => {
+            document.getElementById('wechatOverlay').classList.add('hidden');
+            document.body.style.overflow = ''; // 스크롤 잠금 해제
+        };
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
