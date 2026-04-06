@@ -25,7 +25,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* (기존 CSS 스타일 유지) */
         .part-checkbox:checked+div {
             background-color: #4f46e5;
             color: white;
@@ -141,7 +140,7 @@
             animation: bounce-up-right 1s infinite;
         }
 
-        /* AI 해설 본문(Markdown) 디자인 */
+        /* AI 해설 본문(Markdown) 디자인 - 표 관련 스타일 제거 및 텍스트 최적화 */
         #introContent h1 {
             font-size: 1.5rem;
             font-weight: bold;
@@ -177,10 +176,11 @@
             list-style-type: disc;
             padding-left: 1.5rem;
             margin-bottom: 1rem;
+            color: #374151;
         }
 
         #introContent li {
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.5rem;
             line-height: 1.6;
         }
 
@@ -192,28 +192,6 @@
             background-color: #eff6ff;
             border-radius: 0.5rem;
             margin-bottom: 1rem;
-        }
-
-        #introContent table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1rem;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        #introContent th,
-        #introContent td {
-            border: 1px solid #e5e7eb;
-            padding: 0.75rem;
-            text-align: left;
-        }
-
-        #introContent th {
-            background-color: #f8fafc;
-            font-weight: bold;
-            color: #1e293b;
         }
 
         #introContent strong {
@@ -361,7 +339,8 @@
                         싶은 곡을 선택하세요</label>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <select id="introSongSelect"
-                            class="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm font-bold text-gray-700 focus:outline-none focus:border-blue-500 bg-gray-50">
+                            class="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm font-bold text-gray-700 focus:outline-none focus:border-blue-500 bg-gray-50"
+                            onchange="hideIntroDeleteBtn()">
                             <option value="">곡 목록을 불러오는 중...</option>
                         </select>
                         <button onclick="generateIntro()"
@@ -380,6 +359,13 @@
 
                 <div id="introContent"
                     class="hidden bg-white p-6 md:p-8 rounded-2xl shadow-md border border-gray-200 w-full overflow-x-auto">
+                </div>
+
+                <div id="introDeleteContainer" class="hidden mt-3 text-right pr-2">
+                    <button onclick="deleteIntro()"
+                        class="text-[11px] text-gray-400 hover:text-red-400 transition-colors underline decoration-gray-300 hover:decoration-red-300">
+                        기존 AI 해설 내용 삭제
+                    </button>
                 </div>
             </div>
         </div>
@@ -611,9 +597,9 @@
             document.body.style.overflow = '';
         };
 
-        // Firebase 설정
+        // Firebase 설정 (deleteDoc 추가 수입)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
@@ -651,7 +637,9 @@
 
         const WEEKLY_COL = "cnation-msyh-sgd-weekly";
         const FIXED_COL = "cnation-msyh-sgd-fixed";
-        const INTRO_COL = "cnation-msyh-sgd-intros"; // 💡 AI 해설 캐싱 전용 DB 컬렉션
+        const INTRO_COL = "cnation-msyh-sgd-intros";
+
+        let currentIntroSong = ""; // 💡 현재 해설을 보고 있는 곡 저장용 전역 변수
 
         window.handlePartSelection = (checkbox) => {
             const checkboxes = document.querySelectorAll('.part-checkbox');
@@ -673,12 +661,19 @@
             document.getElementById('homeView').classList.remove('hidden');
         };
 
-        // 💡 곡 목록 불러오기 (스마트 정렬 로직 적용)
+        // 드롭다운 변경 시 삭제버튼 숨기기
+        window.hideIntroDeleteBtn = () => {
+            document.getElementById('introDeleteContainer').classList.add('hidden');
+        };
+
+        // 💡 곡 목록 불러오기
         window.openSongIntro = async () => {
             document.getElementById('homeView').classList.add('hidden');
             document.getElementById('introView').classList.remove('hidden');
             document.getElementById('introContent').classList.add('hidden');
+            document.getElementById('introDeleteContainer').classList.add('hidden');
             document.getElementById('introContent').innerHTML = '';
+            currentIntroSong = "";
 
             const select = document.getElementById('introSongSelect');
             select.innerHTML = '<option value="">곡 목록을 불러오는 중...</option>';
@@ -686,31 +681,26 @@
             try {
                 const q = query(collection(db, WEEKLY_COL));
                 const snap = await getDocs(q);
-                let songMap = new Map(); // 곡명과 가장 최근 날짜를 매핑
+                let songMap = new Map();
 
-                // 곡별로 가장 최근 날짜 추출
                 snap.forEach(doc => {
-                    const date = doc.id; // 예: 2026-04-12
+                    const date = doc.id;
                     const title = doc.data().title;
                     if (title && title.trim() !== '') {
                         const cleanTitle = title.trim();
-                        // 날짜가 더 최신이거나 처음 등록하는 곡이면 Map에 갱신
                         if (!songMap.has(cleanTitle) || songMap.get(cleanTitle) < date) {
                             songMap.set(cleanTitle, date);
                         }
                     }
                 });
 
-                // 날짜 기준 최신순(내림차순) 정렬 후 곡 제목만 추출
                 let sortedWeeklySongs = Array.from(songMap.entries())
                     .sort((a, b) => b[1].localeCompare(a[1]))
                     .map(entry => entry[0]);
 
-                // 고정곡은 배열 맨 끝에 배치
                 const fixedSongs = ["입례송", "기도송", "축도송"];
                 let finalSongs = [...sortedWeeklySongs, ...fixedSongs];
 
-                // 드롭다운에 옵션 렌더링
                 select.innerHTML = '<option value="">해설을 들을 곡을 선택하세요</option>';
                 finalSongs.forEach(song => {
                     select.innerHTML += `<option value="${song}">${song}</option>`;
@@ -721,14 +711,16 @@
             }
         };
 
-        // 💡 AI 해설 생성 및 캐싱(저장/불러오기) 로직
+        // 💡 AI 해설 생성 및 캐싱
         window.generateIntro = async () => {
             const select = document.getElementById('introSongSelect');
             const songName = select.value;
 
             if (!songName) { alert("목록에서 해설을 원하시는 곡을 먼저 선택해주세요."); return; }
 
+            currentIntroSong = songName; // 현재 곡 이름 저장
             document.getElementById('introContent').classList.add('hidden');
+            document.getElementById('introDeleteContainer').classList.add('hidden');
             const loadingEl = document.getElementById('introLoading');
             const loadingMsg = document.getElementById('introLoadingMsg');
             loadingEl.classList.remove('hidden');
@@ -737,24 +729,25 @@
             let finalMarkdown = "";
 
             try {
-                // 1단계: Firebase에 이미 저장된 해설이 있는지 확인 (캐싱 확인)
                 const introRef = doc(db, INTRO_COL, songName);
                 const introSnap = await getDoc(introRef);
 
                 if (introSnap.exists()) {
-                    // 저장된 데이터가 있으면 바로 꺼내옴 (Qwen 호출 안 함)
                     loadingMsg.innerText = "저장된 해설을 불러오는 중...";
                     finalMarkdown = introSnap.data().content;
                 } else {
-                    // 저장된 데이터가 없으면 Qwen에게 새로 요청
                     if (!cnation_QWEN_API_KEY) {
                         throw new Error("AI 엔진 연결 대기중입니다. 잠시 후 시도해주세요.");
                     }
                     loadingMsg.innerText = "AI가 새로운 해설을 작성하고 있습니다...";
 
+                    // 💡 프롬프트 수정: 표 형식 절대 금지 및 텍스트/글머리 기호 사용 지시
                     const prompt = `너는 교회 성가대 지휘자이자 신학자야. '${songName}' 이라는 기독교 성가곡(합창곡)에 대해 아주 상세하고 전문적인 해설을 작성해줘. 
-형식은 반드시 마크다운(Markdown)으로 작성하고, 다음 항목들을 포함해줘:
-1. 기본 정보 (곡명, 작곡가, 장르, 사용 시기, 편성 등 표 형식으로)
+형식은 반드시 마크다운(Markdown)으로 작성해.
+⚠️ [중요 사항]: 스마트폰 화면에서 가독성을 높이기 위해 절대 표(Table)를 사용하지 말고, 모든 항목을 일반 텍스트나 글머리 기호(Bullet points)로만 작성해줘.
+
+다음 항목들을 포함해줘:
+1. 기본 정보 (곡명, 작곡가, 장르, 사용 시기, 편성 등)
 2. 가사 주제와 신학적 의미 (관련 성경 구절 포함)
 3. 음악적 특징
 4. 사용 추천 시기
@@ -767,7 +760,7 @@
                         body: JSON.stringify({
                             model: "qwen-plus",
                             messages: [
-                                { role: "system", content: "You are a professional Christian music theologian and choir conductor. Write beautiful and profound song explanations in Korean Markdown format." },
+                                { role: "system", content: "You are a professional Christian music theologian and choir conductor. Write beautiful and profound song explanations in Korean Markdown format. Never use tables." },
                                 { role: "user", content: prompt }
                             ],
                             temperature: 0.6
@@ -779,14 +772,12 @@
                     const data = await response.json();
                     finalMarkdown = data.choices[0].message.content;
 
-                    // 2단계: 새로 받아온 해설을 Firebase에 영구 저장
                     await setDoc(introRef, {
                         content: finalMarkdown,
                         createdAt: new Date().toISOString()
                     });
                 }
 
-                // 화면 렌더링
                 const introContent = document.getElementById('introContent');
                 introContent.innerHTML = marked.parse(finalMarkdown);
 
@@ -794,11 +785,36 @@
                 loadingEl.classList.remove('flex');
                 introContent.classList.remove('hidden');
 
+                // 💡 해설이 성공적으로 나오면 삭제 버튼도 보여주기
+                document.getElementById('introDeleteContainer').classList.remove('hidden');
+
             } catch (err) {
                 alert(err.message || "해설 처리 중 오류가 발생했습니다.");
                 console.error(err);
                 loadingEl.classList.add('hidden');
                 loadingEl.classList.remove('flex');
+            }
+        };
+
+        // 💡 기존 AI 해설 삭제 로직
+        window.deleteIntro = async () => {
+            if (!currentIntroSong) return;
+
+            const isConfirmed = confirm(`'${currentIntroSong}' 곡의 저장된 AI 해설을 삭제하시겠습니까?\n삭제 후 다시 요청하시면 AI가 새롭게 해설을 작성합니다.`);
+            if (!isConfirmed) return;
+
+            try {
+                // DB에서 해당 곡 해설 문서 삭제
+                await deleteDoc(doc(db, INTRO_COL, currentIntroSong));
+                alert("기존 해설 내용이 성공적으로 삭제되었습니다.");
+
+                // 화면 비우기
+                document.getElementById('introContent').classList.add('hidden');
+                document.getElementById('introDeleteContainer').classList.add('hidden');
+                document.getElementById('introContent').innerHTML = '';
+            } catch (err) {
+                alert("삭제 중 오류가 발생했습니다. 권한이나 네트워크를 확인해주세요.");
+                console.error(err);
             }
         };
 
