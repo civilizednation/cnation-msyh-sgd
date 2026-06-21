@@ -5,380 +5,744 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>무석연합교회 성가대 연습</title>
-
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
     <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="./android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="./android-chrome-512x512.png">
-
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="성가대연습">
-
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./dist/tailwind.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
     <style>
-        .part-checkbox:checked+div { background-color: #4f46e5; color: white; border-color: #4f46e5; }
-        .part-checkbox-sop:checked+div { background-color: #ec4899; color: white; border-color: #ec4899; }
-        .part-checkbox-alto:checked+div { background-color: #8b5cf6; color: white; border-color: #8b5cf6; }
-        .part-checkbox-tenor:checked+div { background-color: #10b981; color: white; border-color: #10b981; }
-        .part-checkbox-bass:checked+div { background-color: #f97316; color: white; border-color: #f97316; }
+        body {
+            font-family: 'Nunito', 'Noto Sans KR', sans-serif;
+        }
 
-        .toggle-checkbox:checked { right: 0; border-color: #4f46e5; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #4f46e5; }
-        .toggle-checkbox { right: 4; z-index: 1; border-color: #e5e7eb; transition: all 0.3s; }
-        .toggle-label { width: 3rem; height: 1.5rem; background-color: #e5e7eb; border-radius: 9999px; transition: all 0.3s; }
+        /* ===== 청량한 얼음 3D 입체 버튼 (파트 선택) ===== */
+        .part-checkbox+div {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 6px 0 #bae6fd, 0 10px 15px rgba(14, 165, 233, 0.1);
+            transform: translateY(0);
+            border: 2px solid transparent;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #0284c7;
+        }
 
-        .badge-soprano { background-color: #fce7f3; color: #be185d; }
-        .badge-alto { background-color: #ede9fe; color: #6d28d9; }
-        .badge-tenor { background-color: #d1fae5; color: #065f46; }
-        .badge-bass { background-color: #ffedd5; color: #c2410c; }
-        .badge-full { background-color: #e0e7ff; color: #3730a3; }
+        .part-checkbox:checked+div {
+            box-shadow: 0 0 0 transparent, 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(6px);
+            border-color: transparent;
+            color: white;
+        }
 
-        .label-soprano { color: #be185d; font-weight: 700; }
-        .label-alto { color: #6d28d9; font-weight: 700; }
-        .label-tenor { color: #065f46; font-weight: 700; }
-        .label-bass { color: #c2410c; font-weight: 700; }
+        /* 여름 바다 테마 파트별 3D 버튼 컬러 */
+        /* 전체/합창: 깊은 바다색 */
+        .part-checkbox[value="전체"]:checked+div,
+        .part-checkbox[value="합창"]:checked+div {
+            background: #0284c7;
+            box-shadow: 0 0 0 transparent, 0 8px 20px rgba(2, 132, 199, 0.4);
+        }
 
-        @keyframes bounce-up-right { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(10px,-10px); } }
-        .animate-bounce-custom { animation: bounce-up-right 1s infinite; }
+        /* 소프라노: 산호색(Coral Pink) - 시원한 대비 */
+        .part-checkbox-sop:checked+div {
+            background: #fb7185;
+            box-shadow: 0 0 0 transparent, 0 8px 20px rgba(251, 113, 133, 0.4);
+        }
 
-        /* 이미지 슬롯 스타일 */
-        .img-slot { position: relative; }
-        .img-slot .preview-thumb {
-            width: 56px; height: 56px;
+        /* 알토: 맑은 스카이블루 */
+        .part-checkbox-alto:checked+div {
+            background: #38bdf8;
+            box-shadow: 0 0 0 transparent, 0 8px 20px rgba(56, 189, 248, 0.4);
+        }
+
+        /* 테너: 에메랄드/민트 바다 */
+        .part-checkbox-tenor:checked+div {
+            background: #2dd4bf;
+            box-shadow: 0 0 0 transparent, 0 8px 20px rgba(45, 212, 191, 0.4);
+        }
+
+        /* 베이스: 햇살 가득한 모래사장(Sand Yellow) */
+        .part-checkbox-bass:checked+div {
+            background: #fbbf24;
+            box-shadow: 0 0 0 transparent, 0 8px 20px rgba(251, 191, 36, 0.4);
+        }
+
+        /* ===== 동글동글 3D 토글 스위치 (물방울 느낌) ===== */
+        .toggle-checkbox:checked {
+            right: 0;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #0ea5e9;
+        }
+
+        .toggle-checkbox {
+            right: 4px;
+            z-index: 1;
+            border-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toggle-label {
+            width: 3.5rem;
+            height: 1.75rem;
+            background-color: #e0f2fe;
+            border-radius: 9999px;
+            box-shadow: inset 0 2px 5px rgba(2, 132, 199, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== 시원한 과일/바다 뱃지 ===== */
+        .badge-soprano {
+            background: #ffe4e6;
+            color: #e11d48;
+            font-weight: 900;
+        }
+
+        .badge-alto {
+            background: #e0f2fe;
+            color: #0284c7;
+            font-weight: 900;
+        }
+
+        .badge-tenor {
+            background: #ccfbf1;
+            color: #0f766e;
+            font-weight: 900;
+        }
+
+        .badge-bass {
+            background: #fef3c7;
+            color: #b45309;
+            font-weight: 900;
+        }
+
+        .badge-full {
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-weight: 900;
+        }
+
+        .label-soprano {
+            color: #e11d48;
+            font-weight: 900;
+        }
+
+        .label-alto {
+            color: #0284c7;
+            font-weight: 900;
+        }
+
+        .label-tenor {
+            color: #0f766e;
+            font-weight: 900;
+        }
+
+        .label-bass {
+            color: #b45309;
+            font-weight: 900;
+        }
+
+        @keyframes float-animation {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .animate-float {
+            animation: float-animation 3.5s ease-in-out infinite;
+        }
+
+        /* ===== 얼음 조각 같은 이미지 슬롯 ===== */
+        .img-slot {
+            position: relative;
+        }
+
+        .img-slot .preview-thumb,
+        .existing-img-thumb img {
+            width: 64px;
+            height: 64px;
             object-fit: cover;
-            border-radius: 8px;
-            border: 2px solid #a5b4fc;
+            border-radius: 20px;
+            border: 3px solid white;
+            box-shadow: 0 10px 20px rgba(14, 165, 233, 0.15);
+            transition: all 0.2s;
         }
-        .img-slot .remove-img-btn {
-            position: absolute; top: -6px; right: -6px;
-            background: #ef4444; color: white;
-            border-radius: 999px; width: 18px; height: 18px;
-            font-size: 10px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; border: 2px solid white;
-        }
-        .img-slot-empty {
-            width: 56px; height: 56px;
-            border: 2px dashed #c7d2fe;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            color: #a5b4fc; font-size: 20px;
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-        }
-        .img-slot-empty:hover { border-color: #6366f1; background: #eef2ff; }
 
-        /* 기존 이미지 썸네일 */
+        .img-slot .preview-thumb:hover,
+        .existing-img-thumb img:hover {
+            transform: scale(1.05) translateY(-5px);
+        }
+
+        .img-slot .remove-img-btn,
+        .existing-img-thumb .del-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 999px;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+            transition: all 0.2s;
+        }
+
+        .img-slot .remove-img-btn:hover,
+        .existing-img-thumb .del-btn:hover {
+            transform: scale(1.1) rotate(15deg);
+        }
+
+        .img-slot-empty {
+            width: 64px;
+            height: 64px;
+            border: 3px dashed #7dd3fc;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #38bdf8;
+            font-size: 24px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 15px rgba(56, 189, 248, 0.05);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .img-slot-empty:hover {
+            border-color: #0ea5e9;
+            background: #e0f2fe;
+            color: #0284c7;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(14, 165, 233, 0.2);
+        }
+
         .existing-img-thumb {
             position: relative;
             display: inline-block;
+            margin-right: 8px;
         }
-        .existing-img-thumb img {
-            width: 56px; height: 56px;
-            object-fit: cover; border-radius: 8px;
-            border: 2px solid #6366f1;
+
+        /* 시원한 물방울 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-        .existing-img-thumb .del-btn {
-            position: absolute; top: -6px; right: -6px;
-            background: #ef4444; color: white;
-            border-radius: 999px; width: 18px; height: 18px;
-            font-size: 10px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; border: 2px solid white;
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #bae6fd;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7dd3fc;
         }
     </style>
 </head>
 
-<body class="bg-gray-100 font-sans text-gray-800 pb-20 relative">
+<body
+    class="bg-gradient-to-br from-cyan-50 via-sky-100 to-blue-50 font-sans text-gray-800 pb-24 relative min-h-screen selection:bg-sky-200">
 
-    <!-- 위챗 오버레이 -->
     <div id="wechatOverlay"
-        class="hidden fixed inset-0 z-[9999] bg-gray-900/95 flex flex-col items-center pt-8 px-6 backdrop-blur-sm overflow-y-auto pb-10">
-        <div class="w-full max-w-sm text-center mt-2">
-            <div class="flex justify-end mb-2 pr-2">
-                <i class="fas fa-arrow-up text-5xl text-yellow-400 animate-bounce-custom" style="transform: rotate(45deg);"></i>
+        class="hidden fixed inset-0 z-[9999] bg-cyan-950/80 flex flex-col items-center pt-10 px-6 backdrop-blur-md overflow-y-auto pb-10">
+        <div
+            class="w-full max-w-sm text-center mt-2 bg-white/95 rounded-[2.5rem] p-8 shadow-2xl relative animate-float border-2 border-cyan-100">
+            <div
+                class="absolute -top-12 right-0 bg-yellow-400 w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-xl rotate-45">
+                <i class="fas fa-arrow-up text-3xl text-white"></i>
             </div>
-            <h2 class="text-2xl font-black mb-2 leading-tight text-white">화면 우측 상단의<br>
-                <span class="bg-gray-700 px-3 py-1 rounded-lg inline-block my-1 tracking-widest text-white">···</span> 버튼을 눌러주세요</h2>
-            <p class="text-[17px] font-bold text-yellow-400 mb-5 bg-yellow-900/30 inline-block px-4 py-2 rounded-xl border border-yellow-400/50">
-                그리고 <span class="text-white">'기본 브라우저에서 열기'</span> 선택!
+            <h2 class="text-2xl font-black mb-4 leading-tight text-cyan-900 mt-2">우측 상단의<br>
+                <span
+                    class="bg-cyan-50 px-4 py-2 rounded-2xl inline-block my-2 text-cyan-700 border-2 border-cyan-200 shadow-inner">···</span>
+                버튼 누르기
+            </h2>
+            <p
+                class="text-lg font-black text-white mb-6 bg-cyan-500 inline-block px-5 py-3 rounded-2xl shadow-[0_8px_20px_rgba(6,182,212,0.4)]">
+                '기본 브라우저에서 열기' 🏄‍♂️
             </p>
-            <img src="./wc.jpg" alt="위챗 기본 브라우저 열기 안내"
-                class="w-full rounded-xl shadow-2xl border-2 border-gray-600 mb-6 object-contain">
-            <div class="bg-gray-800 p-4 rounded-xl text-left w-full mb-6 border border-gray-700">
-                <p class="text-sm text-gray-200 font-bold mb-2"><i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>속도 저하 경고</p>
-                <p class="text-[13px] text-gray-400 leading-relaxed">
-                    위챗에서 직접 열기를 하면 앱 구동 <strong>속도가 현저히 느려지거나 악보가 정상적으로 보이지 않는 현상</strong>이 발생할 수 있습니다.
+            <div class="bg-red-50 p-5 rounded-3xl text-left w-full mb-6 border-2 border-red-100 shadow-sm">
+                <p class="text-sm text-red-600 font-black mb-2"><i
+                        class="fas fa-exclamation-circle text-red-500 mr-2"></i>주의사항</p>
+                <p class="text-[13px] text-red-800 leading-relaxed font-bold">
+                    위챗에서 바로 열면 앱 구동 <strong>속도가 매우 느려지고 악보가 깨질 수 있습니다!</strong>
                 </p>
             </div>
-            <div class="border-t border-gray-700 pt-5">
-                <p class="text-[12px] text-gray-400 mb-3">속도가 좀 느려지더라도 위챗에서 열기를 원하시면<br>아래 버튼을 눌러주세요.</p>
-                <button onclick="closeWechatOverlay()"
-                    class="w-full px-5 py-3.5 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-gray-200 text-sm font-bold rounded-xl transition shadow-md border border-gray-600">
-                    <i class="fab fa-weixin mr-2 text-green-400"></i>그냥 위챗에서 계속하기
-                </button>
-            </div>
+            <button onclick="closeWechatOverlay()"
+                class="w-full px-6 py-4 bg-sky-50 hover:bg-sky-100 text-sky-600 text-sm font-black rounded-2xl transition shadow-inner border-2 border-sky-200">
+                무시하고 그냥 위챗에서 열기
+            </button>
         </div>
     </div>
 
-    <div class="w-full max-w-5xl mx-auto bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
+    <div class="w-full max-w-5xl mx-auto relative overflow-x-hidden">
+        <div id="homeView" class="flex flex-col min-h-screen bg-transparent p-4 md:p-8 relative">
+            <div class="flex-1 flex flex-col items-center justify-center pt-8">
+                <div class="relative w-full max-w-xs mb-10">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-cyan-300 to-blue-400 rounded-[3rem] blur-xl opacity-40 animate-pulse">
+                    </div>
+                    <img src="msyhsgd.jpg" alt="무석연합교회 성가대"
+                        class="relative w-full object-contain rounded-[3rem] shadow-[0_20px_40px_rgba(14,165,233,0.2)] border-[6px] border-white/90 bg-white"
+                        onerror="this.src='https://via.placeholder.com/300x150?text=Choir+Image'">
+                </div>
 
-        <!-- 홈 뷰 -->
-        <div id="homeView" class="flex flex-col min-h-screen bg-indigo-50 p-6 relative">
-            <div class="flex-1 flex flex-col items-center justify-center">
-                <img src="msyhsgd.jpg" alt="무석연합교회 성가대" class="w-full max-w-xs mb-8 object-contain rounded-xl"
-                    onerror="this.src='https://via.placeholder.com/300x150?text=Choir+Image'">
-
-                <div class="w-full max-w-2xl bg-white p-4 rounded-2xl shadow-sm border border-indigo-100 mb-6">
-                    <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider text-center">연습할 파트 설정 (복수 선택 가능)</h3>
-                    <div class="flex flex-wrap justify-center gap-2" id="partSelectionContainer">
-                        <label class="cursor-pointer"><input type="checkbox" value="전체" class="hidden part-checkbox" onchange="handlePartSelection(this)" checked>
-                            <div class="px-4 py-2 rounded-full border border-gray-200 text-sm font-bold text-gray-600 transition-colors">전체</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="합창" class="hidden part-checkbox" onchange="handlePartSelection(this)">
-                            <div class="px-4 py-2 rounded-full border border-gray-200 text-sm font-bold text-gray-600 transition-colors">합창</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="소프라노" class="hidden part-checkbox part-checkbox-sop" onchange="handlePartSelection(this)">
-                            <div class="px-4 py-2 rounded-full border border-pink-200 text-sm font-bold text-pink-500 transition-colors">소프라노</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="알토" class="hidden part-checkbox part-checkbox-alto" onchange="handlePartSelection(this)">
-                            <div class="px-4 py-2 rounded-full border border-violet-200 text-sm font-bold text-violet-500 transition-colors">알토</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="테너" class="hidden part-checkbox part-checkbox-tenor" onchange="handlePartSelection(this)">
-                            <div class="px-4 py-2 rounded-full border border-emerald-200 text-sm font-bold text-emerald-600 transition-colors">테너</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="베이스" class="hidden part-checkbox part-checkbox-bass" onchange="handlePartSelection(this)">
-                            <div class="px-4 py-2 rounded-full border border-orange-200 text-sm font-bold text-orange-500 transition-colors">베이스</div></label>
+                <div
+                    class="w-full max-w-2xl bg-white/70 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] shadow-[0_20px_50px_-15px_rgba(2,132,199,0.15)] mb-8 border-4 border-white">
+                    <h3
+                        class="text-sm font-black text-sky-500 mb-5 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                        <i class="fas fa-water"></i> 연습할 파트 설정
+                    </h3>
+                    <div class="flex flex-wrap justify-center gap-x-3 gap-y-4 pt-2 pb-2" id="partSelectionContainer">
+                        <label class="cursor-pointer relative"><input type="checkbox" value="전체"
+                                class="hidden part-checkbox" onchange="handlePartSelection(this)" checked>
+                            <div
+                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                전체</div>
+                        </label>
+                        <label class="cursor-pointer relative"><input type="checkbox" value="합창"
+                                class="hidden part-checkbox" onchange="handlePartSelection(this)">
+                            <div
+                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                합창</div>
+                        </label>
+                        <label class="cursor-pointer relative"><input type="checkbox" value="소프라노"
+                                class="hidden part-checkbox part-checkbox-sop" onchange="handlePartSelection(this)">
+                            <div
+                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                소프라노</div>
+                        </label>
+                        <label class="cursor-pointer relative"><input type="checkbox" value="알토"
+                                class="hidden part-checkbox part-checkbox-alto" onchange="handlePartSelection(this)">
+                            <div
+                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                알토</div>
+                        </label>
+                        <label class="cursor-pointer relative"><input type="checkbox" value="테너"
+                                class="hidden part-checkbox part-checkbox-tenor" onchange="handlePartSelection(this)">
+                            <div
+                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                테너</div>
+                        </label>
+                        <label class="cursor-pointer relative"><input type="checkbox" value="베이스"
+                                class="hidden part-checkbox part-checkbox-bass" onchange="handlePartSelection(this)">
+                            <div
+                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                베이스</div>
+                        </label>
                     </div>
                 </div>
 
                 <div class="w-full max-w-2xl">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <button onclick="openPractice('이번주')"
-                            class="w-full py-4 bg-white rounded-xl shadow-sm border border-indigo-100 text-gray-800 font-bold hover:shadow-md transition flex items-center justify-between px-6">
-                            <span class="flex items-center gap-3"><i class="fas fa-calendar-day text-indigo-400"></i> 이번주 곡</span><i class="fas fa-chevron-right text-gray-300"></i>
+                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(14,165,233,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(14,165,233,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-sky-200">
+                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                                <div
+                                    class="w-12 h-12 rounded-[1.2rem] bg-sky-100 text-sky-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-sky-500 group-hover:text-white transition-all shadow-inner">
+                                    <i class="fas fa-sun text-xl"></i>
+                                </div>
+                                이번주 곡
+                            </span>
+                            <i class="fas fa-chevron-right text-sky-300 group-hover:text-sky-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('다음주')"
-                            class="w-full py-4 bg-white rounded-xl shadow-sm border border-indigo-100 text-gray-800 font-bold hover:shadow-md transition flex items-center justify-between px-6">
-                            <span class="flex items-center gap-3"><i class="fas fa-calendar-week text-indigo-400"></i> 다음주 곡</span><i class="fas fa-chevron-right text-gray-300"></i>
+                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(59,130,246,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(59,130,246,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-blue-200">
+                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                                <div
+                                    class="w-12 h-12 rounded-[1.2rem] bg-blue-100 text-blue-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-inner">
+                                    <i class="fas fa-umbrella-beach text-xl"></i>
+                                </div>
+                                다음주 곡
+                            </span>
+                            <i
+                                class="fas fa-chevron-right text-blue-300 group-hover:text-blue-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('이번주_다음주')"
-                            class="w-full py-4 bg-white rounded-xl shadow-sm border border-indigo-100 text-gray-800 font-bold hover:shadow-md transition flex items-center justify-between px-6 md:col-span-2">
-                            <span class="flex items-center gap-3"><i class="fas fa-layer-group text-indigo-400"></i> 이번주 + 다음주 곡 연습</span><i class="fas fa-chevron-right text-gray-300"></i>
+                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(20,184,166,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(20,184,166,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-teal-200">
+                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                                <div
+                                    class="w-12 h-12 rounded-[1.2rem] bg-teal-100 text-teal-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-teal-500 group-hover:text-white transition-all shadow-inner">
+                                    <i class="fas fa-water text-xl"></i>
+                                </div>
+                                이번주 + 다음주 연습
+                            </span>
+                            <i
+                                class="fas fa-chevron-right text-teal-300 group-hover:text-teal-500 transition-colors"></i>
                         </button>
                         <button onclick="openPastPractice()"
-                            class="w-full py-4 bg-white rounded-xl shadow-sm border border-indigo-100 text-gray-800 font-bold hover:shadow-md transition flex items-center justify-between px-6">
-                            <span class="flex items-center gap-3"><i class="fas fa-history text-indigo-400"></i> 기존 곡 연습</span><i class="fas fa-chevron-right text-gray-300"></i>
+                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(99,102,241,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(99,102,241,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-indigo-200">
+                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                                <div
+                                    class="w-12 h-12 rounded-[1.2rem] bg-indigo-100 text-indigo-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-inner">
+                                    <i class="fas fa-history text-xl"></i>
+                                </div>
+                                기존 곡 연습
+                            </span>
+                            <i
+                                class="fas fa-chevron-right text-indigo-300 group-hover:text-indigo-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('고정')"
-                            class="w-full py-4 bg-white rounded-xl shadow-sm border border-indigo-100 text-gray-800 font-bold hover:shadow-md transition flex items-center justify-between px-6">
-                            <span class="flex items-center gap-3"><i class="fas fa-church text-indigo-400"></i> 고정송 (입례/기도/축도)</span><i class="fas fa-chevron-right text-gray-300"></i>
+                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(6,182,212,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(6,182,212,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-cyan-200">
+                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                                <div
+                                    class="w-12 h-12 rounded-[1.2rem] bg-cyan-100 text-cyan-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-white transition-all shadow-inner">
+                                    <i class="fas fa-church text-xl"></i>
+                                </div>
+                                고정송 (입례/기도)
+                            </span>
+                            <i
+                                class="fas fa-chevron-right text-cyan-300 group-hover:text-cyan-500 transition-colors"></i>
                         </button>
                     </div>
-                    <div class="pt-4 border-t border-indigo-200 mt-6">
+
+                    <div class="mt-8 pt-2">
                         <button onclick="openSetup()"
-                            class="w-full py-4 bg-gray-800 rounded-xl shadow-md text-white font-bold hover:bg-gray-900 transition flex items-center justify-center gap-2">
-                            <i class="fas fa-link"></i> 관리자 설정 (링크 및 악보)
+                            class="w-full py-5 bg-gradient-to-r from-blue-900 to-cyan-900 rounded-[2rem] shadow-[0_10px_20px_rgba(8,145,178,0.3)] text-white font-black hover:shadow-[0_15px_30px_rgba(8,145,178,0.5)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-center gap-3 border-b-4 border-slate-900 active:translate-y-0 active:border-b-0">
+                            <i class="fas fa-anchor text-xl"></i> 관리자 설정 (링크/악보)
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 연습 뷰 -->
-        <div id="practiceView" class="hidden flex flex-col min-h-screen bg-gray-50 pb-10">
-            <div class="bg-indigo-600 text-white p-4 flex items-center justify-between shadow-md sticky top-0 z-10">
-                <button onclick="goHome()" class="text-xl px-2 hover:scale-110 transition-transform"><i class="fas fa-arrow-left"></i></button>
-                <h2 id="practiceTitle" class="font-bold text-lg tracking-wide">곡 연습</h2>
-                <div class="w-8"></div>
+        <div id="practiceView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
+            <div
+                class="bg-gradient-to-r from-cyan-500/90 to-blue-500/90 backdrop-blur-2xl text-white mx-4 md:mx-8 mt-6 mb-4 rounded-[2rem] p-4 flex items-center justify-between shadow-[0_15px_35px_-10px_rgba(6,182,212,0.4)] sticky top-4 z-20 border border-white/40">
+                <button onclick="goHome()"
+                    class="w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all flex items-center justify-center font-bold">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 id="practiceTitle" class="font-black text-xl tracking-tight drop-shadow-md">곡 연습</h2>
+                <div class="w-10"></div>
             </div>
-            <div id="pastDateSelector" class="hidden p-4 bg-white shadow-sm z-0 relative border-b border-gray-100">
-                <div class="max-w-2xl mx-auto">
+
+            <div id="pastDateSelector"
+                class="hidden mx-4 md:mx-8 mb-4 bg-white/80 backdrop-blur-md p-4 rounded-[2rem] shadow-[0_10px_30px_-15px_rgba(2,132,199,0.2)] z-10 border-2 border-white">
+                <div class="max-w-xl mx-auto relative">
                     <select id="pastDateDropdown"
-                        class="w-full border border-gray-300 rounded-xl px-4 py-3 text-center font-bold text-gray-700 focus:outline-none focus:border-indigo-500"
+                        class="w-full bg-sky-50 border-2 border-sky-100 rounded-2xl px-6 py-4 text-center font-black text-cyan-900 focus:outline-none focus:border-cyan-400 focus:bg-white transition-all appearance-none cursor-pointer shadow-inner text-lg"
                         onchange="loadPastPractice()">
                         <option value="">날짜(일요일)를 선택하세요</option>
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-6 flex items-center text-cyan-500">
+                        <i class="fas fa-chevron-down text-xl"></i>
+                    </div>
                 </div>
             </div>
-            <div id="practiceContainer" class="flex-1 p-4 md:p-6 overflow-y-auto"></div>
+            <div id="practiceContainer" class="flex-1 p-4 md:p-8 overflow-y-auto z-0"></div>
         </div>
 
-        <!-- 설정 뷰 -->
-        <div id="setupView" class="hidden flex flex-col min-h-screen bg-gray-50 pb-20">
-            <div class="bg-gray-800 text-white p-4 flex items-center justify-between shadow-md sticky top-0 z-10">
-                <button onclick="goHome()" class="text-xl px-2 hover:scale-110 transition-transform"><i class="fas fa-arrow-left"></i></button>
-                <h2 class="font-bold text-lg tracking-wide">설정 (링크 및 악보)</h2>
-                <div class="w-8"></div>
+        <div id="setupView" class="hidden flex flex-col min-h-screen bg-transparent pb-20">
+            <div
+                class="bg-gradient-to-r from-slate-800/95 to-cyan-900/95 backdrop-blur-2xl text-white mx-4 md:mx-8 mt-6 mb-6 rounded-[2rem] p-4 flex items-center justify-between shadow-[0_20px_40px_-10px_rgba(8,145,178,0.4)] sticky top-4 z-20 border border-white/20">
+                <button onclick="goHome()"
+                    class="w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white/30 hover:scale-110 transition-all flex items-center justify-center font-bold">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="font-black text-xl tracking-tight drop-shadow-md">설정 (링크 및 악보)</h2>
+                <div class="w-10"></div>
             </div>
 
-            <div class="flex-1 p-4 md:p-6 space-y-6 overflow-y-auto max-w-4xl mx-auto w-full">
-                <div class="bg-white p-5 md:p-8 rounded-2xl shadow-sm border border-gray-200">
-                    <h3 class="font-bold text-lg text-indigo-700 mb-4 border-b border-gray-100 pb-2">
-                        <i class="fas fa-calendar-alt mr-2"></i>주일 찬양 설정
+            <div class="flex-1 px-4 md:px-8 space-y-8 overflow-y-auto max-w-4xl mx-auto w-full z-0">
+                <div
+                    class="bg-white/80 backdrop-blur-xl p-6 md:p-10 rounded-[2.5rem] shadow-[0_20px_50px_-15px_rgba(2,132,199,0.15)] border-4 border-white">
+                    <h3 class="font-black text-2xl text-cyan-900 mb-8 flex items-center">
+                        <div
+                            class="w-12 h-12 rounded-[1.2rem] bg-cyan-100 flex items-center justify-center mr-4 text-cyan-600 shadow-inner">
+                            <i class="fas fa-calendar-alt text-2xl"></i>
+                        </div>
+                        주일 찬양 설정
                     </h3>
-
-                    <div class="space-y-5">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">적용 날짜 (일요일)</label>
+                                <label class="block text-sm font-black text-cyan-600 mb-2 ml-2">적용 날짜 (일요일)</label>
                                 <input type="date" id="setupDate"
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                                    class="w-full bg-sky-50 border-2 border-sky-100 rounded-[1.5rem] px-5 py-4 shadow-inner focus:bg-white focus:border-cyan-400 outline-none transition-all text-cyan-900 font-bold text-lg cursor-pointer"
                                     onchange="loadSetupForDate()">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">찬양 제목</label>
+                                <label class="block text-sm font-black text-cyan-600 mb-2 ml-2">찬양 제목</label>
                                 <input type="text" id="setupTitle" placeholder="예: 나를 부르신 이유"
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+                                    class="w-full bg-sky-50 border-2 border-sky-100 rounded-[1.5rem] px-5 py-4 shadow-inner focus:bg-white focus:border-cyan-400 outline-none transition-all text-cyan-900 font-bold text-lg">
                             </div>
                         </div>
 
-                        <!-- ===== 악보 첨부 섹션 ===== -->
-                        <div class="space-y-4">
-
-                            <!-- PDF 첨부 -->
-                            <div class="bg-red-50 p-4 rounded-xl border border-red-100">
-                                <label class="block text-sm font-bold text-red-700 mb-2">
-                                    <i class="fas fa-file-pdf mr-1 text-red-500"></i>악보 첨부 (PDF)
+                        <div class="space-y-6">
+                            <div
+                                class="bg-red-50/70 backdrop-blur-sm p-6 rounded-[2rem] border-2 border-red-100 shadow-sm relative overflow-hidden">
+                                <label class="block text-base font-black text-red-600 mb-4 flex items-center">
+                                    <div class="bg-red-100 w-10 h-10 rounded-xl flex items-center justify-center mr-3">
+                                        <i class="fas fa-file-pdf text-red-500 text-lg"></i>
+                                    </div>
+                                    악보 첨부 (PDF)
                                 </label>
                                 <input type="file" id="setupSheetMusic" accept="application/pdf"
-                                    class="w-full text-sm mt-1 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-red-100 file:text-red-700 hover:file:bg-red-200 cursor-pointer transition"
+                                    class="w-full text-sm file:mr-4 file:py-3 file:px-6 file:rounded-[1rem] file:border-0 file:font-black file:bg-white file:text-red-600 file:shadow-sm hover:file:shadow-md cursor-pointer transition-all focus:outline-none"
                                     onchange="onPdfSelected()">
-                                <div id="currentSheetMusicStatus" class="text-xs text-gray-500 mt-2 italic">현재 등록된 악보가 없습니다.</div>
-
-                                <!-- 기존 PDF 삭제 버튼 (등록된 경우에만 표시) -->
+                                <div id="currentSheetMusicStatus"
+                                    class="text-sm font-bold text-red-400 mt-4 bg-white inline-block px-4 py-2 rounded-xl border border-red-100 shadow-sm">
+                                    현재 등록된 악보가 없습니다.</div>
                                 <button id="deletePdfBtn" onclick="deleteCurrentPdf()"
-                                    class="hidden mt-2 px-4 py-1.5 bg-red-100 text-red-600 text-xs font-bold rounded-lg border border-red-200 hover:bg-red-200 transition">
-                                    <i class="fas fa-trash mr-1"></i>등록된 PDF 악보 삭제
+                                    class="hidden mt-4 px-6 py-3 bg-gradient-to-r from-red-400 to-red-500 text-white text-sm font-black rounded-xl hover:from-red-500 hover:to-red-600 shadow-[0_8px_15px_rgba(239,68,68,0.3)] transition-all hover:-translate-y-1">
+                                    <i class="fas fa-trash mr-2"></i>PDF 악보 삭제
                                 </button>
                             </div>
 
-                            <!-- 이미지 첨부 -->
-                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                                <div class="flex items-center justify-between mb-2">
-                                    <label class="block text-sm font-bold text-indigo-800">
-                                        <i class="fas fa-images mr-1 text-indigo-500"></i>악보 첨부 (이미지 파일)
+                            <div
+                                class="bg-sky-50/70 backdrop-blur-sm p-6 rounded-[2rem] border-2 border-sky-100 shadow-sm relative">
+                                <div class="flex items-center justify-between mb-4 border-b-2 border-sky-100 pb-4">
+                                    <label class="block text-base font-black text-sky-700 flex items-center">
+                                        <div
+                                            class="bg-sky-100 w-10 h-10 rounded-xl flex items-center justify-center mr-3">
+                                            <i class="fas fa-images text-sky-500 text-lg"></i>
+                                        </div>
+                                        악보 첨부 (이미지)
                                     </label>
-                                    <span class="text-[11px] text-indigo-400 font-bold">JPG / PNG · 최대 20장</span>
+                                    <span
+                                        class="bg-white px-4 py-2 rounded-full text-xs text-sky-600 font-black shadow-sm border border-sky-50">JPG
+                                        / PNG · 최대 20장</span>
                                 </div>
-                                <p class="text-[11px] text-indigo-400 mb-3">악보 순서대로 한 장씩 추가해 주세요.</p>
+                                <p class="text-[13px] text-sky-500 font-bold mb-5 ml-2">악보 순서대로 한 장씩 추가해 주세요.</p>
 
-                                <!-- 기존 이미지 목록 -->
-                                <div id="existingImagesArea" class="hidden mb-3">
-                                    <p class="text-[11px] font-bold text-gray-500 mb-2">현재 등록된 이미지 악보</p>
-                                    <div id="existingImagesList" class="flex flex-wrap gap-2"></div>
+                                <div id="existingImagesArea"
+                                    class="hidden mb-6 bg-white/80 p-5 rounded-[1.5rem] border border-sky-50 shadow-sm">
+                                    <p class="text-xs font-black text-sky-400 mb-4 ml-1">현재 등록된 이미지 악보</p>
+                                    <div id="existingImagesList" class="flex flex-wrap gap-4"></div>
                                     <button onclick="deleteAllExistingImages()"
-                                        class="mt-2 px-4 py-1.5 bg-red-100 text-red-600 text-xs font-bold rounded-lg border border-red-200 hover:bg-red-200 transition">
-                                        <i class="fas fa-trash mr-1"></i>등록된 이미지 전체 삭제
+                                        class="mt-5 px-6 py-3 bg-red-50 text-red-500 text-sm font-black rounded-xl border-2 border-red-100 hover:bg-red-100 transition-all hover:-translate-y-1 shadow-sm">
+                                        <i class="fas fa-trash mr-2"></i>전체 삭제
                                     </button>
                                 </div>
 
-                                <!-- 새 이미지 슬롯 -->
-                                <div id="imageSlotArea" class="flex flex-wrap gap-2 items-center">
-                                    <!-- 슬롯은 JS로 동적 생성 -->
-                                </div>
-                                <div class="mt-3 flex gap-2">
+                                <div id="imageSlotArea" class="flex flex-wrap gap-4 items-center min-h-[80px]"></div>
+
+                                <div class="mt-6 flex flex-wrap gap-3 pt-4 border-t-2 border-sky-100">
                                     <button onclick="addImageSlot()"
-                                        class="px-4 py-2 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 hover:bg-indigo-200 transition">
-                                        <i class="fas fa-plus mr-1"></i>이미지 슬롯 추가
+                                        class="px-6 py-3 bg-gradient-to-r from-sky-400 to-cyan-500 text-white text-sm font-black rounded-xl shadow-[0_8px_15px_rgba(14,165,233,0.3)] hover:from-sky-500 hover:to-cyan-600 transition-all hover:-translate-y-1 flex items-center">
+                                        <i class="fas fa-plus mr-2"></i>슬롯 추가
                                     </button>
                                     <button onclick="clearAllImageSlots()"
-                                        class="px-4 py-2 bg-gray-100 text-gray-500 text-xs font-bold rounded-lg border border-gray-200 hover:bg-gray-200 transition">
-                                        <i class="fas fa-times mr-1"></i>새 이미지 전체 취소
+                                        class="px-6 py-3 bg-white text-sky-600 text-sm font-black rounded-xl border-2 border-sky-100 hover:bg-sky-50 transition-all hover:-translate-y-1 flex items-center shadow-sm">
+                                        <i class="fas fa-times mr-2"></i>새 이미지 취소
                                     </button>
                                 </div>
-                                <p id="imageSlotCount" class="text-[11px] text-indigo-400 mt-2">추가된 슬롯: 0개</p>
+                                <p id="imageSlotCount"
+                                    class="text-xs text-sky-600 font-black mt-4 ml-2 bg-white inline-block px-4 py-2 rounded-xl shadow-sm border border-sky-50">
+                                    추가된 슬롯: 0개</p>
                             </div>
-
                         </div>
-                        <!-- ===== 악보 첨부 섹션 끝 ===== -->
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-dashed border-gray-200 mt-2">
-                            <div class="flex items-center gap-2"><span class="w-14 text-xs font-bold text-indigo-600 text-right">합창</span>
-                                <input type="text" id="setupFull" placeholder="유튜브 링크" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none"></div>
-                            <div class="flex items-center gap-2"><span class="w-14 text-xs label-soprano text-right">소프라노</span>
-                                <input type="text" id="setupSop" placeholder="유튜브 링크" class="flex-1 border border-pink-200 rounded-lg px-3 py-2 text-sm focus:border-pink-400 outline-none"></div>
-                            <div class="flex items-center gap-2"><span class="w-14 text-xs label-alto text-right">알토</span>
-                                <input type="text" id="setupAlto" placeholder="유튜브 링크" class="flex-1 border border-violet-200 rounded-lg px-3 py-2 text-sm focus:border-violet-400 outline-none"></div>
-                            <div class="flex items-center gap-2"><span class="w-14 text-xs label-tenor text-right">테너</span>
-                                <input type="text" id="setupTenor" placeholder="유튜브 링크" class="flex-1 border border-emerald-200 rounded-lg px-3 py-2 text-sm focus:border-emerald-400 outline-none"></div>
-                            <div class="flex items-center gap-2"><span class="w-14 text-xs label-bass text-right">베이스</span>
-                                <input type="text" id="setupBass" placeholder="유튜브 링크" class="flex-1 border border-orange-200 rounded-lg px-3 py-2 text-sm focus:border-orange-400 outline-none"></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-8 border-t-4 border-dashed border-sky-100">
+                            <div
+                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-cyan-300 transition-all">
+                                <span class="w-16 text-sm font-black text-cyan-700 text-center">합창</span>
+                                <input type="text" id="setupFull" placeholder="유튜브 링크"
+                                    class="flex-1 bg-white border border-sky-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-cyan-400 outline-none font-bold text-gray-700">
+                            </div>
+                            <div
+                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-pink-300 transition-all">
+                                <span class="w-16 text-sm font-black text-pink-500 text-center">소프</span>
+                                <input type="text" id="setupSop" placeholder="유튜브 링크"
+                                    class="flex-1 bg-white border border-pink-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-pink-400 outline-none font-bold text-gray-700">
+                            </div>
+                            <div
+                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-sky-400 transition-all">
+                                <span class="w-16 text-sm font-black text-sky-500 text-center">알토</span>
+                                <input type="text" id="setupAlto" placeholder="유튜브 링크"
+                                    class="flex-1 bg-white border border-sky-200 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-sky-400 outline-none font-bold text-gray-700">
+                            </div>
+                            <div
+                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-teal-300 transition-all">
+                                <span class="w-16 text-sm font-black text-teal-500 text-center">테너</span>
+                                <input type="text" id="setupTenor" placeholder="유튜브 링크"
+                                    class="flex-1 bg-white border border-teal-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-teal-400 outline-none font-bold text-gray-700">
+                            </div>
+                            <div
+                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-amber-300 transition-all">
+                                <span class="w-16 text-sm font-black text-amber-500 text-center">베이스</span>
+                                <input type="text" id="setupBass" placeholder="유튜브 링크"
+                                    class="flex-1 bg-white border border-amber-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-amber-400 outline-none font-bold text-gray-700">
+                            </div>
                         </div>
 
                         <button onclick="saveWeeklyLinks()" id="saveWeeklyBtn"
-                            class="w-full mt-6 py-4 bg-indigo-600 text-white text-lg font-bold rounded-xl shadow-md hover:bg-indigo-700 transition">
-                            주일 찬양 및 악보 저장
+                            class="w-full mt-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xl font-black rounded-[2rem] shadow-[0_15px_30px_rgba(6,182,212,0.4)] hover:-translate-y-2 hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 border-b-4 border-blue-700 active:translate-y-0 active:border-b-0">
+                            <i class="fas fa-save mr-2"></i> 주일 찬양 및 악보 저장
                         </button>
                     </div>
                 </div>
 
-                <!-- 고정곡 설정 -->
-                <div class="bg-white p-5 md:p-8 rounded-2xl shadow-sm border border-gray-200">
-                    <h3 class="font-bold text-lg text-gray-800 mb-2 border-b border-gray-100 pb-2">
-                        <i class="fas fa-church mr-2"></i>고정곡 파트별 링크 입력
+                <div
+                    class="bg-white/80 backdrop-blur-xl p-6 md:p-10 rounded-[2.5rem] shadow-[0_20px_50px_-15px_rgba(2,132,199,0.15)] border-4 border-white mt-8">
+                    <h3 class="font-black text-2xl text-cyan-900 mb-4 flex items-center">
+                        <div
+                            class="w-12 h-12 rounded-[1.2rem] bg-cyan-100 flex items-center justify-center mr-4 text-cyan-600 shadow-inner">
+                            <i class="fas fa-church text-2xl"></i>
+                        </div>
+                        고정곡 링크 입력
                     </h3>
-                    <p class="text-[11px] text-gray-400 mb-4">한번 입력해두면 계속 유지됩니다.</p>
+                    <p
+                        class="text-[13px] text-cyan-600 font-bold mb-8 ml-2 bg-cyan-50 inline-block px-4 py-2 rounded-xl border border-cyan-100 shadow-sm">
+                        한번 입력해두면 계속 유지됩니다.</p>
 
-                    <div class="space-y-6">
-                        <!-- 입례송 -->
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                            <h4 class="text-sm font-bold text-indigo-700 mb-3 flex items-center gap-2"><i class="fas fa-caret-right"></i> 입례송</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] font-bold text-indigo-600 text-right">합창</span><input type="text" id="setupIntroitFull" class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-soprano text-right">소프라노</span><input type="text" id="setupIntroitSop" class="flex-1 border border-pink-200 rounded-md px-2 py-1.5 text-xs focus:border-pink-400 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-alto text-right">알토</span><input type="text" id="setupIntroitAlto" class="flex-1 border border-violet-200 rounded-md px-2 py-1.5 text-xs focus:border-violet-400 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-tenor text-right">테너</span><input type="text" id="setupIntroitTenor" class="flex-1 border border-emerald-200 rounded-md px-2 py-1.5 text-xs focus:border-emerald-400 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-bass text-right">베이스</span><input type="text" id="setupIntroitBass" class="flex-1 border border-orange-200 rounded-md px-2 py-1.5 text-xs focus:border-orange-400 outline-none"></div>
+                    <div class="space-y-8">
+                        <div class="bg-sky-50/50 p-6 rounded-[2rem] border-2 border-sky-100 shadow-sm">
+                            <h4 class="text-lg font-black text-cyan-700 mb-5 flex items-center">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 text-cyan-500">
+                                    <i class="fas fa-music"></i>
+                                </div> 입례송
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-cyan-600 text-center">합창</span><input
+                                        type="text" id="setupIntroitFull"
+                                        class="flex-1 bg-white border-2 border-sky-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-cyan-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-pink-500 text-center">소프</span><input
+                                        type="text" id="setupIntroitSop"
+                                        class="flex-1 bg-white border-2 border-pink-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-pink-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-sky-500 text-center">알토</span><input
+                                        type="text" id="setupIntroitAlto"
+                                        class="flex-1 bg-white border-2 border-sky-200 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-sky-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-teal-500 text-center">테너</span><input
+                                        type="text" id="setupIntroitTenor"
+                                        class="flex-1 bg-white border-2 border-teal-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-teal-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-amber-500 text-center">베이스</span><input
+                                        type="text" id="setupIntroitBass"
+                                        class="flex-1 bg-white border-2 border-amber-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-amber-400 outline-none font-bold">
+                                </div>
                             </div>
                         </div>
-                        <!-- 기도송 -->
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                            <h4 class="text-sm font-bold text-indigo-700 mb-3 flex items-center gap-2"><i class="fas fa-caret-right"></i> 기도송</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] font-bold text-indigo-600 text-right">합창</span><input type="text" id="setupPrayerFull" class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-soprano text-right">소프라노</span><input type="text" id="setupPrayerSop" class="flex-1 border border-pink-200 rounded-md px-2 py-1.5 text-xs focus:border-pink-400 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-alto text-right">알토</span><input type="text" id="setupPrayerAlto" class="flex-1 border border-violet-200 rounded-md px-2 py-1.5 text-xs focus:border-violet-400 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-tenor text-right">테너</span><input type="text" id="setupPrayerTenor" class="flex-1 border border-emerald-200 rounded-md px-2 py-1.5 text-xs focus:border-emerald-400 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-bass text-right">베이스</span><input type="text" id="setupPrayerBass" class="flex-1 border border-orange-200 rounded-md px-2 py-1.5 text-xs focus:border-orange-400 outline-none"></div>
+                        <div class="bg-sky-50/50 p-6 rounded-[2rem] border-2 border-sky-100 shadow-sm">
+                            <h4 class="text-lg font-black text-cyan-700 mb-5 flex items-center">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 text-cyan-500">
+                                    <i class="fas fa-pray"></i>
+                                </div> 기도송
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-cyan-600 text-center">합창</span><input
+                                        type="text" id="setupPrayerFull"
+                                        class="flex-1 bg-white border-2 border-sky-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-cyan-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-pink-500 text-center">소프</span><input
+                                        type="text" id="setupPrayerSop"
+                                        class="flex-1 bg-white border-2 border-pink-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-pink-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-sky-500 text-center">알토</span><input
+                                        type="text" id="setupPrayerAlto"
+                                        class="flex-1 bg-white border-2 border-sky-200 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-sky-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-teal-500 text-center">테너</span><input
+                                        type="text" id="setupPrayerTenor"
+                                        class="flex-1 bg-white border-2 border-teal-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-teal-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-amber-500 text-center">베이스</span><input
+                                        type="text" id="setupPrayerBass"
+                                        class="flex-1 bg-white border-2 border-amber-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-amber-400 outline-none font-bold">
+                                </div>
                             </div>
                         </div>
-                        <!-- 축도송 -->
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                            <h4 class="text-sm font-bold text-indigo-700 mb-3 flex items-center gap-2"><i class="fas fa-caret-right"></i> 축도송</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] font-bold text-indigo-600 text-right">합창</span><input type="text" id="setupBeneFull" class="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:border-indigo-500 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-soprano text-right">소프라노</span><input type="text" id="setupBeneSop" class="flex-1 border border-pink-200 rounded-md px-2 py-1.5 text-xs focus:border-pink-400 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-alto text-right">알토</span><input type="text" id="setupBeneAlto" class="flex-1 border border-violet-200 rounded-md px-2 py-1.5 text-xs focus:border-violet-400 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-tenor text-right">테너</span><input type="text" id="setupBeneTenor" class="flex-1 border border-emerald-200 rounded-md px-2 py-1.5 text-xs focus:border-emerald-400 outline-none"></div>
-                                <div class="flex items-center gap-2"><span class="w-12 text-[11px] label-bass text-right">베이스</span><input type="text" id="setupBeneBass" class="flex-1 border border-orange-200 rounded-md px-2 py-1.5 text-xs focus:border-orange-400 outline-none"></div>
+                        <div class="bg-sky-50/50 p-6 rounded-[2rem] border-2 border-sky-100 shadow-sm">
+                            <h4 class="text-lg font-black text-cyan-700 mb-5 flex items-center">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 text-cyan-500">
+                                    <i class="fas fa-hands-blessing"></i>
+                                </div> 축도송
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-cyan-600 text-center">합창</span><input
+                                        type="text" id="setupBeneFull"
+                                        class="flex-1 bg-white border-2 border-sky-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-cyan-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-pink-500 text-center">소프</span><input
+                                        type="text" id="setupBeneSop"
+                                        class="flex-1 bg-white border-2 border-pink-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-pink-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-sky-500 text-center">알토</span><input
+                                        type="text" id="setupBeneAlto"
+                                        class="flex-1 bg-white border-2 border-sky-200 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-sky-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-teal-500 text-center">테너</span><input
+                                        type="text" id="setupBeneTenor"
+                                        class="flex-1 bg-white border-2 border-teal-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-teal-400 outline-none font-bold">
+                                </div>
+                                <div class="flex items-center gap-3"><span
+                                        class="w-12 text-xs font-black text-amber-500 text-center">베이스</span><input
+                                        type="text" id="setupBeneBass"
+                                        class="flex-1 bg-white border-2 border-amber-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-amber-400 outline-none font-bold">
+                                </div>
                             </div>
                         </div>
+
                         <button onclick="saveFixedLinks()" id="saveFixedBtn"
-                            class="w-full mt-6 py-4 bg-gray-800 text-white text-lg font-bold rounded-xl shadow-md hover:bg-gray-900 transition">
-                            고정곡 저장
+                            class="w-full mt-10 py-5 bg-cyan-900 text-white text-xl font-black rounded-[2rem] shadow-[0_15px_30px_rgba(8,145,178,0.4)] hover:-translate-y-2 hover:bg-cyan-950 transition-all duration-300 border-b-4 border-slate-900 active:translate-y-0 active:border-b-0">
+                            <i class="fas fa-save mr-2"></i> 고정곡 저장
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- PDF 모달 -->
-        <div id="pdfModal" class="hidden fixed inset-0 z-50 bg-gray-900 flex flex-col">
-            <div class="bg-gray-800 text-white p-4 flex items-center justify-between shadow-md">
-                <h3 id="pdfModalTitle" class="font-bold text-sm tracking-wide flex-1 truncate pr-4">악보 크게보기</h3>
-                <button onclick="closePdfModal()" class="text-white text-2xl px-2 hover:text-red-400 transition-colors">
+        <div id="pdfModal"
+            class="hidden fixed inset-0 z-50 bg-cyan-950/90 backdrop-blur-xl flex flex-col transition-all duration-300">
+            <div
+                class="bg-cyan-900/80 text-white p-5 flex items-center justify-between shadow-2xl border-b border-cyan-700">
+                <h3 id="pdfModalTitle" class="font-black text-lg tracking-wide flex-1 truncate pr-4 text-center">악보 크게보기
+                </h3>
+                <button onclick="closePdfModal()"
+                    class="w-12 h-12 bg-white/10 rounded-full text-white text-2xl flex items-center justify-center hover:bg-red-500 hover:scale-110 transition-all shadow-sm border border-white/20">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div id="pdfModalContent"
-                class="flex-1 overflow-y-auto overflow-x-auto p-2 bg-gray-900 flex flex-col items-center gap-2">
+                class="flex-1 overflow-y-auto overflow-x-auto p-4 md:p-8 bg-transparent flex flex-col items-center gap-6">
             </div>
         </div>
-
     </div>
 
     <script type="module">
-        // 위챗 감지
+        // 기능/구조 건드리지 않고 그대로 유지
         document.addEventListener("DOMContentLoaded", function () {
             const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
             if (isWeChat) {
@@ -390,11 +754,9 @@
             document.getElementById('wechatOverlay').classList.add('hidden');
             document.body.style.overflow = '';
         };
-
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-
         const firebaseConfig = {
             apiKey: "AIzaSyCTwOAC_LrrKH8CKepUOTf0pyd9qRv4y_8",
             authDomain: "cnation-project.firebaseapp.com",
@@ -404,26 +766,21 @@
             appId: "1:1004154104261:web:0eac4c7ded38262ae5c3ac",
             measurementId: "G-7PW1NSP5EQ"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
-
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
         const WEEKLY_COL = "cnation-msyh-sgd-weekly";
         const FIXED_COL = "cnation-msyh-sgd-fixed";
 
-        // ======== 설정 화면 상태 ========
-        let currentSheetMusicUrl = '';       // 기존 PDF URL
-        let currentSheetMusicImages = [];    // 기존 이미지 URL 배열
-        let pendingDeletePdf = false;        // PDF 삭제 예약 여부
-        let pendingDeleteImages = false;     // 기존 이미지 전체 삭제 예약 여부
-        let imageSlots = [];                 // 새로 추가할 이미지 슬롯 [{file, previewUrl}]
+        let currentSheetMusicUrl = '';
+        let currentSheetMusicImages = [];
+        let pendingDeletePdf = false;
+        let pendingDeleteImages = false;
+        let imageSlots = [];
         const MAX_IMAGE_SLOTS = 20;
 
-        // ===== 파트 선택 =====
         window.handlePartSelection = (checkbox) => {
             const checkboxes = document.querySelectorAll('.part-checkbox');
             if (checkbox.value === '전체' && checkbox.checked) {
@@ -434,28 +791,23 @@
             const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
             if (!anyChecked) document.querySelector('.part-checkbox[value="전체"]').checked = true;
         };
+        function getSelectedParts() { return Array.from(document.querySelectorAll('.part-checkbox:checked')).map(cb => cb.value); }
 
-        function getSelectedParts() {
-            return Array.from(document.querySelectorAll('.part-checkbox:checked')).map(cb => cb.value);
-        }
-
-        // ===== 화면 전환 =====
         window.goHome = () => {
             document.getElementById('practiceView').classList.add('hidden');
             document.getElementById('setupView').classList.add('hidden');
             document.getElementById('pastDateSelector').classList.add('hidden');
             document.getElementById('practiceContainer').innerHTML = '';
             document.getElementById('homeView').classList.remove('hidden');
+            window.scrollTo(0, 0);
         };
 
-        // ===== 설정 화면 =====
         window.openSetup = async () => {
             document.getElementById('homeView').classList.add('hidden');
             document.getElementById('setupView').classList.remove('hidden');
             document.getElementById('setupDate').value = getNextSunday();
             resetSheetMusicUI();
             loadSetupForDate();
-
             try {
                 const docSnap = await getDoc(doc(db, FIXED_COL, "current"));
                 if (docSnap.exists()) {
@@ -478,14 +830,12 @@
                     document.getElementById('setupBeneBass').value = b.bass || '';
                 }
             } catch (e) { console.error(e); }
+            window.scrollTo(0, 0);
         };
 
         function resetSheetMusicUI() {
-            currentSheetMusicUrl = '';
-            currentSheetMusicImages = [];
-            pendingDeletePdf = false;
-            pendingDeleteImages = false;
-            imageSlots = [];
+            currentSheetMusicUrl = ''; currentSheetMusicImages = [];
+            pendingDeletePdf = false; pendingDeleteImages = false; imageSlots = [];
             document.getElementById('setupSheetMusic').value = '';
             document.getElementById('currentSheetMusicStatus').innerHTML = '현재 등록된 악보가 없습니다.';
             document.getElementById('deletePdfBtn').classList.add('hidden');
@@ -494,11 +844,9 @@
             renderImageSlots();
         }
 
-        // PDF 선택 시 이미지 슬롯 초기화 (둘 다 동시 첨부 불가)
         window.onPdfSelected = () => {
             const f = document.getElementById('setupSheetMusic').files[0];
             if (f) {
-                // PDF 선택 시 이미지 슬롯 경고
                 if (imageSlots.some(s => s.file) || (currentSheetMusicImages.length > 0 && !pendingDeleteImages)) {
                     if (!confirm('PDF를 첨부하면 이미지 악보는 무시됩니다. 계속하시겠습니까?')) {
                         document.getElementById('setupSheetMusic').value = '';
@@ -507,124 +855,91 @@
             }
         };
 
-        // ===== 이미지 슬롯 관리 =====
         window.addImageSlot = () => {
-            if (imageSlots.length >= MAX_IMAGE_SLOTS) {
-                alert(`이미지는 최대 ${MAX_IMAGE_SLOTS}장까지 추가할 수 있습니다.`);
-                return;
-            }
-            imageSlots.push({ file: null, previewUrl: null });
-            renderImageSlots();
+            if (imageSlots.length >= MAX_IMAGE_SLOTS) { alert(`최대 ${MAX_IMAGE_SLOTS}장까지 추가 가능합니다.`); return; }
+            imageSlots.push({ file: null, previewUrl: null }); renderImageSlots();
         };
-
-        window.clearAllImageSlots = () => {
-            imageSlots = [];
-            renderImageSlots();
-        };
+        window.clearAllImageSlots = () => { imageSlots = []; renderImageSlots(); };
 
         function renderImageSlots() {
             const area = document.getElementById('imageSlotArea');
             area.innerHTML = '';
             imageSlots.forEach((slot, idx) => {
                 const div = document.createElement('div');
-                div.className = 'img-slot flex flex-col items-center gap-1';
+                div.className = 'img-slot flex flex-col items-center gap-2';
                 if (slot.previewUrl) {
                     div.innerHTML = `
                         <div style="position:relative;display:inline-block;">
-                            <img src="${slot.previewUrl}" class="preview-thumb" alt="악보${idx+1}">
+                            <img src="${slot.previewUrl}" class="preview-thumb border-sky-300" alt="악보${idx + 1}">
                             <span class="remove-img-btn" onclick="removeImageSlot(${idx})"><i class="fas fa-times"></i></span>
                         </div>
-                        <span style="font-size:10px;color:#6366f1;font-weight:700;">${idx+1}번</span>
+                        <span style="font-size:11px;color:#0284c7;font-weight:900;background:#e0f2fe;padding:4px 10px;border-radius:12px;border:1px solid #bae6fd;">${idx + 1}번</span>
                     `;
                 } else {
                     div.innerHTML = `
                         <div class="img-slot-empty" onclick="document.getElementById('imgInput_${idx}').click()">
                             <i class="fas fa-plus"></i>
                         </div>
-                        <input type="file" id="imgInput_${idx}" accept="image/jpeg,image/png" class="hidden"
-                            onchange="onImageSlotFileSelected(${idx}, this)">
-                        <span style="font-size:10px;color:#a5b4fc;font-weight:700;">${idx+1}번</span>
+                        <input type="file" id="imgInput_${idx}" accept="image/jpeg,image/png" class="hidden" onchange="onImageSlotFileSelected(${idx}, this)">
+                        <span style="font-size:11px;color:#38bdf8;font-weight:900;background:#f0f9ff;padding:4px 10px;border-radius:12px;border:1px solid #e0f2fe;">${idx + 1}번</span>
                     `;
                 }
                 area.appendChild(div);
             });
-            document.getElementById('imageSlotCount').textContent =
-                `추가된 슬롯: ${imageSlots.length}개 / 선택된 파일: ${imageSlots.filter(s=>s.file).length}개`;
+            document.getElementById('imageSlotCount').textContent = `추가된 슬롯: ${imageSlots.length}개 / 선택 파일: ${imageSlots.filter(s => s.file).length}개`;
         }
 
         window.onImageSlotFileSelected = (idx, input) => {
             const file = input.files[0];
             if (!file) return;
-            // PDF 선택 취소 유도
             const pdfInput = document.getElementById('setupSheetMusic');
             if (pdfInput.files.length > 0) {
-                if (!confirm('이미지를 첨부하면 PDF 선택이 무시됩니다. 계속하시겠습니까?')) {
-                    input.value = '';
-                    return;
-                }
+                if (!confirm('이미지를 첨부하면 PDF 선택이 무시됩니다. 계속하시겠습니까?')) { input.value = ''; return; }
                 pdfInput.value = '';
             }
             const reader = new FileReader();
-            reader.onload = (e) => {
-                imageSlots[idx] = { file, previewUrl: e.target.result };
-                renderImageSlots();
-            };
+            reader.onload = (e) => { imageSlots[idx] = { file, previewUrl: e.target.result }; renderImageSlots(); };
             reader.readAsDataURL(file);
         };
 
-        window.removeImageSlot = (idx) => {
-            imageSlots.splice(idx, 1);
-            renderImageSlots();
-        };
+        window.removeImageSlot = (idx) => { imageSlots.splice(idx, 1); renderImageSlots(); };
 
-        // ===== 기존 악보 삭제 =====
         window.deleteCurrentPdf = () => {
             if (!confirm('등록된 PDF 악보를 삭제하시겠습니까?\n저장 버튼을 눌러야 실제로 적용됩니다.')) return;
             pendingDeletePdf = true;
-            document.getElementById('currentSheetMusicStatus').innerHTML =
-                '<span class="text-red-500 font-bold"><i class="fas fa-trash mr-1"></i>저장 시 PDF 악보가 삭제됩니다.</span>';
+            document.getElementById('currentSheetMusicStatus').innerHTML = '<span class="text-white font-black bg-red-500 px-4 py-2 rounded-xl"><i class="fas fa-trash mr-2"></i>저장 시 삭제됨</span>';
             document.getElementById('deletePdfBtn').classList.add('hidden');
         };
 
         window.deleteAllExistingImages = () => {
             if (!confirm('등록된 이미지 악보를 전체 삭제하시겠습니까?\n저장 버튼을 눌러야 실제로 적용됩니다.')) return;
             pendingDeleteImages = true;
-            document.getElementById('existingImagesArea').innerHTML = '';
-            const area = document.getElementById('existingImagesArea');
-            area.classList.remove('hidden');
-            area.innerHTML = '<p class="text-red-500 text-xs font-bold"><i class="fas fa-trash mr-1"></i>저장 시 이미지 악보가 전체 삭제됩니다.</p>';
+            document.getElementById('existingImagesArea').innerHTML = '<p class="text-white bg-red-500 text-sm font-black inline-block px-4 py-2 rounded-xl"><i class="fas fa-trash mr-2"></i>저장 시 전체 삭제됨</p>';
         };
 
-        // 기존 이미지 개별 삭제 예약
         window.markExistingImageDeleted = (idx) => {
-            if (!confirm(`${idx+1}번 이미지를 삭제 예약하시겠습니까?\n저장 버튼을 눌러야 실제로 적용됩니다.`)) return;
-            currentSheetMusicImages[idx] = null;
-            renderExistingImages();
+            if (!confirm(`${idx + 1}번 이미지를 삭제 예약하시겠습니까?\n저장 버튼을 눌러야 실제로 적용됩니다.`)) return;
+            currentSheetMusicImages[idx] = null; renderExistingImages();
         };
 
         function renderExistingImages() {
-            const list = document.getElementById('existingImagesList');
-            list.innerHTML = '';
+            const list = document.getElementById('existingImagesList'); list.innerHTML = '';
             const remaining = currentSheetMusicImages.filter(u => u !== null);
             currentSheetMusicImages.forEach((url, idx) => {
                 if (!url) return;
-                const div = document.createElement('div');
-                div.className = 'existing-img-thumb';
+                const div = document.createElement('div'); div.className = 'existing-img-thumb mb-3';
                 div.innerHTML = `
-                    <img src="${url}" alt="악보${idx+1}" onerror="this.src=''">
+                    <img src="${url}" alt="악보${idx + 1}" onerror="this.src=''" class="border-sky-300">
                     <span class="del-btn" onclick="markExistingImageDeleted(${idx})"><i class="fas fa-times"></i></span>
-                    <div style="font-size:10px;color:#6366f1;font-weight:700;text-align:center;">${idx+1}번</div>
+                    <div style="font-size:11px;color:#0284c7;font-weight:900;text-align:center;margin-top:8px;background:#e0f2fe;padding:4px;border-radius:8px;border:1px solid #bae6fd;">${idx + 1}번</div>
                 `;
                 list.appendChild(div);
             });
             document.getElementById('existingImagesArea').classList.toggle('hidden', remaining.length === 0);
         }
 
-        // ===== Firestore 날짜별 로드 =====
         window.loadSetupForDate = async () => {
-            const date = document.getElementById('setupDate').value;
-            resetSheetMusicUI();
-            if (!date) return;
+            const date = document.getElementById('setupDate').value; resetSheetMusicUI(); if (!date) return;
             try {
                 const docSnap = await getDoc(doc(db, WEEKLY_COL, date));
                 if (docSnap.exists()) {
@@ -635,451 +950,272 @@
                     document.getElementById('setupAlto').value = data.alto || '';
                     document.getElementById('setupTenor').value = data.tenor || '';
                     document.getElementById('setupBass').value = data.bass || '';
-
                     const statusEl = document.getElementById('currentSheetMusicStatus');
-                    // PDF 상태
                     if (data.sheetMusicUrl) {
                         currentSheetMusicUrl = data.sheetMusicUrl;
-                        statusEl.innerHTML = `<span class="text-red-600 font-bold"><i class="fas fa-file-pdf mr-1"></i>PDF 악보가 등록되어 있습니다.</span> (새 파일 첨부 시 덮어씀)`;
+                        statusEl.innerHTML = `<span class="text-cyan-800 font-black bg-cyan-100 px-4 py-2 rounded-xl border border-cyan-200 shadow-sm"><i class="fas fa-file-pdf mr-2 text-red-500"></i>PDF 등록됨</span>`;
                         document.getElementById('deletePdfBtn').classList.remove('hidden');
-                    } else {
-                        statusEl.innerHTML = '등록된 PDF 악보가 없습니다.';
-                    }
-                    // 이미지 상태
+                    } else { statusEl.innerHTML = '<span class="bg-gray-100 text-gray-500 font-bold px-4 py-2 rounded-xl border border-gray-200">등록된 PDF 없음</span>'; }
                     if (data.sheetMusicImages && data.sheetMusicImages.length > 0) {
                         currentSheetMusicImages = [...data.sheetMusicImages];
+                        document.getElementById('existingImagesArea').classList.remove('hidden');
                         renderExistingImages();
                     }
                 } else {
-                    document.getElementById('setupTitle').value = '';
-                    document.getElementById('setupFull').value = '';
-                    document.getElementById('setupSop').value = '';
-                    document.getElementById('setupAlto').value = '';
-                    document.getElementById('setupTenor').value = '';
-                    document.getElementById('setupBass').value = '';
+                    ['setupTitle', 'setupFull', 'setupSop', 'setupAlto', 'setupTenor', 'setupBass'].forEach(id => document.getElementById(id).value = '');
                 }
             } catch (e) { console.error(e); }
         };
 
-        // ===== 저장 =====
         window.saveWeeklyLinks = async () => {
-            const date = document.getElementById('setupDate').value;
-            if (!date) { alert("날짜를 선택해주세요."); return; }
-
-            const btn = document.getElementById('saveWeeklyBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 업로드 및 저장 중...';
-            btn.disabled = true;
-
+            const date = document.getElementById('setupDate').value; if (!date) { alert("날짜 선택 요망"); return; }
+            const btn = document.getElementById('saveWeeklyBtn'); btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> 저장 중...'; btn.disabled = true;
             try {
                 const pdfInput = document.getElementById('setupSheetMusic');
-                const hasPdfFile = pdfInput.files.length > 0;
-                const hasNewImages = imageSlots.some(s => s.file);
-
-                // PDF와 이미지 동시 첨부 방지 (PDF 우선)
+                const hasPdfFile = pdfInput.files.length > 0; const hasNewImages = imageSlots.some(s => s.file);
                 if (hasPdfFile && hasNewImages) {
-                    if (!confirm('PDF와 이미지가 동시에 선택되었습니다.\nPDF를 우선 저장합니다. 이미지는 무시됩니다. 계속하시겠습니까?')) {
-                        btn.innerHTML = '주일 찬양 및 악보 저장';
-                        btn.disabled = false;
-                        return;
-                    }
+                    if (!confirm('PDF 우선 저장 (이미지 무시) 계속?')) { btn.innerHTML = '<i class="fas fa-save mr-2"></i> 주일 찬양 및 악보 저장'; btn.disabled = false; return; }
                 }
-
                 let finalPdfUrl = pendingDeletePdf ? '' : currentSheetMusicUrl;
                 let finalImages = pendingDeleteImages ? [] : currentSheetMusicImages.filter(u => u !== null);
 
-                // PDF 업로드
                 if (hasPdfFile) {
                     const file = pdfInput.files[0];
                     const storageRef = ref(storage, `sheet_music/${date}_${file.name}`);
-                    await uploadBytes(storageRef, file);
-                    finalPdfUrl = await getDownloadURL(storageRef);
-                    finalImages = []; // PDF 업로드 시 이미지 초기화
-                }
-                // 이미지 업로드 (PDF 없을 때만)
-                else if (hasNewImages) {
-                    finalPdfUrl = ''; // 이미지 업로드 시 PDF 초기화
-                    const uploadedUrls = [];
+                    await uploadBytes(storageRef, file); finalPdfUrl = await getDownloadURL(storageRef); finalImages = [];
+                } else if (hasNewImages) {
+                    finalPdfUrl = ''; const uploadedUrls = [];
                     for (let i = 0; i < imageSlots.length; i++) {
-                        const slot = imageSlots[i];
-                        if (!slot.file) continue;
+                        const slot = imageSlots[i]; if (!slot.file) continue;
                         const ext = slot.file.name.split('.').pop();
-                        const storageRef = ref(storage, `sheet_music_images/${date}_img${String(i+1).padStart(2,'0')}.${ext}`);
-                        await uploadBytes(storageRef, slot.file);
-                        const url = await getDownloadURL(storageRef);
-                        uploadedUrls.push(url);
+                        const storageRef = ref(storage, `sheet_music_images/${date}_img${String(i + 1).padStart(2, '0')}.${ext}`);
+                        await uploadBytes(storageRef, slot.file); uploadedUrls.push(await getDownloadURL(storageRef));
                     }
-                    // 기존 잔여 이미지 + 새 이미지 합치기
                     finalImages = [...finalImages, ...uploadedUrls];
                 }
-
                 await setDoc(doc(db, WEEKLY_COL, date), {
-                    title: document.getElementById('setupTitle').value,
-                    full: document.getElementById('setupFull').value,
-                    soprano: document.getElementById('setupSop').value,
-                    alto: document.getElementById('setupAlto').value,
-                    tenor: document.getElementById('setupTenor').value,
-                    bass: document.getElementById('setupBass').value,
-                    sheetMusicUrl: finalPdfUrl,
-                    sheetMusicImages: finalImages
+                    title: document.getElementById('setupTitle').value, full: document.getElementById('setupFull').value,
+                    soprano: document.getElementById('setupSop').value, alto: document.getElementById('setupAlto').value,
+                    tenor: document.getElementById('setupTenor').value, bass: document.getElementById('setupBass').value,
+                    sheetMusicUrl: finalPdfUrl, sheetMusicImages: finalImages
                 });
-
-                alert(`${date} 찬양 링크 및 악보가 성공적으로 저장되었습니다.`);
-                loadSetupForDate();
-            } catch (e) {
-                console.error(e);
-                alert("저장 실패. 네트워크 또는 파일 크기를 확인해주세요.");
-            } finally {
-                btn.innerHTML = '주일 찬양 및 악보 저장';
-                btn.disabled = false;
-            }
+                alert('성공적으로 저장되었습니다.'); loadSetupForDate();
+            } catch (e) { alert("저장 실패"); } finally { btn.innerHTML = '<i class="fas fa-save mr-2"></i> 주일 찬양 및 악보 저장'; btn.disabled = false; }
         };
 
         window.saveFixedLinks = async () => {
-            const btn = document.getElementById('saveFixedBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 저장중...';
-            btn.disabled = true;
+            const btn = document.getElementById('saveFixedBtn'); btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> 저장중...'; btn.disabled = true;
             try {
                 await setDoc(doc(db, FIXED_COL, "current"), {
-                    introit: {
-                        full: document.getElementById('setupIntroitFull').value,
-                        soprano: document.getElementById('setupIntroitSop').value,
-                        alto: document.getElementById('setupIntroitAlto').value,
-                        tenor: document.getElementById('setupIntroitTenor').value,
-                        bass: document.getElementById('setupIntroitBass').value
-                    },
-                    prayer: {
-                        full: document.getElementById('setupPrayerFull').value,
-                        soprano: document.getElementById('setupPrayerSop').value,
-                        alto: document.getElementById('setupPrayerAlto').value,
-                        tenor: document.getElementById('setupPrayerTenor').value,
-                        bass: document.getElementById('setupPrayerBass').value
-                    },
-                    benediction: {
-                        full: document.getElementById('setupBeneFull').value,
-                        soprano: document.getElementById('setupBeneSop').value,
-                        alto: document.getElementById('setupBeneAlto').value,
-                        tenor: document.getElementById('setupBeneTenor').value,
-                        bass: document.getElementById('setupBeneBass').value
-                    }
-                });
-                alert(`고정곡 15개 파트 링크가 성공적으로 저장되었습니다.`);
-            } catch (e) { alert("저장 실패. 네트워크를 확인해주세요."); }
-            finally { btn.innerHTML = '고정곡 저장'; btn.disabled = false; }
+                    introit: { full: document.getElementById('setupIntroitFull').value, soprano: document.getElementById('setupIntroitSop').value, alto: document.getElementById('setupIntroitAlto').value, tenor: document.getElementById('setupIntroitTenor').value, bass: document.getElementById('setupIntroitBass').value },
+                    prayer: { full: document.getElementById('setupPrayerFull').value, soprano: document.getElementById('setupPrayerSop').value, alto: document.getElementById('setupPrayerAlto').value, tenor: document.getElementById('setupPrayerTenor').value, bass: document.getElementById('setupPrayerBass').value },
+                    benediction: { full: document.getElementById('setupBeneFull').value, soprano: document.getElementById('setupBeneSop').value, alto: document.getElementById('setupBeneAlto').value, tenor: document.getElementById('setupBeneTenor').value, bass: document.getElementById('setupBeneBass').value }
+                }); alert(`고정곡 저장 성공.`);
+            } catch (e) { alert("저장 실패."); } finally { btn.innerHTML = '<i class="fas fa-save mr-2"></i> 고정곡 저장'; btn.disabled = false; }
         };
 
-        // ===== 유틸 =====
         function getYoutubeId(url) {
-            if (!url) return null;
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-            const match = url.match(regExp);
+            if (!url) return null; const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
             return (match && match[2].length === 11) ? match[2] : null;
         }
-
         function getNextSunday(baseDate = new Date()) {
-            const d = new Date(baseDate);
-            const day = d.getDay();
-            const diff = day === 0 ? 0 : 7 - day;
-            d.setDate(d.getDate() + diff);
-            const offset = d.getTimezoneOffset() * 60000;
-            return (new Date(d - offset)).toISOString().split('T')[0];
+            const d = new Date(baseDate); const diff = d.getDay() === 0 ? 0 : 7 - d.getDay();
+            d.setDate(d.getDate() + diff); return (new Date(d - d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         }
-
-        // ===== 반복재생 토글 =====
         window.toggleRepeat = (videoId, partKey, isChecked) => {
-            const iframe = document.getElementById(`iframe_${partKey}`);
-            if (!iframe) return;
-            iframe.src = isChecked
-                ? `https://www.youtube.com/embed/${videoId}?loop=1&playlist=${videoId}&autoplay=1`
-                : `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            const iframe = document.getElementById(`iframe_${partKey}`); if (!iframe) return;
+            iframe.src = isChecked ? `https://www.youtube.com/embed/${videoId}?loop=1&playlist=${videoId}&autoplay=1` : `https://www.youtube.com/embed/${videoId}?autoplay=1`;
         };
 
-        // ===== 렌더링 함수 =====
         function getPartBadgeClass(subtitle) {
-            if (subtitle === '소프라노') return 'badge-soprano';
-            if (subtitle === '알토') return 'badge-alto';
-            if (subtitle === '테너') return 'badge-tenor';
-            if (subtitle === '베이스') return 'badge-bass';
-            return 'badge-full';
+            if (subtitle === '소프라노') return 'badge-soprano'; if (subtitle === '알토') return 'badge-alto';
+            if (subtitle === '테너') return 'badge-tenor'; if (subtitle === '베이스') return 'badge-bass'; return 'badge-full';
         }
 
+        // 비디오 카드 렌더링 (얼음 질감 3D)
         function renderVideo(title, subtitle, videoId, partKey) {
             if (!videoId) return '';
             const badgeClass = getPartBadgeClass(subtitle);
             return `
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full hover:shadow-md transition">
-                    <div class="p-3 md:p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <div class="bg-white/90 backdrop-blur-md rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(14,165,233,0.15)] border-[4px] border-white overflow-hidden flex flex-col h-full hover:shadow-[0_25px_40px_-15px_rgba(2,132,199,0.3)] hover:-translate-y-2 transition-all duration-300 relative group">
+                    <div class="p-5 border-b-2 border-sky-50 bg-sky-50/40 flex justify-between items-center z-10">
                         <div>
-                            <span class="text-xs font-bold px-2 py-1 rounded ${badgeClass}">${subtitle}</span>
-                            <h3 class="font-bold text-gray-800 mt-1.5 text-sm md:text-base line-clamp-1">${title}</h3>
+                            <span class="text-xs px-3 py-1.5 rounded-xl border border-white/50 shadow-sm ${badgeClass}">${subtitle}</span>
+                            <h3 class="font-black text-cyan-900 mt-3 text-[15px] line-clamp-1">${title}</h3>
                         </div>
-                        <div class="flex flex-col items-end gap-1">
-                            <span class="text-[10px] font-bold text-gray-500">반복재생</span>
-                            <div class="relative inline-block w-9 align-middle select-none transition duration-200 ease-in">
+                        <div class="flex flex-col items-end gap-2">
+                            <span class="text-[10px] font-black text-sky-400">반복재생</span>
+                            <div class="relative inline-block w-[3.5rem] align-middle select-none">
                                 <input type="checkbox" id="toggle_${partKey}" onchange="toggleRepeat('${videoId}', '${partKey}', this.checked)"
-                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                <label for="toggle_${partKey}" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                                    class="toggle-checkbox absolute block w-7 h-7 rounded-full bg-white border-[4px] appearance-none cursor-pointer"/>
+                                <label for="toggle_${partKey}" class="toggle-label block overflow-hidden h-7 rounded-full bg-sky-100 cursor-pointer border-2 border-white shadow-inner"></label>
                             </div>
                         </div>
                     </div>
-                    <div class="aspect-video w-full bg-black relative flex-1">
-                        <iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full"
-                            src="https://www.youtube.com/embed/${videoId}"
-                            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen></iframe>
+                    <div class="aspect-video w-full bg-cyan-950 relative flex-1 border-t-2 border-white/50">
+                        <iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                 </div>`;
         }
 
-        // PDF 악보 렌더링
         function renderPdfContainer(title, date, url, index) {
-            if (!url) return '';
-            const containerId = `pdf-container-${index}`;
+            if (!url) return ''; const containerId = `pdf-container-${index}`;
             return `
-                <div class="bg-white rounded-2xl shadow-md border border-indigo-200 overflow-hidden mb-8 mt-4 max-w-4xl mx-auto">
-                    <div class="p-4 border-b border-indigo-100 bg-indigo-50 flex justify-between items-center sticky top-0 z-10 shadow-sm">
-                        <h3 class="font-bold text-indigo-800 text-sm md:text-base truncate pr-2">
-                            <i class="fas fa-file-pdf text-red-500 mr-2"></i>[${date}] ${title} 악보
+                <div class="bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(2,132,199,0.15)] border-[4px] border-white overflow-hidden mb-12 mt-6 max-w-4xl mx-auto">
+                    <div class="p-6 border-b-2 border-sky-100 bg-gradient-to-r from-sky-50/80 to-white sticky top-0 z-10 flex justify-between items-center shadow-sm">
+                        <h3 class="font-black text-cyan-900 text-base md:text-lg truncate pr-2 flex items-center drop-shadow-sm">
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center mr-3 shadow-sm border border-sky-50"><i class="fas fa-file-pdf text-red-500 text-xl"></i></div>
+                            [${date}] ${title} 악보
                         </h3>
                         <button onclick="openPdfModal('${containerId}', '[${date}] ${title}')"
-                            class="text-xs font-bold text-indigo-700 bg-white px-4 py-2 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition shadow-sm whitespace-nowrap">
-                            <i class="fas fa-expand mr-1"></i>크게보기
+                            class="text-sm font-black text-white bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-3 rounded-xl shadow-[0_8px_15px_rgba(14,165,233,0.3)] hover:from-cyan-500 hover:to-blue-600 hover:-translate-y-1 transition-all whitespace-nowrap flex items-center gap-2 border border-blue-400/50">
+                            <i class="fas fa-expand"></i>확대
                         </button>
                     </div>
-                    <div id="${containerId}" data-pdf-url="${url}" class="pdf-viewer w-full bg-gray-200 p-2 md:p-6 flex flex-col gap-2 min-h-[200px]"></div>
+                    <div id="${containerId}" data-pdf-url="${url}" class="pdf-viewer w-full bg-sky-50/50 p-4 md:p-8 flex flex-col gap-6 min-h-[300px]"></div>
                 </div>`;
         }
 
-        // 이미지 악보 렌더링
         function renderImagesContainer(title, date, images, index) {
             if (!images || images.length === 0) return '';
-            const imgsHtml = images.map((url, i) =>
-                `<img src="${url}" alt="${title} 악보 ${i+1}페이지"
-                    class="w-full h-auto bg-white shadow-md border border-gray-300 rounded mb-4 max-w-full object-contain"
-                    onerror="this.style.display='none'">`
-            ).join('');
+            const imgsHtml = images.map((url, i) => `<img src="${url}" alt="${title} 악보 ${i + 1}페이지" class="w-full h-auto bg-white shadow-[0_15px_30px_rgba(14,165,233,0.1)] border-[6px] border-white rounded-[2rem] mb-6 max-w-full object-contain" onerror="this.style.display='none'">`).join('');
             return `
-                <div class="bg-white rounded-2xl shadow-md border border-indigo-200 overflow-hidden mb-8 mt-4 max-w-4xl mx-auto">
-                    <div class="p-4 border-b border-indigo-100 bg-indigo-50 sticky top-0 z-10 shadow-sm">
-                        <h3 class="font-bold text-indigo-800 text-sm md:text-base truncate">
-                            <i class="fas fa-images text-indigo-500 mr-2"></i>[${date}] ${title} 악보 (${images.length}장)
+                <div class="bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(2,132,199,0.15)] border-[4px] border-white overflow-hidden mb-12 mt-6 max-w-4xl mx-auto">
+                    <div class="p-6 border-b-2 border-sky-100 bg-gradient-to-r from-sky-50/80 to-white sticky top-0 z-10 flex items-center shadow-sm">
+                        <h3 class="font-black text-cyan-900 text-base md:text-lg truncate flex items-center drop-shadow-sm">
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center mr-3 shadow-sm border border-sky-50"><i class="fas fa-images text-cyan-500 text-xl"></i></div>
+                            [${date}] ${title} 악보 <span class="bg-cyan-100 text-cyan-700 px-3 py-1.5 rounded-xl ml-3 text-sm shadow-inner border border-cyan-200">${images.length}장</span>
                         </h3>
                     </div>
-                    <div class="w-full bg-gray-200 p-2 md:p-6 flex flex-col gap-2">${imgsHtml}</div>
+                    <div class="w-full bg-sky-50/50 p-4 md:p-8 flex flex-col gap-4">${imgsHtml}</div>
                 </div>`;
         }
 
         async function loadPdfToCanvas(url, containerId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '<p class="text-indigo-500 py-10 text-center text-sm font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>악보를 페이지별로 그리는 중...</p>';
+            const container = document.getElementById(containerId); if (!container) return;
+            container.innerHTML = '<div class="py-16 text-center bg-white/80 rounded-3xl animate-pulse border-2 border-sky-100 shadow-sm"><i class="fas fa-spinner fa-spin text-4xl text-cyan-400 mb-4"></i><p class="text-cyan-800 font-black">악보를 예쁘게 그리는 중...</p></div>';
             try {
-                const pdf = await pdfjsLib.getDocument(url).promise;
-                container.innerHTML = '';
+                const pdf = await pdfjsLib.getDocument(url).promise; container.innerHTML = '';
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 1.5 });
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    canvas.className = 'w-full h-auto bg-white shadow-md border border-gray-300 rounded mb-4 max-w-full';
-                    await page.render({ canvasContext: context, viewport }).promise;
-                    container.appendChild(canvas);
+                    const page = await pdf.getPage(pageNum); const viewport = page.getViewport({ scale: 1.5 });
+                    const canvas = document.createElement('canvas'); const context = canvas.getContext('2d');
+                    canvas.width = viewport.width; canvas.height = viewport.height;
+                    canvas.className = 'w-full h-auto bg-white shadow-[0_15px_30px_rgba(14,165,233,0.1)] border-[6px] border-white rounded-[2rem] mb-6 max-w-full';
+                    await page.render({ canvasContext: context, viewport }).promise; container.appendChild(canvas);
                 }
-            } catch (error) {
-                container.innerHTML = '<p class="text-red-500 py-10 text-center text-xs">악보를 불러올 수 없습니다.<br>(Firebase Storage CORS 설정 필요)</p>';
-            }
+            } catch (error) { container.innerHTML = '<div class="py-12 text-center bg-red-50/90 rounded-3xl border-2 border-red-200 shadow-sm"><i class="fas fa-life-ring text-4xl text-red-400 mb-4"></i><p class="text-red-700 font-black text-lg">악보를 불러오지 못했어요.</p></div>'; }
         }
 
         window.openPdfModal = (containerId, title) => {
-            const srcContainer = document.getElementById(containerId);
-            const modalContent = document.getElementById('pdfModalContent');
-            document.getElementById('pdfModalTitle').innerText = title;
-            modalContent.innerHTML = '';
+            const srcContainer = document.getElementById(containerId); const modalContent = document.getElementById('pdfModalContent');
+            document.getElementById('pdfModalTitle').innerText = title; modalContent.innerHTML = '';
             while (srcContainer.firstChild) modalContent.appendChild(srcContainer.firstChild);
-            modalContent.dataset.srcContainerId = containerId;
-            document.getElementById('pdfModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            modalContent.dataset.srcContainerId = containerId; document.getElementById('pdfModal').classList.remove('hidden'); document.body.style.overflow = 'hidden';
         };
-
         window.closePdfModal = () => {
-            const modalContent = document.getElementById('pdfModalContent');
-            const srcContainer = document.getElementById(modalContent.dataset.srcContainerId);
-            if (srcContainer) {
-                while (modalContent.firstChild) srcContainer.appendChild(modalContent.firstChild);
-            }
-            document.getElementById('pdfModal').classList.add('hidden');
-            document.body.style.overflow = '';
+            const modalContent = document.getElementById('pdfModalContent'); const srcContainer = document.getElementById(modalContent.dataset.srcContainerId);
+            if (srcContainer) { while (modalContent.firstChild) srcContainer.appendChild(modalContent.firstChild); }
+            document.getElementById('pdfModal').classList.add('hidden'); document.body.style.overflow = '';
         };
 
-        // ===== 연습 화면 =====
         window.openPractice = async (type) => {
-            document.getElementById('homeView').classList.add('hidden');
-            document.getElementById('practiceView').classList.remove('hidden');
+            document.getElementById('homeView').classList.add('hidden'); document.getElementById('practiceView').classList.remove('hidden'); window.scrollTo(0, 0);
             const container = document.getElementById('practiceContainer');
-            container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-gray-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>데이터를 불러오는 중...</p></div>';
-
-            const parts = getSelectedParts();
-            const isAll = parts.includes('전체');
-
+            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white/80 backdrop-blur-md p-8 rounded-[2rem] shadow-xl text-center border-4 border-white"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">노래 부를 준비 중...</p></div></div>';
+            const parts = getSelectedParts(); const isAll = parts.includes('전체');
             try {
-                let videosHtml = '<div class="space-y-10">';
-                let sheetsHtml = '<div class="mt-12 pt-8 border-t-2 border-dashed border-gray-300">';
-                let sheetEntries = []; // {type:'pdf'|'images', url, images, title, date, idx}
-
+                let videosHtml = '<div class="space-y-16">'; let sheetsHtml = '<div class="mt-20 pt-10 border-t-4 border-dashed border-sky-200">'; let sheetEntries = [];
                 if (type === '고정') {
-                    document.getElementById('practiceTitle').innerText = '입례/기도/축도송 연습';
+                    document.getElementById('practiceTitle').innerText = '입례/기도/축도송';
                     const docSnap = await getDoc(doc(db, FIXED_COL, "current"));
                     if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        const i = data.introit || {}, p = data.prayer || {}, b = data.benediction || {};
-                        videosHtml += buildFixedSection('입례송', 'fa-church', i, isAll, parts, 'i');
+                        const data = docSnap.data(); const i = data.introit || {}, p = data.prayer || {}, b = data.benediction || {};
+                        videosHtml += buildFixedSection('입례송', 'fa-music', i, isAll, parts, 'i');
                         videosHtml += buildFixedSection('기도송', 'fa-pray', p, isAll, parts, 'p');
                         videosHtml += buildFixedSection('축도송', 'fa-hands-blessing', b, isAll, parts, 'b');
                     }
-                    videosHtml += '</div>';
-                    container.innerHTML = videosHtml;
+                    videosHtml += '</div>'; container.innerHTML = videosHtml;
                 } else {
-                    const thisSunday = getNextSunday();
-                    const d = new Date(thisSunday);
-                    d.setDate(d.getDate() + 7);
-                    const nextSunday = d.toISOString().split('T')[0];
-                    const datesToFetch = [];
-                    if (type === '이번주' || type === '이번주_다음주') datesToFetch.push(thisSunday);
-                    if (type === '다음주' || type === '이번주_다음주') datesToFetch.push(nextSunday);
-
+                    const thisSunday = getNextSunday(); const d = new Date(thisSunday); d.setDate(d.getDate() + 7); const nextSunday = d.toISOString().split('T')[0];
+                    const datesToFetch = []; if (type === '이번주' || type === '이번주_다음주') datesToFetch.push(thisSunday); if (type === '다음주' || type === '이번주_다음주') datesToFetch.push(nextSunday);
                     document.getElementById('practiceTitle').innerText = type.replace('_', ', ') + ' 곡 연습';
-                    let hasVideos = false;
-
                     for (const date of datesToFetch) {
                         const docSnap = await getDoc(doc(db, WEEKLY_COL, date));
                         if (docSnap.exists()) {
-                            const data = docSnap.data();
-                            const title = data.title || `${date} 찬양`;
-                            videosHtml += `<div><h2 class="font-extrabold text-xl md:text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-calendar-check"></i> ${date}</h2>`;
-                            videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">`;
-                            if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); hasVideos = true; }
-                            if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); hasVideos = true; }
-                            if (isAll || parts.includes('알토')) { videosHtml += renderVideo(title, '알토', getYoutubeId(data.alto), `alto_${date}`); hasVideos = true; }
-                            if (isAll || parts.includes('테너')) { videosHtml += renderVideo(title, '테너', getYoutubeId(data.tenor), `tenor_${date}`); hasVideos = true; }
-                            if (isAll || parts.includes('베이스')) { videosHtml += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`); hasVideos = true; }
+                            const data = docSnap.data(); const title = data.title || `${date} 찬양`;
+                            videosHtml += `<div><h2 class="font-black text-3xl text-cyan-900 mb-8 flex items-center bg-white/80 backdrop-blur-md py-4 px-6 rounded-[2rem] shadow-sm inline-flex border-2 border-white"><div class="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center mr-4 text-cyan-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
+                            videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">`;
+                            if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); }
+                            if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); }
+                            if (isAll || parts.includes('알토')) { videosHtml += renderVideo(title, '알토', getYoutubeId(data.alto), `alto_${date}`); }
+                            if (isAll || parts.includes('테너')) { videosHtml += renderVideo(title, '테너', getYoutubeId(data.tenor), `tenor_${date}`); }
+                            if (isAll || parts.includes('베이스')) { videosHtml += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`); }
                             videosHtml += `</div></div>`;
-
                             const idx = sheetEntries.length;
-                            if (data.sheetMusicUrl) {
-                                sheetEntries.push({ type: 'pdf', url: data.sheetMusicUrl, title, date, idx });
-                                sheetsHtml += renderPdfContainer(title, date, data.sheetMusicUrl, idx);
-                            } else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) {
-                                sheetEntries.push({ type: 'images', images: data.sheetMusicImages, title, date, idx });
-                                sheetsHtml += renderImagesContainer(title, date, data.sheetMusicImages, idx);
-                            }
+                            if (data.sheetMusicUrl) { sheetEntries.push({ type: 'pdf', url: data.sheetMusicUrl, title, date, idx }); sheetsHtml += renderPdfContainer(title, date, data.sheetMusicUrl, idx); }
+                            else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) { sheetEntries.push({ type: 'images', images: data.sheetMusicImages, title, date, idx }); sheetsHtml += renderImagesContainer(title, date, data.sheetMusicImages, idx); }
                         } else {
-                            videosHtml += `<div class="bg-gray-100 p-8 rounded-2xl text-center text-gray-500 mb-6 border border-gray-200">
-                                <i class="fas fa-exclamation-circle mb-3 text-3xl opacity-50"></i><br>
-                                <span class="font-bold text-lg">${date}</span><br>곡이 아직 등록되지 않았습니다.</div>`;
+                            videosHtml += `<div class="bg-white/60 backdrop-blur-sm p-12 rounded-[2.5rem] text-center border-4 border-dashed border-sky-200 mb-12 shadow-sm"><i class="fas fa-box-open mb-6 text-6xl text-sky-300"></i><br><span class="font-black text-2xl text-cyan-800">${date}</span><p class="text-cyan-600 font-bold mt-3 text-lg">아직 등록된 곡이 없습니다.</p></div>`;
                         }
                     }
-                    videosHtml += '</div>';
-                    sheetsHtml += '</div>';
-
+                    videosHtml += '</div>'; sheetsHtml += '</div>';
                     container.innerHTML = videosHtml + (sheetEntries.length > 0 ? sheetsHtml : '');
-
-                    // PDF만 canvas 렌더링
-                    setTimeout(() => {
-                        sheetEntries.filter(e => e.type === 'pdf').forEach(e => {
-                            loadPdfToCanvas(e.url, `pdf-container-${e.idx}`);
-                        });
-                    }, 100);
+                    setTimeout(() => { sheetEntries.filter(e => e.type === 'pdf').forEach(e => { loadPdfToCanvas(e.url, `pdf-container-${e.idx}`); }); }, 100);
                 }
-            } catch (e) {
-                container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-red-400 font-bold">데이터를 불러오지 못했습니다.</p></div>';
-            }
+            } catch (e) { container.innerHTML = '<div class="py-32 text-center"><div class="bg-red-50/90 p-8 rounded-3xl inline-block border-2 border-red-200 shadow-lg"><p class="text-red-600 font-black text-xl">데이터를 불러오지 못했습니다 😭</p></div></div>'; }
         };
 
         function buildFixedSection(name, icon, data, isAll, parts, prefix) {
-            let html = `<div><h2 class="font-extrabold text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas ${icon}"></i> ${name}</h2>`;
-            html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+            let html = `<div><h2 class="font-black text-3xl text-cyan-900 mb-8 flex items-center bg-white/80 backdrop-blur-md py-4 px-6 rounded-[2rem] shadow-sm inline-flex border-2 border-white"><div class="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center mr-4 text-cyan-500 shadow-inner"><i class="fas ${icon}"></i></div> ${name}</h2>`;
+            html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">`;
             if (isAll || parts.includes('합창')) html += renderVideo(name, '합창', getYoutubeId(data.full), `${prefix}_full`);
             if (isAll || parts.includes('소프라노')) html += renderVideo(name, '소프라노', getYoutubeId(data.soprano), `${prefix}_sop`);
             if (isAll || parts.includes('알토')) html += renderVideo(name, '알토', getYoutubeId(data.alto), `${prefix}_alto`);
             if (isAll || parts.includes('테너')) html += renderVideo(name, '테너', getYoutubeId(data.tenor), `${prefix}_tenor`);
             if (isAll || parts.includes('베이스')) html += renderVideo(name, '베이스', getYoutubeId(data.bass), `${prefix}_bass`);
-            html += `</div></div>`;
-            return html;
+            html += `</div></div>`; return html;
         }
 
         window.openPastPractice = async () => {
-            document.getElementById('homeView').classList.add('hidden');
-            document.getElementById('practiceView').classList.remove('hidden');
-            document.getElementById('pastDateSelector').classList.remove('hidden');
-            document.getElementById('practiceTitle').innerText = '기존 곡 연습';
+            document.getElementById('homeView').classList.add('hidden'); document.getElementById('practiceView').classList.remove('hidden');
+            document.getElementById('pastDateSelector').classList.remove('hidden'); document.getElementById('practiceTitle').innerText = '기존 곡 연습'; window.scrollTo(0, 0);
             const container = document.getElementById('practiceContainer');
-            container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-gray-400 font-bold">위에서 날짜를 선택해주세요.</p></div>';
-            const dropdown = document.getElementById('pastDateDropdown');
-            dropdown.innerHTML = '<option value="">날짜 목록 불러오는 중...</option>';
+            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-sky-50/80 backdrop-blur-md p-8 rounded-[2rem] border-2 border-sky-200 text-center animate-bounce shadow-sm"><i class="fas fa-hand-point-up text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">위에서 날짜를 콕! 찍어주세요.</p></div></div>';
+            const dropdown = document.getElementById('pastDateDropdown'); dropdown.innerHTML = '<option value="">날짜 목록 불러오는 중...</option>';
             try {
-                const snap = await getDocs(query(collection(db, WEEKLY_COL)));
-                let dates = [];
-                snap.forEach(d => dates.push({ date: d.id, title: d.data().title || '' }));
-                dates.sort((a, b) => b.date.localeCompare(a.date));
-                dropdown.innerHTML = '<option value="">날짜(일요일)를 선택하세요</option>';
-                dates.forEach(item => {
-                    dropdown.innerHTML += `<option value="${item.date}">${item.date} ${item.title ? '- ' + item.title : ''}</option>`;
-                });
+                const snap = await getDocs(query(collection(db, WEEKLY_COL))); let dates = []; snap.forEach(d => dates.push({ date: d.id, title: d.data().title || '' }));
+                dates.sort((a, b) => b.date.localeCompare(a.date)); dropdown.innerHTML = '<option value="">날짜(일요일)를 선택하세요</option>';
+                dates.forEach(item => { dropdown.innerHTML += `<option value="${item.date}">${item.date} ${item.title ? '- ' + item.title : ''}</option>`; });
             } catch (e) { dropdown.innerHTML = '<option value="">불러오기 실패</option>'; }
         };
 
         window.loadPastPractice = async () => {
-            const date = document.getElementById('pastDateDropdown').value;
-            const container = document.getElementById('practiceContainer');
-            if (!date) { container.innerHTML = ''; return; }
-            container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-gray-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>불러오는 중...</p></div>';
-
-            const parts = getSelectedParts();
-            const isAll = parts.includes('전체');
-
+            const date = document.getElementById('pastDateDropdown').value; const container = document.getElementById('practiceContainer'); if (!date) { container.innerHTML = ''; return; }
+            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white/80 backdrop-blur-md p-8 rounded-[2rem] shadow-xl text-center border-4 border-white"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">노래 찾는 중...</p></div></div>';
+            const parts = getSelectedParts(); const isAll = parts.includes('전체');
             try {
-                const docSnap = await getDoc(doc(db, WEEKLY_COL, date));
-                let videosHtml = '<div class="space-y-6">';
-                let sheetsHtml = '';
-                let hasData = false;
-
+                const docSnap = await getDoc(doc(db, WEEKLY_COL, date)); let videosHtml = '<div class="space-y-12">'; let sheetsHtml = ''; let hasData = false;
                 if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    const title = data.title || `${date} 찬양`;
-                    videosHtml += `<div><h2 class="font-extrabold text-xl md:text-2xl text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-calendar-check"></i> ${date}</h2>`;
-                    videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">`;
+                    const data = docSnap.data(); const title = data.title || `${date} 찬양`;
+                    videosHtml += `<div><h2 class="font-black text-3xl text-cyan-900 mb-8 flex items-center bg-white/80 backdrop-blur-md py-4 px-6 rounded-[2rem] shadow-sm inline-flex border-2 border-white"><div class="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center mr-4 text-cyan-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
+                    videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">`;
                     if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); hasData = true; }
                     if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); hasData = true; }
                     if (isAll || parts.includes('알토')) { videosHtml += renderVideo(title, '알토', getYoutubeId(data.alto), `alto_${date}`); hasData = true; }
                     if (isAll || parts.includes('테너')) { videosHtml += renderVideo(title, '테너', getYoutubeId(data.tenor), `tenor_${date}`); hasData = true; }
                     if (isAll || parts.includes('베이스')) { videosHtml += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`); hasData = true; }
                     videosHtml += `</div></div>`;
-
-                    if (data.sheetMusicUrl) {
-                        sheetsHtml = `<div class="mt-8 pt-4 border-t-2 border-dashed border-gray-300">${renderPdfContainer(title, date, data.sheetMusicUrl, 'past')}</div>`;
-                        hasData = true;
-                    } else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) {
-                        sheetsHtml = `<div class="mt-8 pt-4 border-t-2 border-dashed border-gray-300">${renderImagesContainer(title, date, data.sheetMusicImages, 'past')}</div>`;
-                        hasData = true;
-                    }
+                    if (data.sheetMusicUrl) { sheetsHtml = `<div class="mt-16 pt-10 border-t-4 border-dashed border-sky-200">${renderPdfContainer(title, date, data.sheetMusicUrl, 'past')}</div>`; hasData = true; }
+                    else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) { sheetsHtml = `<div class="mt-16 pt-10 border-t-4 border-dashed border-sky-200">${renderImagesContainer(title, date, data.sheetMusicImages, 'past')}</div>`; hasData = true; }
                 }
                 videosHtml += '</div>';
-
                 if (hasData) {
-                    container.innerHTML = videosHtml + sheetsHtml;
-                    const d = docSnap.data();
-                    if (d && d.sheetMusicUrl) {
-                        setTimeout(() => loadPdfToCanvas(d.sheetMusicUrl, 'pdf-container-past'), 100);
-                    }
-                } else {
-                    container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-gray-400 font-bold">해당 파트에 등록된 영상이나 악보가 없습니다.</p></div>';
-                }
-            } catch (e) {
-                container.innerHTML = '<div class="flex items-center justify-center py-20"><p class="text-red-400 font-bold">데이터 로드 실패.</p></div>';
-            }
+                    container.innerHTML = videosHtml + sheetsHtml; const d = docSnap.data();
+                    if (d && d.sheetMusicUrl) { setTimeout(() => loadPdfToCanvas(d.sheetMusicUrl, 'pdf-container-past'), 100); }
+                } else { container.innerHTML = '<div class="py-32 text-center"><div class="bg-white/80 backdrop-blur-md p-10 rounded-[2rem] inline-block shadow-sm border-2 border-sky-100"><i class="fas fa-folder-open text-6xl text-sky-300 mb-6 block"></i><p class="text-cyan-700 font-black text-xl">이 파트에는 등록된 곡이 없어요.</p></div></div>'; }
+            } catch (e) { container.innerHTML = '<div class="py-32 text-center"><div class="bg-red-50/90 p-8 rounded-[2rem] inline-block border-2 border-red-200 shadow-lg"><p class="text-red-600 font-black text-xl">데이터 로드 실패 😭</p></div></div>'; }
         };
     </script>
 </body>
-</html>
 
+</html>
