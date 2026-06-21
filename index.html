@@ -430,7 +430,7 @@
 
         <div id="practiceView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
             <div
-                class="bg-gradient-to-r from-cyan-500/90 to-blue-500/90 backdrop-blur-2xl text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-[0_15px_35px_-10px_rgba(6,182,212,0.4)] sticky top-3 z-20 border border-white/40">
+                class="bg-cyan-600 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-cyan-500">
                 <button onclick="goHome()"
                     class="w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all flex items-center justify-center font-bold">
                     <i class="fas fa-arrow-left"></i>
@@ -440,7 +440,7 @@
             </div>
 
             <div id="pastDateSelector"
-                class="hidden mx-3 md:mx-6 mb-3 bg-white/80 backdrop-blur-md p-3 rounded-[1.5rem] shadow-[0_10px_30px_-15px_rgba(2,132,199,0.2)] z-10 border-2 border-white">
+                class="hidden mx-3 md:mx-6 mb-3 bg-white p-3 rounded-[1.5rem] shadow-sm z-10 border-2 border-sky-100">
                 <div class="max-w-xl mx-auto relative">
                     <select id="pastDateDropdown"
                         class="w-full bg-sky-50 border-2 border-sky-100 rounded-2xl px-6 py-4 text-center font-black text-cyan-900 focus:outline-none focus:border-cyan-400 focus:bg-white transition-all appearance-none cursor-pointer shadow-inner text-lg"
@@ -1053,15 +1053,15 @@
             if (subtitle === '테너') return 'badge-tenor'; if (subtitle === '베이스') return 'badge-bass'; return 'badge-full';
         }
 
-        // 비디오 카드 렌더링 (얼음 질감 3D)
+        // 비디오 카드 렌더링: 속도 우선으로 blur와 무거운 그림자를 줄임
         function renderVideo(title, subtitle, videoId, partKey) {
             if (!videoId) return '';
             const badgeClass = getPartBadgeClass(subtitle);
             return `
-                <div class="bg-white/90 backdrop-blur-md rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(14,165,233,0.15)] border-2 border-white overflow-hidden flex flex-col h-full hover:shadow-[0_25px_40px_-15px_rgba(2,132,199,0.3)] hover:-translate-y-1 transition-all duration-300 relative group">
+                <div class="bg-white rounded-[1.5rem] shadow-lg border-2 border-sky-50 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-transform duration-300 relative group">
                     <div class="p-3 border-b border-sky-50 bg-sky-50/40 flex justify-between items-center z-10">
                         <div>
-                            <span class="text-xs px-3 py-1.5 rounded-xl border border-white/50 shadow-sm ${badgeClass}">${subtitle}</span>
+                            <span class="text-xs px-3 py-1.5 rounded-xl border border-sky-100 shadow-sm ${badgeClass}">${subtitle}</span>
                             <h3 class="font-black text-cyan-900 mt-2 text-[15px] line-clamp-1">${title}</h3>
                         </div>
                         <div class="flex flex-col items-end gap-2">
@@ -1074,7 +1074,7 @@
                         </div>
                     </div>
                     <div class="aspect-video w-full bg-cyan-950 relative flex-1 border-t-2 border-white/50">
-                        <iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                 </div>`;
         }
@@ -1082,33 +1082,33 @@
         function renderPdfContainer(title, date, url, index) {
             if (!url) return ''; const containerId = `pdf-container-${index}`;
             return `
-                <div class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_20px_40px_-15px_rgba(2,132,199,0.15)] border border-white overflow-hidden mb-6 mt-4 w-full max-w-none mx-0">
-                    <div class="p-3 md:p-4 border-b border-sky-100 bg-gradient-to-r from-sky-50/80 to-white sticky top-0 z-10 flex justify-between items-center shadow-sm">
-                        <h3 class="font-black text-cyan-900 text-base md:text-lg truncate pr-2 flex items-center drop-shadow-sm">
+                <div class="bg-white rounded-[1.5rem] shadow-lg border border-sky-100 overflow-hidden mb-6 mt-4 w-full max-w-none mx-0">
+                    <div class="p-3 md:p-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white sticky top-0 z-10 flex justify-between items-center shadow-sm">
+                        <h3 class="font-black text-cyan-900 text-base md:text-lg truncate pr-2 flex items-center">
                             <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center mr-3 shadow-sm border border-sky-50"><i class="fas fa-file-pdf text-red-500 text-xl"></i></div>
                             [${date}] ${title} 악보
                         </h3>
                         <button onclick="openPdfModal('${containerId}', '[${date}] ${title}')"
-                            class="text-sm font-black text-white bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 rounded-xl shadow-[0_8px_15px_rgba(14,165,233,0.3)] hover:from-cyan-500 hover:to-blue-600 hover:-translate-y-1 transition-all whitespace-nowrap flex items-center gap-2 border border-blue-400/50">
+                            class="text-sm font-black text-white bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 rounded-xl shadow-md hover:from-cyan-500 hover:to-blue-600 hover:-translate-y-1 transition-transform whitespace-nowrap flex items-center gap-2">
                             <i class="fas fa-expand"></i>확대
                         </button>
                     </div>
-                    <div id="${containerId}" data-pdf-url="${url}" class="pdf-viewer w-full bg-white p-0 flex flex-col gap-2 min-h-[240px]"></div>
+                    <div id="${containerId}" data-pdf-url="${url}" class="pdf-viewer w-full bg-gray-50 p-0 flex flex-col gap-2 min-h-[240px]"></div>
                 </div>`;
         }
 
         function renderImagesContainer(title, date, images, index) {
             if (!images || images.length === 0) return '';
-            const imgsHtml = images.map((url, i) => `<img src="${url}" alt="${title} 악보 ${i + 1}페이지" class="w-full h-auto bg-white shadow-none border-0 rounded-none mb-2 max-w-full object-contain" onerror="this.style.display='none'">`).join('');
+            const imgsHtml = images.map((url, i) => `<img src="${url}" alt="${title} 악보 ${i + 1}페이지" loading="lazy" class="w-full h-auto bg-white shadow-sm border border-gray-100 mb-2 max-w-full object-contain" onerror="this.style.display='none'">`).join('');
             return `
-                <div class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_20px_40px_-15px_rgba(2,132,199,0.15)] border border-white overflow-hidden mb-6 mt-4 w-full max-w-none mx-0">
-                    <div class="p-3 md:p-4 border-b border-sky-100 bg-gradient-to-r from-sky-50/80 to-white sticky top-0 z-10 flex items-center shadow-sm">
-                        <h3 class="font-black text-cyan-900 text-base md:text-lg truncate flex items-center drop-shadow-sm">
+                <div class="bg-white rounded-[1.5rem] shadow-lg border border-sky-100 overflow-hidden mb-6 mt-4 w-full max-w-none mx-0">
+                    <div class="p-3 md:p-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white sticky top-0 z-10 flex items-center shadow-sm">
+                        <h3 class="font-black text-cyan-900 text-base md:text-lg truncate flex items-center">
                             <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center mr-3 shadow-sm border border-sky-50"><i class="fas fa-images text-cyan-500 text-xl"></i></div>
-                            [${date}] ${title} 악보 <span class="bg-cyan-100 text-cyan-700 px-3 py-1.5 rounded-xl ml-3 text-sm shadow-inner border border-cyan-200">${images.length}장</span>
+                            [${date}] ${title} 악보 <span class="bg-cyan-100 text-cyan-700 px-3 py-1.5 rounded-xl ml-3 text-sm border border-cyan-200">${images.length}장</span>
                         </h3>
                     </div>
-                    <div class="w-full bg-white p-0 flex flex-col gap-2">${imgsHtml}</div>
+                    <div class="w-full bg-gray-50 p-1 md:p-2 flex flex-col gap-2">${imgsHtml}</div>
                 </div>`;
         }
 
@@ -1118,7 +1118,8 @@
             try {
                 const pdf = await pdfjsLib.getDocument(url).promise; container.innerHTML = '';
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const page = await pdf.getPage(pageNum); const viewport = page.getViewport({ scale: 1.5 });
+                    if (pageNum > 1) await new Promise(resolve => requestAnimationFrame(resolve));
+                    const page = await pdf.getPage(pageNum); const viewport = page.getViewport({ scale: 1.2 });
                     const canvas = document.createElement('canvas'); const context = canvas.getContext('2d');
                     canvas.width = viewport.width; canvas.height = viewport.height;
                     canvas.className = 'w-full h-auto bg-white shadow-none border-0 rounded-none mb-2 max-w-full';
@@ -1142,7 +1143,7 @@
         window.openPractice = async (type) => {
             document.getElementById('homeView').classList.add('hidden'); document.getElementById('practiceView').classList.remove('hidden'); window.scrollTo(0, 0);
             const container = document.getElementById('practiceContainer');
-            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white/80 backdrop-blur-md p-8 rounded-[2rem] shadow-xl text-center border-4 border-white"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
+            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-sky-100"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
             const parts = getSelectedParts(); const isAll = parts.includes('전체');
             try {
                 let videosHtml = '<div class="space-y-8">'; let sheetsHtml = '<div class="mt-10 pt-5 border-t-2 border-dashed border-sky-200">'; let sheetEntries = [];
@@ -1160,11 +1161,12 @@
                     const thisSunday = getNextSunday(); const d = new Date(thisSunday); d.setDate(d.getDate() + 7); const nextSunday = d.toISOString().split('T')[0];
                     const datesToFetch = []; if (type === '이번주' || type === '이번주_다음주') datesToFetch.push(thisSunday); if (type === '다음주' || type === '이번주_다음주') datesToFetch.push(nextSunday);
                     document.getElementById('practiceTitle').innerText = type.replace('_', ', ') + ' 곡 연습';
-                    for (const date of datesToFetch) {
-                        const docSnap = await getDoc(doc(db, WEEKLY_COL, date));
+                    const weeklyDocs = await Promise.all(datesToFetch.map(date => getDoc(doc(db, WEEKLY_COL, date))));
+                    for (const [idx, date] of datesToFetch.entries()) {
+                        const docSnap = weeklyDocs[idx];
                         if (docSnap.exists()) {
                             const data = docSnap.data(); const title = data.title || `${date} 찬양`;
-                            videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-cyan-900 mb-5 flex items-center bg-white/80 backdrop-blur-md py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-white"><div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
+                            videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-cyan-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-sky-50"><div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
                             videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">`;
                             if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); }
                             if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); }
@@ -1176,7 +1178,7 @@
                             if (data.sheetMusicUrl) { sheetEntries.push({ type: 'pdf', url: data.sheetMusicUrl, title, date, idx }); sheetsHtml += renderPdfContainer(title, date, data.sheetMusicUrl, idx); }
                             else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) { sheetEntries.push({ type: 'images', images: data.sheetMusicImages, title, date, idx }); sheetsHtml += renderImagesContainer(title, date, data.sheetMusicImages, idx); }
                         } else {
-                            videosHtml += `<div class="bg-white/60 backdrop-blur-sm p-12 rounded-[2.5rem] text-center border-4 border-dashed border-sky-200 mb-12 shadow-sm"><i class="fas fa-box-open mb-6 text-6xl text-sky-300"></i><br><span class="font-black text-2xl text-cyan-800">${date}</span><p class="text-cyan-600 font-bold mt-3 text-lg">아직 등록된 곡이 없습니다.</p></div>`;
+                            videosHtml += `<div class="bg-white p-12 rounded-[2rem] text-center border-2 border-dashed border-sky-200 mb-12 shadow-sm"><i class="fas fa-box-open mb-6 text-6xl text-sky-300"></i><br><span class="font-black text-2xl text-cyan-800">${date}</span><p class="text-cyan-600 font-bold mt-3 text-lg">아직 등록된 곡이 없습니다.</p></div>`;
                         }
                     }
                     videosHtml += '</div>'; sheetsHtml += '</div>';
@@ -1187,7 +1189,7 @@
         };
 
         function buildFixedSection(name, icon, data, isAll, parts, prefix) {
-            let html = `<div><h2 class="font-black text-2xl md:text-3xl text-cyan-900 mb-5 flex items-center bg-white/80 backdrop-blur-md py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-white"><div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-500 shadow-inner"><i class="fas ${icon}"></i></div> ${name}</h2>`;
+            let html = `<div><h2 class="font-black text-2xl md:text-3xl text-cyan-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-sky-50"><div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-500 shadow-inner"><i class="fas ${icon}"></i></div> ${name}</h2>`;
             html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">`;
             if (isAll || parts.includes('합창')) html += renderVideo(name, '합창', getYoutubeId(data.full), `${prefix}_full`);
             if (isAll || parts.includes('소프라노')) html += renderVideo(name, '소프라노', getYoutubeId(data.soprano), `${prefix}_sop`);
@@ -1201,7 +1203,7 @@
             document.getElementById('homeView').classList.add('hidden'); document.getElementById('practiceView').classList.remove('hidden');
             document.getElementById('pastDateSelector').classList.remove('hidden'); document.getElementById('practiceTitle').innerText = '기존 곡 연습'; window.scrollTo(0, 0);
             const container = document.getElementById('practiceContainer');
-            container.innerHTML = '<div class="flex justify-center py-20"><div class="bg-sky-50/80 backdrop-blur-md p-6 rounded-[1.5rem] border-2 border-sky-200 text-center animate-bounce shadow-sm"><i class="fas fa-hand-point-up text-4xl text-cyan-400 mb-4 block"></i><p class="text-cyan-900 font-black text-xl">위에서 날짜를 콕! 찍어주세요.</p></div></div>' + renderPracticeFooter();
+            container.innerHTML = '<div class="flex justify-center py-20"><div class="bg-sky-50 p-6 rounded-[1.5rem] border-2 border-sky-200 text-center shadow-sm"><i class="fas fa-hand-point-up text-4xl text-cyan-400 mb-4 block"></i><p class="text-cyan-900 font-black text-xl">위에서 날짜를 콕! 찍어주세요.</p></div></div>' + renderPracticeFooter();
             const dropdown = document.getElementById('pastDateDropdown'); dropdown.innerHTML = '<option value="">날짜 목록 불러오는 중...</option>';
             try {
                 const snap = await getDocs(query(collection(db, WEEKLY_COL))); let dates = []; snap.forEach(d => dates.push({ date: d.id, title: d.data().title || '' }));
@@ -1212,13 +1214,13 @@
 
         window.loadPastPractice = async () => {
             const date = document.getElementById('pastDateDropdown').value; const container = document.getElementById('practiceContainer'); if (!date) { container.innerHTML = renderPracticeFooter(); return; }
-            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white/80 backdrop-blur-md p-8 rounded-[2rem] shadow-xl text-center border-4 border-white"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
+            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-sky-100"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
             const parts = getSelectedParts(); const isAll = parts.includes('전체');
             try {
                 const docSnap = await getDoc(doc(db, WEEKLY_COL, date)); let videosHtml = '<div class="space-y-12">'; let sheetsHtml = ''; let hasData = false;
                 if (docSnap.exists()) {
                     const data = docSnap.data(); const title = data.title || `${date} 찬양`;
-                    videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-cyan-900 mb-5 flex items-center bg-white/80 backdrop-blur-md py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-white"><div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
+                    videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-cyan-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-sky-50"><div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
                     videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">`;
                     if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); hasData = true; }
                     if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); hasData = true; }
@@ -1233,7 +1235,7 @@
                 if (hasData) {
                     container.innerHTML = videosHtml + sheetsHtml + renderPracticeFooter(); const d = docSnap.data();
                     if (d && d.sheetMusicUrl) { setTimeout(() => loadPdfToCanvas(d.sheetMusicUrl, 'pdf-container-past'), 100); }
-                } else { container.innerHTML = '<div class="py-20 text-center"><div class="bg-white/80 backdrop-blur-md p-8 rounded-[1.5rem] inline-block shadow-sm border-2 border-sky-100"><i class="fas fa-folder-open text-5xl text-sky-300 mb-4 block"></i><p class="text-cyan-700 font-black text-xl">이 파트에는 등록된 곡이 없어요.</p></div></div>' + renderPracticeFooter(); }
+                } else { container.innerHTML = '<div class="py-20 text-center"><div class="bg-white p-8 rounded-[1.5rem] inline-block shadow-sm border-2 border-sky-100"><i class="fas fa-folder-open text-5xl text-sky-300 mb-4 block"></i><p class="text-cyan-700 font-black text-xl">이 파트에는 등록된 곡이 없어요.</p></div></div>' + renderPracticeFooter(); }
             } catch (e) { container.innerHTML = '<div class="py-20 text-center"><div class="bg-red-50/90 p-8 rounded-[1.5rem] inline-block border-2 border-red-200 shadow-lg"><p class="text-red-600 font-black text-xl">데이터 로드 실패 😭</p></div></div>' + renderPracticeFooter(); }
         };
     </script>
