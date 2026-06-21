@@ -297,70 +297,70 @@
     </div>
 
     <div class="w-full max-w-5xl mx-auto relative overflow-x-hidden">
-        <div id="homeView" class="flex flex-col min-h-screen bg-transparent p-4 md:p-8 relative">
-            <div class="flex-1 flex flex-col items-center justify-center pt-8">
-                <div class="relative w-full max-w-xs mb-10">
+        <div id="homeView" class="flex flex-col min-h-screen bg-transparent p-3 md:p-6 relative">
+            <div class="flex-1 flex flex-col items-center justify-start pt-3 md:pt-5">
+                <div class="relative w-full max-w-2xl mb-4 md:mb-5">
                     <div
                         class="absolute inset-0 bg-gradient-to-r from-cyan-300 to-blue-400 rounded-[3rem] blur-xl opacity-40 animate-pulse">
                     </div>
                     <img src="msyhsgd.jpg" alt="무석연합교회 성가대"
-                        class="relative w-full object-contain rounded-[3rem] shadow-[0_20px_40px_rgba(14,165,233,0.2)] border-[6px] border-white/90 bg-white"
+                        class="relative w-full h-auto object-contain rounded-[2rem] shadow-[0_20px_40px_rgba(14,165,233,0.2)] border-[5px] border-white/90 bg-white"
                         onerror="this.src='https://via.placeholder.com/300x150?text=Choir+Image'">
                 </div>
 
                 <div
-                    class="w-full max-w-2xl bg-white/70 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] shadow-[0_20px_50px_-15px_rgba(2,132,199,0.15)] mb-8 border-4 border-white">
+                    class="w-full max-w-2xl bg-white/70 backdrop-blur-xl p-4 md:p-5 rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(2,132,199,0.15)] mb-4 md:mb-5 border-4 border-white">
                     <h3
-                        class="text-sm font-black text-sky-500 mb-5 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                        class="text-xs md:text-sm font-black text-sky-500 mb-3 uppercase tracking-widest text-center flex items-center justify-center gap-2">
                         <i class="fas fa-water"></i> 연습할 파트 설정
                     </h3>
-                    <div class="flex flex-wrap justify-center gap-x-3 gap-y-4 pt-2 pb-2" id="partSelectionContainer">
+                    <div class="flex flex-wrap justify-center gap-x-2 gap-y-3 pt-1 pb-1" id="partSelectionContainer">
                         <label class="cursor-pointer relative"><input type="checkbox" value="전체"
                                 class="hidden part-checkbox" onchange="handlePartSelection(this)" checked>
                             <div
-                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                class="px-4 py-2 rounded-[1.25rem] text-xs md:text-sm font-black text-center cursor-pointer min-w-[64px]">
                                 전체</div>
                         </label>
                         <label class="cursor-pointer relative"><input type="checkbox" value="합창"
                                 class="hidden part-checkbox" onchange="handlePartSelection(this)">
                             <div
-                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                class="px-4 py-2 rounded-[1.25rem] text-xs md:text-sm font-black text-center cursor-pointer min-w-[64px]">
                                 합창</div>
                         </label>
                         <label class="cursor-pointer relative"><input type="checkbox" value="소프라노"
                                 class="hidden part-checkbox part-checkbox-sop" onchange="handlePartSelection(this)">
                             <div
-                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                class="px-4 py-2 rounded-[1.25rem] text-xs md:text-sm font-black text-center cursor-pointer min-w-[64px]">
                                 소프라노</div>
                         </label>
                         <label class="cursor-pointer relative"><input type="checkbox" value="알토"
                                 class="hidden part-checkbox part-checkbox-alto" onchange="handlePartSelection(this)">
                             <div
-                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                class="px-4 py-2 rounded-[1.25rem] text-xs md:text-sm font-black text-center cursor-pointer min-w-[64px]">
                                 알토</div>
                         </label>
                         <label class="cursor-pointer relative"><input type="checkbox" value="테너"
                                 class="hidden part-checkbox part-checkbox-tenor" onchange="handlePartSelection(this)">
                             <div
-                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                class="px-4 py-2 rounded-[1.25rem] text-xs md:text-sm font-black text-center cursor-pointer min-w-[64px]">
                                 테너</div>
                         </label>
                         <label class="cursor-pointer relative"><input type="checkbox" value="베이스"
                                 class="hidden part-checkbox part-checkbox-bass" onchange="handlePartSelection(this)">
                             <div
-                                class="px-5 py-3 rounded-[1.5rem] text-sm font-black text-center cursor-pointer min-w-[70px]">
+                                class="px-4 py-2 rounded-[1.25rem] text-xs md:text-sm font-black text-center cursor-pointer min-w-[64px]">
                                 베이스</div>
                         </label>
                     </div>
                 </div>
 
                 <div class="w-full max-w-2xl">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                         <button onclick="openPractice('이번주')"
-                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(14,165,233,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(14,165,233,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-sky-200">
-                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(14,165,233,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-sky-200">
+                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-12 h-12 rounded-[1.2rem] bg-sky-100 text-sky-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-sky-500 group-hover:text-white transition-all shadow-inner">
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-sky-100 text-sky-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-sky-500 group-hover:text-white transition-all shadow-inner">
                                     <i class="fas fa-sun text-xl"></i>
                                 </div>
                                 이번주 곡
@@ -368,10 +368,10 @@
                             <i class="fas fa-chevron-right text-sky-300 group-hover:text-sky-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('다음주')"
-                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(59,130,246,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(59,130,246,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-blue-200">
-                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(59,130,246,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(59,130,246,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-blue-200">
+                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-12 h-12 rounded-[1.2rem] bg-blue-100 text-blue-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-inner">
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-blue-100 text-blue-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-inner">
                                     <i class="fas fa-umbrella-beach text-xl"></i>
                                 </div>
                                 다음주 곡
@@ -380,10 +380,10 @@
                                 class="fas fa-chevron-right text-blue-300 group-hover:text-blue-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('이번주_다음주')"
-                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(20,184,166,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(20,184,166,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-teal-200">
-                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(20,184,166,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(20,184,166,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-teal-200">
+                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-12 h-12 rounded-[1.2rem] bg-teal-100 text-teal-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-teal-500 group-hover:text-white transition-all shadow-inner">
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-teal-100 text-teal-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-teal-500 group-hover:text-white transition-all shadow-inner">
                                     <i class="fas fa-water text-xl"></i>
                                 </div>
                                 이번주 + 다음주 연습
@@ -392,10 +392,10 @@
                                 class="fas fa-chevron-right text-teal-300 group-hover:text-teal-500 transition-colors"></i>
                         </button>
                         <button onclick="openPastPractice()"
-                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(99,102,241,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(99,102,241,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-indigo-200">
-                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(99,102,241,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(99,102,241,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-indigo-200">
+                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-12 h-12 rounded-[1.2rem] bg-indigo-100 text-indigo-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-inner">
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-indigo-100 text-indigo-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-inner">
                                     <i class="fas fa-history text-xl"></i>
                                 </div>
                                 기존 곡 연습
@@ -404,10 +404,10 @@
                                 class="fas fa-chevron-right text-indigo-300 group-hover:text-indigo-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('고정')"
-                            class="group w-full p-6 bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(6,182,212,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(6,182,212,0.4)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-cyan-200">
-                            <span class="flex items-center gap-4 text-cyan-900 font-black text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(6,182,212,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(6,182,212,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-cyan-200">
+                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-12 h-12 rounded-[1.2rem] bg-cyan-100 text-cyan-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-white transition-all shadow-inner">
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-cyan-100 text-cyan-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-white transition-all shadow-inner">
                                     <i class="fas fa-church text-xl"></i>
                                 </div>
                                 고정송 (입례/기도)
@@ -417,9 +417,9 @@
                         </button>
                     </div>
 
-                    <div class="mt-8 pt-2">
+                    <div class="mt-4 pt-1">
                         <button onclick="openSetup()"
-                            class="w-full py-5 bg-gradient-to-r from-blue-900 to-cyan-900 rounded-[2rem] shadow-[0_10px_20px_rgba(8,145,178,0.3)] text-white font-black hover:shadow-[0_15px_30px_rgba(8,145,178,0.5)] hover:-translate-y-2 transition-all duration-300 flex items-center justify-center gap-3 border-b-4 border-slate-900 active:translate-y-0 active:border-b-0">
+                            class="w-full py-4 bg-gradient-to-r from-blue-900 to-cyan-900 rounded-[1.5rem] shadow-[0_10px_20px_rgba(8,145,178,0.3)] text-white font-black hover:shadow-[0_15px_30px_rgba(8,145,178,0.5)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3 border-b-4 border-slate-900 active:translate-y-0 active:border-b-0">
                             <i class="fas fa-anchor text-xl"></i> 관리자 설정 (링크/악보)
                         </button>
                     </div>
