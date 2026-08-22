@@ -781,6 +781,8 @@
         let pendingDeleteImages = false;
         let imageSlots = [];
         const MAX_IMAGE_SLOTS = 20;
+        const sectionRepeatState = {};
+        let ytApiPromise = null;
 
         window.handlePartSelection = (checkbox) => {
             const checkboxes = document.querySelectorAll('.part-checkbox');
@@ -795,6 +797,7 @@
         function getSelectedParts() { return Array.from(document.querySelectorAll('.part-checkbox:checked')).map(cb => cb.value); }
 
         window.goHome = () => {
+            clearAllSectionPlayers();
             document.getElementById('practiceView').classList.add('hidden');
             document.getElementById('setupView').classList.add('hidden');
             document.getElementById('pastDateSelector').classList.add('hidden');
@@ -1044,8 +1047,133 @@
             d.setDate(d.getDate() + diff); return (new Date(d - d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         }
         window.toggleRepeat = (videoId, partKey, isChecked) => {
+            if (sectionRepeatState[partKey]) window.stopSectionRepeat(partKey);
             const iframe = document.getElementById(`iframe_${partKey}`); if (!iframe) return;
             iframe.src = isChecked ? `https://www.youtube.com/embed/${videoId}?loop=1&playlist=${videoId}&autoplay=1` : `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        };
+
+        // ===== 구간 반복 연습 (YouTube IFrame API) =====
+        function ensureYouTubeApi() {
+            if (ytApiPromise) return ytApiPromise;
+            ytApiPromise = new Promise((resolve) => {
+                if (window.YT && window.YT.Player) { resolve(); return; }
+                const prevReady = window.onYouTubeIframeAPIReady;
+                window.onYouTubeIframeAPIReady = () => { if (typeof prevReady === 'function') prevReady(); resolve(); };
+                if (!document.getElementById('youtube-iframe-api')) {
+                    const tag = document.createElement('script');
+                    tag.id = 'youtube-iframe-api';
+                    tag.src = 'https://www.youtube.com/iframe_api';
+                    document.head.appendChild(tag);
+                }
+            });
+            return ytApiPromise;
+        }
+
+        function restoreVideoIframe(wrap, videoId, partKey) {
+            wrap.innerHTML = `<iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
+
+        function clearAllSectionPlayers() {
+            Object.keys(sectionRepeatState).forEach(partKey => {
+                const state = sectionRepeatState[partKey];
+                if (state.interval) clearInterval(state.interval);
+                if (state.player && typeof state.player.destroy === 'function') {
+                    try { state.player.destroy(); } catch (e) { /* ignore */ }
+                }
+                delete sectionRepeatState[partKey];
+            });
+        }
+
+        window.toggleSectionRepeat = async (partKey) => {
+            if (sectionRepeatState[partKey]) { window.stopSectionRepeat(partKey); return; }
+
+            const wrap = document.getElementById(`videoWrap_${partKey}`);
+            const videoId = wrap ? wrap.dataset.videoId : null;
+            const startInput = document.getElementById(`startSec_${partKey}`);
+            const endInput = document.getElementById(`endSec_${partKey}`);
+            const msg = document.getElementById(`sectionMsg_${partKey}`);
+            const btn = document.getElementById(`sectionBtn_${partKey}`);
+            if (!wrap || !videoId || !startInput || !endInput) return;
+
+            const start = parseInt(startInput.value, 10);
+            const end = parseInt(endInput.value, 10);
+            if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end <= start) {
+                if (msg) { msg.textContent = '시작/종료 초를 올바르게 입력해주세요. (종료 > 시작)'; msg.classList.remove('hidden'); }
+                return;
+            }
+            if (msg) msg.classList.add('hidden');
+
+            const loopToggle = document.getElementById(`toggle_${partKey}`);
+            if (loopToggle && loopToggle.checked) { loopToggle.checked = false; window.toggleRepeat(videoId, partKey, false); }
+
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> 준비중...'; }
+            wrap.innerHTML = `<div id="player_${partKey}" class="absolute inset-0 w-full h-full"></div>`;
+
+            try {
+                await ensureYouTubeApi();
+            } catch (e) {
+                if (msg) { msg.textContent = '유튜브 플레이어를 불러오지 못했습니다.'; msg.classList.remove('hidden'); }
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-repeat mr-1"></i> 구간반복 시작'; }
+                restoreVideoIframe(wrap, videoId, partKey);
+                return;
+            }
+
+            // 대기 중 화면이 전환되었으면 중단
+            if (!document.getElementById(`player_${partKey}`)) return;
+
+            const player = new YT.Player(`player_${partKey}`, {
+                width: '100%',
+                height: '100%',
+                videoId,
+                playerVars: { start, end, autoplay: 1, enablejsapi: 1, rel: 0 },
+                events: {
+                    onReady: (e) => { e.target.seekTo(start, true); e.target.playVideo(); },
+                    onStateChange: (e) => {
+                        if (e.data === YT.PlayerState.ENDED) { e.target.seekTo(start, true); e.target.playVideo(); }
+                    },
+                    onError: () => {
+                        if (msg) { msg.textContent = '이 영상은 구간 반복 재생을 지원하지 않습니다.'; msg.classList.remove('hidden'); }
+                        window.stopSectionRepeat(partKey);
+                    }
+                }
+            });
+
+            const interval = setInterval(() => {
+                const state = sectionRepeatState[partKey];
+                if (!state || !state.player || typeof state.player.getCurrentTime !== 'function') return;
+                try {
+                    const cur = state.player.getCurrentTime();
+                    if (typeof cur === 'number' && cur >= state.end - 0.15) state.player.seekTo(state.start, true);
+                } catch (e) { /* 아직 준비되지 않음 */ }
+            }, 250);
+
+            sectionRepeatState[partKey] = { player, interval, start, end, videoId };
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-stop mr-1"></i> 구간반복 정지';
+                btn.classList.remove('bg-cyan-500', 'hover:bg-cyan-600');
+                btn.classList.add('bg-red-500', 'hover:bg-red-600');
+            }
+        };
+
+        window.stopSectionRepeat = (partKey) => {
+            const state = sectionRepeatState[partKey];
+            if (!state) return;
+            clearInterval(state.interval);
+            if (state.player && typeof state.player.destroy === 'function') {
+                try { state.player.destroy(); } catch (e) { /* ignore */ }
+            }
+            const videoId = state.videoId;
+            delete sectionRepeatState[partKey];
+
+            const btn = document.getElementById(`sectionBtn_${partKey}`);
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-repeat mr-1"></i> 구간반복 시작';
+                btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                btn.classList.add('bg-cyan-500', 'hover:bg-cyan-600');
+            }
+            const wrap = document.getElementById(`videoWrap_${partKey}`);
+            if (wrap) restoreVideoIframe(wrap, videoId, partKey);
         };
 
         function getPartBadgeClass(subtitle) {
@@ -1073,8 +1201,23 @@
                             </div>
                         </div>
                     </div>
-                    <div class="aspect-video w-full bg-cyan-950 relative flex-1 border-t-2 border-white/50">
+                    <div id="videoWrap_${partKey}" data-video-id="${videoId}" class="aspect-video w-full bg-cyan-950 relative flex-1 border-t-2 border-white/50">
                         <iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="p-3 border-t-2 border-sky-50 bg-sky-50/40">
+                        <p class="text-[11px] font-black text-cyan-500 mb-2 flex items-center gap-1"><i class="fas fa-repeat"></i> 구간 반복 연습</p>
+                        <div class="flex items-center gap-2">
+                            <input type="number" min="0" step="1" inputmode="numeric" id="startSec_${partKey}" placeholder="시작(초)"
+                                class="w-0 flex-1 min-w-0 bg-white border-2 border-sky-100 rounded-lg px-2 py-2 text-sm font-bold text-cyan-900 focus:border-cyan-400 outline-none">
+                            <span class="text-cyan-300 font-black">~</span>
+                            <input type="number" min="0" step="1" inputmode="numeric" id="endSec_${partKey}" placeholder="종료(초)"
+                                class="w-0 flex-1 min-w-0 bg-white border-2 border-sky-100 rounded-lg px-2 py-2 text-sm font-bold text-cyan-900 focus:border-cyan-400 outline-none">
+                            <button id="sectionBtn_${partKey}" onclick="toggleSectionRepeat('${partKey}')"
+                                class="shrink-0 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-black rounded-lg shadow-sm transition-all whitespace-nowrap">
+                                <i class="fas fa-repeat mr-1"></i>구간반복 시작
+                            </button>
+                        </div>
+                        <p id="sectionMsg_${partKey}" class="hidden text-[11px] text-red-500 font-bold mt-1.5"></p>
                     </div>
                 </div>`;
         }
@@ -1141,6 +1284,7 @@
         };
 
         window.openPractice = async (type) => {
+            clearAllSectionPlayers();
             document.getElementById('homeView').classList.add('hidden'); document.getElementById('practiceView').classList.remove('hidden'); window.scrollTo(0, 0);
             const container = document.getElementById('practiceContainer');
             container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-sky-100"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
@@ -1200,6 +1344,7 @@
         }
 
         window.openPastPractice = async () => {
+            clearAllSectionPlayers();
             document.getElementById('homeView').classList.add('hidden'); document.getElementById('practiceView').classList.remove('hidden');
             document.getElementById('pastDateSelector').classList.remove('hidden'); document.getElementById('practiceTitle').innerText = '기존 곡 연습'; window.scrollTo(0, 0);
             const container = document.getElementById('practiceContainer');
@@ -1213,6 +1358,7 @@
         };
 
         window.loadPastPractice = async () => {
+            clearAllSectionPlayers();
             const date = document.getElementById('pastDateDropdown').value; const container = document.getElementById('practiceContainer'); if (!date) { container.innerHTML = renderPracticeFooter(); return; }
             container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-sky-100"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
             const parts = getSelectedParts(); const isAll = parts.includes('전체');
