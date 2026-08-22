@@ -1095,9 +1095,9 @@
             const btn = document.getElementById(`sectionBtn_${partKey}`);
             if (!wrap || !videoId || !startInput || !endInput) return;
 
-            const start = parseFloat(startInput.value);
-            const end = parseFloat(endInput.value);
-            if (!isFinite(start) || !isFinite(end) || start < 0 || end <= start) {
+            const start = parseInt(startInput.value, 10);
+            const end = parseInt(endInput.value, 10);
+            if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end <= start) {
                 if (msg) { msg.textContent = '시작/종료 초를 올바르게 입력해주세요. (종료 > 시작)'; msg.classList.remove('hidden'); }
                 return;
             }
@@ -1125,7 +1125,7 @@
                 width: '100%',
                 height: '100%',
                 videoId,
-                playerVars: { start: Math.floor(start), end: Math.ceil(end), autoplay: 1, enablejsapi: 1, rel: 0 },
+                playerVars: { start, end, autoplay: 1, enablejsapi: 1, rel: 0 },
                 events: {
                     onReady: (e) => { e.target.seekTo(start, true); e.target.playVideo(); },
                     onStateChange: (e) => {
@@ -1207,10 +1207,10 @@
                     <div class="p-3 border-t-2 border-sky-50 bg-sky-50/40">
                         <p class="text-[11px] font-black text-cyan-500 mb-2 flex items-center gap-1"><i class="fas fa-repeat"></i> 구간 반복 연습</p>
                         <div class="flex items-center gap-2">
-                            <input type="number" min="0" step="1" id="startSec_${partKey}" placeholder="시작(초)"
+                            <input type="number" min="0" step="1" inputmode="numeric" id="startSec_${partKey}" placeholder="시작(초)"
                                 class="w-0 flex-1 min-w-0 bg-white border-2 border-sky-100 rounded-lg px-2 py-2 text-sm font-bold text-cyan-900 focus:border-cyan-400 outline-none">
                             <span class="text-cyan-300 font-black">~</span>
-                            <input type="number" min="0" step="1" id="endSec_${partKey}" placeholder="종료(초)"
+                            <input type="number" min="0" step="1" inputmode="numeric" id="endSec_${partKey}" placeholder="종료(초)"
                                 class="w-0 flex-1 min-w-0 bg-white border-2 border-sky-100 rounded-lg px-2 py-2 text-sm font-bold text-cyan-900 focus:border-cyan-400 outline-none">
                             <button id="sectionBtn_${partKey}" onclick="toggleSectionRepeat('${partKey}')"
                                 class="shrink-0 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-black rounded-lg shadow-sm transition-all whitespace-nowrap">
