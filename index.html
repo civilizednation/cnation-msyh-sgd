@@ -1495,7 +1495,7 @@
             if (!isChecked) {
                 if (wrap.dataset.loopActive === '1') {
                     wrap.dataset.loopActive = '';
-                    restoreVideoFacade(wrap, videoId, partKey);
+                    restoreVideoIframe(wrap, videoId, partKey);
                 }
                 return;
             }
@@ -1524,32 +1524,46 @@
             return ytApiPromise;
         }
 
-        // 클릭 전에는 유튜브 서버에 아무 요청도 보내지 않는 "클릭해서 재생" 방식.
-        // 실제 재생(iframe 생성)은 사용자가 재생 버튼을 눌렀을 때만 window.playDefaultVideo에서 일어난다.
-        function buildVideoFacadeHtml(partKey, videoId) {
-            return `
-                <div class="absolute inset-0 w-full h-full cursor-pointer" onclick="playDefaultVideo('${partKey}', '${videoId}')">
-                    <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.opacity='0'">
-                    <div class="absolute inset-0 bg-black/25 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <div class="w-16 h-16 rounded-full bg-red-600 group-hover:scale-110 transition-transform flex items-center justify-center shadow-xl border-2 border-white/80">
-                            <i class="fas fa-play text-white text-2xl ml-1"></i>
-                        </div>
-                    </div>
-                </div>`;
+        // 일반재생은 main과 동일하게 평범한 유튜브 embed 하나만 보여준다(별도 버튼 없음).
+        // enablejsapi=1만 붙여서 유튜브가 보내주는 재생 상태 메시지를 "듣기만" 하고, 우리는
+        // seekTo/playVideo 같은 명령을 절대 보내지 않는다 — 반복재생 문제의 원인이었던
+        // "능동적으로 명령을 계속 보내는" 패턴과는 다른, 구독/수신 전용 방식이다.
+        function videoIframeHtml(partKey, videoId) {
+            return `<iframe id="iframe_${partKey}" data-listen-mode="normal" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         }
 
-        function restoreVideoFacade(wrap, videoId, partKey) {
+        function restoreVideoIframe(wrap, videoId, partKey) {
             wrap.dataset.loopActive = '';
-            wrap.innerHTML = buildVideoFacadeHtml(partKey, videoId);
+            wrap.innerHTML = videoIframeHtml(partKey, videoId);
         }
 
-        window.playDefaultVideo = (partKey, videoId) => {
-            const wrap = document.getElementById(`videoWrap_${partKey}`);
-            if (!wrap) return;
-            const partLabel = wrap.dataset.partLabel;
-            wrap.innerHTML = `<iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-            logVideoListen(partLabel, 'normal');
-        };
+        // 실제 재생 시작을 감지해 1회만 청취로 기록한다(같은 iframe에서 반복 재생/탐색해도 중복 카운트 안 함).
+        const countedNormalListenIframes = new WeakSet();
+        document.addEventListener('load', (event) => {
+            const el = event.target;
+            if (el && el.tagName === 'IFRAME' && el.dataset && el.dataset.listenMode === 'normal') {
+                try {
+                    el.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: el.id }), '*');
+                    el.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }), '*');
+                } catch (e) { /* ignore */ }
+            }
+        }, true);
+        window.addEventListener('message', (event) => {
+            if (event.origin !== 'https://www.youtube.com') return;
+            let data;
+            try { data = JSON.parse(event.data); } catch (e) { return; }
+            let state = null;
+            if (data && data.event === 'onStateChange' && typeof data.info === 'number') state = data.info;
+            else if (data && data.event === 'infoDelivery' && data.info && typeof data.info.playerState === 'number') state = data.info.playerState;
+            if (state !== 1) return; // YT.PlayerState.PLAYING
+            document.querySelectorAll('iframe[data-listen-mode="normal"]').forEach((iframeEl) => {
+                if (iframeEl.contentWindow !== event.source || countedNormalListenIframes.has(iframeEl)) return;
+                countedNormalListenIframes.add(iframeEl);
+                const partKey = iframeEl.id.slice('iframe_'.length);
+                const wrap = document.getElementById(`videoWrap_${partKey}`);
+                logVideoListen(wrap ? wrap.dataset.partLabel : null, 'normal');
+            });
+        });
 
         function clearAllSectionPlayers() {
             Object.keys(sectionRepeatState).forEach(partKey => {
@@ -1583,7 +1597,7 @@
             try {
                 await ensureYouTubeApi();
             } catch (e) {
-                restoreVideoFacade(wrap, videoId, partKey);
+                restoreVideoIframe(wrap, videoId, partKey);
                 throw e;
             }
 
@@ -1690,7 +1704,7 @@
                 btn.classList.add('bg-cyan-500', 'hover:bg-cyan-600');
             }
             const wrap = document.getElementById(`videoWrap_${partKey}`);
-            if (wrap) restoreVideoFacade(wrap, videoId, partKey);
+            if (wrap) restoreVideoIframe(wrap, videoId, partKey);
         };
 
         function getPartBadgeClass(subtitle) {
@@ -1719,7 +1733,7 @@
                         </div>
                     </div>
                     <div id="videoWrap_${partKey}" data-video-id="${videoId}" data-part-label="${subtitle}" class="aspect-video w-full bg-cyan-950 relative flex-1 border-t-2 border-white/50">
-                        ${buildVideoFacadeHtml(partKey, videoId)}
+                        ${videoIframeHtml(partKey, videoId)}
                     </div>
                     <div class="p-3 border-t-2 border-sky-50 bg-sky-50/40">
                         <p class="text-[11px] font-black text-cyan-500 mb-2 flex items-center gap-1"><i class="fas fa-repeat"></i> 구간 반복 연습</p>
