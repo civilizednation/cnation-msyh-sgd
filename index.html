@@ -1488,7 +1488,7 @@
         }
         // 전체 반복재생은 유튜브 자체 반복 파라미터(loop=1&playlist=videoId)로만 동작한다.
         // IFrame API/seekTo를 전혀 쓰지 않아, 반복 재생 도중 구글 봇 확인창이 뜨던 문제를 근본적으로 피한다.
-        // (그 대신 되감기 시점을 감지할 수 없어 "되감을 때마다 추가 카운트"는 이 모드에서는 집계하지 않는다.)
+        // 청취 카운트는 일반재생/전체반복/구간반복 모두 동일하게 "재생을 시작하는 순간" 1회만 기록한다.
         window.toggleRepeat = (videoId, partKey, isChecked) => {
             const wrap = document.getElementById(`videoWrap_${partKey}`);
             if (!wrap) return;
