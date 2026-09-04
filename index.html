@@ -1029,8 +1029,25 @@
             window.scrollTo(0, 0);
         };
 
+        // 통계 화면 어디서든 "통계 메뉴로"/"홈화면으로"를 눈에 띄는 버튼으로 보여준다.
+        function renderStatsNav(showBackToMenu) {
+            return `
+                <div class="grid ${showBackToMenu ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mb-4">
+                    ${showBackToMenu ? `
+                    <button onclick="renderStatsMenu()"
+                        class="py-3 px-3 rounded-xl bg-white text-slate-700 border-2 border-slate-300 font-black shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-arrow-left"></i> 통계 메뉴로
+                    </button>` : ''}
+                    <button onclick="goHome()"
+                        class="py-3 px-3 rounded-xl bg-slate-700 text-white border-2 border-slate-800 font-black shadow-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-home"></i> 홈화면으로
+                    </button>
+                </div>`;
+        }
+
         window.renderStatsMenu = function () {
             document.getElementById('statsContainer').innerHTML = `
+                ${renderStatsNav(false)}
                 <p class="text-center text-sm font-bold text-slate-500 bg-slate-100 border-2 border-slate-200 rounded-2xl px-4 py-3 shadow-sm mt-2 mb-4">
                     <i class="fas fa-circle-info mr-1"></i> 집계 시작일: ${STATS_START_LABEL} (그 이전 데이터는 없습니다)
                 </p>
@@ -1068,11 +1085,7 @@
             const weekStr = `${now.getFullYear()}-W${pad(getISOWeekNumber(now))}`;
             window.statsDefaults = { day: todayStr, week: weekStr, month: monthStr, year: yearStr };
             document.getElementById('statsContainer').innerHTML = `
-                <div class="mb-3">
-                    <button onclick="renderStatsMenu()" class="text-sm font-black text-slate-500 flex items-center gap-1.5 hover:text-slate-700 transition-colors">
-                        <i class="fas fa-arrow-left"></i> 통계 메뉴로
-                    </button>
-                </div>
+                ${renderStatsNav(true)}
                 <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] border-2 border-white p-4 md:p-5">
                     <h3 class="font-black text-slate-800 text-lg mb-3">${title}</h3>
                     <div class="grid grid-cols-4 gap-2 mb-3" id="statsPeriodTabs">
