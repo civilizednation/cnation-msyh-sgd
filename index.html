@@ -1467,23 +1467,22 @@
             const d = new Date(baseDate); const diff = d.getDay() === 0 ? 0 : 7 - d.getDay();
             d.setDate(d.getDate() + diff); return (new Date(d - d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         }
-        window.toggleRepeat = async (videoId, partKey, isChecked) => {
+        // 전체 반복재생은 유튜브 자체 반복 파라미터(loop=1&playlist=videoId)로만 동작한다.
+        // IFrame API/seekTo를 전혀 쓰지 않아, 반복 재생 도중 구글 봇 확인창이 뜨던 문제를 근본적으로 피한다.
+        window.toggleRepeat = (videoId, partKey, isChecked) => {
+            const wrap = document.getElementById(`videoWrap_${partKey}`);
+            if (!wrap) return;
             if (!isChecked) {
-                if (sectionRepeatState[partKey] && sectionRepeatState[partKey].mode === 'loop') {
-                    window.stopSectionRepeat(partKey);
+                if (wrap.dataset.loopActive === '1') {
+                    wrap.dataset.loopActive = '';
+                    restoreVideoIframe(wrap, videoId, partKey);
                 }
                 return;
             }
             // 구간반복이 켜져 있었다면 정리하고 전체 반복재생으로 전환
             if (sectionRepeatState[partKey]) window.stopSectionRepeat(partKey);
-            const wrap = document.getElementById(`videoWrap_${partKey}`);
-            const partLabel = wrap ? wrap.dataset.partLabel : null;
-            try {
-                await startLoopPlayback(partKey, videoId, 0, Number.MAX_SAFE_INTEGER, 'loop', partLabel);
-            } catch (e) {
-                const toggle = document.getElementById(`toggle_${partKey}`);
-                if (toggle) toggle.checked = false;
-            }
+            wrap.dataset.loopActive = '1';
+            wrap.innerHTML = `<iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         };
 
         // ===== 반복 재생 공용 엔진 (전체 반복재생 / 구간 반복 연습, YouTube IFrame API) =====
@@ -1504,6 +1503,7 @@
         }
 
         function restoreVideoIframe(wrap, videoId, partKey) {
+            wrap.dataset.loopActive = '';
             wrap.innerHTML = `<iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         }
 
@@ -1529,8 +1529,8 @@
             try { state.player.seekTo(state.start, true); state.player.playVideo(); } catch (e) { /* ignore */ }
         }
 
-        // mode: 'loop'(전체 반복재생, end는 재생 준비되면 영상 길이로 채워짐) | 'section'(구간 반복 연습)
-        async function startLoopPlayback(partKey, videoId, start, end, mode, partLabel, onPlayerError) {
+        // 구간 반복 연습(YouTube IFrame API) 전용 엔진. 전체 반복재생은 이 엔진을 쓰지 않는다.
+        async function startLoopPlayback(partKey, videoId, start, end, partLabel, onPlayerError) {
             const wrap = document.getElementById(`videoWrap_${partKey}`);
             if (!wrap) return;
             wrap.innerHTML = `<div id="player_${partKey}" class="absolute inset-0 w-full h-full"></div>`;
@@ -1549,15 +1549,11 @@
                 width: '100%',
                 height: '100%',
                 videoId,
-                playerVars: Object.assign({ start, autoplay: 1, enablejsapi: 1, rel: 0 }, mode === 'section' ? { end } : {}),
+                playerVars: { start, end, autoplay: 1, enablejsapi: 1, rel: 0 },
                 events: {
                     onReady: (e) => {
                         e.target.seekTo(start, true);
                         e.target.playVideo();
-                        if (mode === 'loop') {
-                            const dur = e.target.getDuration();
-                            if (sectionRepeatState[partKey] && dur > 0) sectionRepeatState[partKey].end = dur;
-                        }
                     },
                     onStateChange: (e) => {
                         if (e.data === YT.PlayerState.ENDED) handleLoopComplete(partKey);
@@ -1580,15 +1576,14 @@
                 } catch (e) { /* 아직 준비되지 않음 */ }
             }, 250);
 
-            sectionRepeatState[partKey] = { player, interval, start, end, videoId, mode, partLabel, lastLoopAt: 0 };
+            sectionRepeatState[partKey] = { player, interval, start, end, videoId, partLabel, lastLoopAt: 0 };
         }
 
         window.toggleSectionRepeat = async (partKey) => {
-            // 이미 구간반복 중이면(같은 버튼) 정지, 전체 반복재생 중이었다면 정리만 하고 구간반복으로 전환
+            // 이미 구간반복 중이면(같은 버튼) 정지
             if (sectionRepeatState[partKey]) {
-                const wasSection = sectionRepeatState[partKey].mode === 'section';
                 window.stopSectionRepeat(partKey);
-                if (wasSection) return;
+                return;
             }
 
             const wrap = document.getElementById(`videoWrap_${partKey}`);
@@ -1614,7 +1609,7 @@
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> 준비중...'; }
 
             try {
-                await startLoopPlayback(partKey, videoId, start, end, 'section', partLabel, () => {
+                await startLoopPlayback(partKey, videoId, start, end, partLabel, () => {
                     if (msg) { msg.textContent = '이 영상은 구간 반복 재생을 지원하지 않습니다.'; msg.classList.remove('hidden'); }
                 });
             } catch (e) {
