@@ -953,6 +953,7 @@
         const FIXED_COL = "cnation-msyh-sgd-fixed";
         const VISITS_COL = "cnation-msyh-sgd-visits";
         const CLICKS_COL = "cnation-msyh-sgd-practice-clicks";
+        const LISTENS_COL = "cnation-msyh-sgd-video-listens";
         const STATS_PASSWORD = "1257";
 
         let currentSheetMusicUrl = '';
@@ -979,6 +980,12 @@
         function logPracticeClick(parts, type) {
             if (!parts || parts.length === 0) return;
             addDoc(collection(db, CLICKS_COL), { parts, type: type || '', timestamp: serverTimestamp() })
+                .catch(() => { /* 통계 기록 실패는 무시 */ });
+        }
+
+        function logVideoListen(partLabel, mode) {
+            if (!partLabel) return;
+            addDoc(collection(db, LISTENS_COL), { part: partLabel, mode: mode || '', timestamp: serverTimestamp() })
                 .catch(() => { /* 통계 기록 실패는 무시 */ });
         }
 
@@ -1150,10 +1157,16 @@
             const resultArea = document.getElementById('statsResultArea');
             resultArea.innerHTML = '<div class="flex justify-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-slate-400"></i></div>';
             try {
-                const col = kind === 'visits' ? VISITS_COL : CLICKS_COL;
-                const q = query(collection(db, col), where('timestamp', '>=', Timestamp.fromDate(start)), where('timestamp', '<', Timestamp.fromDate(end)));
-                const snap = await getDocs(q);
-                if (kind === 'visits') renderVisitStats(snap, label); else renderClickStats(snap, label);
+                if (kind === 'visits') {
+                    const q = query(collection(db, VISITS_COL), where('timestamp', '>=', Timestamp.fromDate(start)), where('timestamp', '<', Timestamp.fromDate(end)));
+                    const snap = await getDocs(q);
+                    renderVisitStats(snap, label);
+                } else {
+                    const clicksQ = query(collection(db, CLICKS_COL), where('timestamp', '>=', Timestamp.fromDate(start)), where('timestamp', '<', Timestamp.fromDate(end)));
+                    const listensQ = query(collection(db, LISTENS_COL), where('timestamp', '>=', Timestamp.fromDate(start)), where('timestamp', '<', Timestamp.fromDate(end)));
+                    const [clicksSnap, listensSnap] = await Promise.all([getDocs(clicksQ), getDocs(listensQ)]);
+                    renderClickStats(clicksSnap, listensSnap, label);
+                }
             } catch (e) {
                 resultArea.innerHTML = '<div class="text-center py-10 text-red-500 font-bold bg-white/80 rounded-[1.5rem] border-2 border-red-100">조회 중 오류가 발생했습니다.</div>';
             }
@@ -1193,28 +1206,39 @@
                 </div>`;
         }
 
-        function renderClickStats(snap, label) {
-            const counts = {};
-            let total = 0;
-            snap.forEach(docSnap => {
+        function renderClickStats(clicksSnap, listensSnap, label) {
+            const clickCounts = {};
+            let totalClicks = 0;
+            clicksSnap.forEach(docSnap => {
                 const data = docSnap.data();
-                total++;
-                (data.parts || []).forEach(p => { counts[p] = (counts[p] || 0) + 1; });
+                totalClicks++;
+                (data.parts || []).forEach(p => { clickCounts[p] = (clickCounts[p] || 0) + 1; });
+            });
+            const listenCounts = {};
+            let totalListens = 0;
+            listensSnap.forEach(docSnap => {
+                const data = docSnap.data();
+                totalListens++;
+                if (data.part) listenCounts[data.part] = (listenCounts[data.part] || 0) + 1;
             });
             const order = ['전체', '합창', '소프라노', '알토', '테너', '베이스'];
-            const keys = [...order, ...Object.keys(counts).filter(k => !order.includes(k))].filter(k => counts[k] !== undefined);
+            const extra = Object.keys(Object.assign({}, clickCounts, listenCounts)).filter(k => !order.includes(k));
+            const keys = [...order, ...extra].filter(k => clickCounts[k] !== undefined || listenCounts[k] !== undefined);
             const rowsHtml = keys.map(k => `
                 <div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
                     <span class="font-black text-slate-800">${escapeHtml(k)}</span>
-                    <span class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg font-black text-sm">${counts[k]}회</span>
+                    <div class="text-right leading-tight">
+                        <p class="text-xs text-slate-400 font-bold">버튼 클릭 <span class="text-slate-700 font-black">${clickCounts[k] || 0}회</span></p>
+                        <p class="text-xs text-slate-400 font-bold mt-0.5">곡 청취 <span class="text-slate-700 font-black">${listenCounts[k] || 0}회</span></p>
+                    </div>
                 </div>`).join('');
             document.getElementById('statsResultArea').innerHTML = `
                 <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] border-2 border-white p-4 md:p-5">
                     <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
                         <h4 class="font-black text-slate-700">${escapeHtml(label)}</h4>
-                        <span class="text-xs font-bold text-slate-400">총 연습 실행 ${total}회</span>
+                        <span class="text-xs font-bold text-slate-400">버튼 클릭 ${totalClicks}회 · 곡 청취 ${totalListens}회</span>
                     </div>
-                    ${total === 0 ? '<p class="text-center text-slate-400 font-bold py-8">해당 기간 연습 기록이 없습니다.</p>' : rowsHtml}
+                    ${keys.length === 0 ? '<p class="text-center text-slate-400 font-bold py-8">해당 기간 연습 기록이 없습니다.</p>' : rowsHtml}
                 </div>`;
         }
 
@@ -1458,13 +1482,26 @@
             const d = new Date(baseDate); const diff = d.getDay() === 0 ? 0 : 7 - d.getDay();
             d.setDate(d.getDate() + diff); return (new Date(d - d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         }
-        window.toggleRepeat = (videoId, partKey, isChecked) => {
+        window.toggleRepeat = async (videoId, partKey, isChecked) => {
+            if (!isChecked) {
+                if (sectionRepeatState[partKey] && sectionRepeatState[partKey].mode === 'loop') {
+                    window.stopSectionRepeat(partKey);
+                }
+                return;
+            }
+            // 구간반복이 켜져 있었다면 정리하고 전체 반복재생으로 전환
             if (sectionRepeatState[partKey]) window.stopSectionRepeat(partKey);
-            const iframe = document.getElementById(`iframe_${partKey}`); if (!iframe) return;
-            iframe.src = isChecked ? `https://www.youtube.com/embed/${videoId}?loop=1&playlist=${videoId}&autoplay=1` : `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            const wrap = document.getElementById(`videoWrap_${partKey}`);
+            const partLabel = wrap ? wrap.dataset.partLabel : null;
+            try {
+                await startLoopPlayback(partKey, videoId, 0, Number.MAX_SAFE_INTEGER, 'loop', partLabel);
+            } catch (e) {
+                const toggle = document.getElementById(`toggle_${partKey}`);
+                if (toggle) toggle.checked = false;
+            }
         };
 
-        // ===== 구간 반복 연습 (YouTube IFrame API) =====
+        // ===== 반복 재생 공용 엔진 (전체 반복재생 / 구간 반복 연습, YouTube IFrame API) =====
         function ensureYouTubeApi() {
             if (ytApiPromise) return ytApiPromise;
             ytApiPromise = new Promise((resolve) => {
@@ -1496,11 +1533,84 @@
             });
         }
 
+        // 반복 구간을 한 바퀴 돌 때마다(=한 번 청취) 시작 지점으로 되감고 통계에 기록한다.
+        // 인터벌 폴링과 YouTube의 자체 ENDED 이벤트가 같은 시점에 겹쳐 들어올 수 있어
+        // 800ms 이내 중복 호출은 한 번으로 합친다.
+        function handleLoopComplete(partKey) {
+            const state = sectionRepeatState[partKey];
+            if (!state || !state.player) return;
+            const now = Date.now();
+            if (state.lastLoopAt && now - state.lastLoopAt < 800) return;
+            state.lastLoopAt = now;
+            try { state.player.seekTo(state.start, true); state.player.playVideo(); } catch (e) { /* ignore */ }
+            logVideoListen(state.partLabel, state.mode);
+        }
+
+        // mode: 'loop'(전체 반복재생, end는 재생 준비되면 영상 길이로 채워짐) | 'section'(구간 반복 연습)
+        async function startLoopPlayback(partKey, videoId, start, end, mode, partLabel, onPlayerError) {
+            const wrap = document.getElementById(`videoWrap_${partKey}`);
+            if (!wrap) return;
+            wrap.innerHTML = `<div id="player_${partKey}" class="absolute inset-0 w-full h-full"></div>`;
+
+            try {
+                await ensureYouTubeApi();
+            } catch (e) {
+                restoreVideoIframe(wrap, videoId, partKey);
+                throw e;
+            }
+
+            // 대기 중 화면이 전환되었으면 중단
+            if (!document.getElementById(`player_${partKey}`)) return;
+
+            const player = new YT.Player(`player_${partKey}`, {
+                width: '100%',
+                height: '100%',
+                videoId,
+                playerVars: Object.assign({ start, autoplay: 1, enablejsapi: 1, rel: 0 }, mode === 'section' ? { end } : {}),
+                events: {
+                    onReady: (e) => {
+                        e.target.seekTo(start, true);
+                        e.target.playVideo();
+                        if (mode === 'loop') {
+                            const dur = e.target.getDuration();
+                            if (sectionRepeatState[partKey] && dur > 0) sectionRepeatState[partKey].end = dur;
+                        }
+                    },
+                    onStateChange: (e) => {
+                        if (e.data === YT.PlayerState.ENDED) handleLoopComplete(partKey);
+                    },
+                    onError: () => {
+                        window.stopSectionRepeat(partKey);
+                        if (typeof onPlayerError === 'function') onPlayerError();
+                    }
+                }
+            });
+
+            const interval = setInterval(() => {
+                const state = sectionRepeatState[partKey];
+                if (!state || !state.player || typeof state.player.getCurrentTime !== 'function') return;
+                try {
+                    const cur = state.player.getCurrentTime();
+                    if (typeof cur === 'number' && typeof state.end === 'number' && cur >= state.end - 0.15) {
+                        handleLoopComplete(partKey);
+                    }
+                } catch (e) { /* 아직 준비되지 않음 */ }
+            }, 250);
+
+            sectionRepeatState[partKey] = { player, interval, start, end, videoId, mode, partLabel, lastLoopAt: 0 };
+        }
+
         window.toggleSectionRepeat = async (partKey) => {
-            if (sectionRepeatState[partKey]) { window.stopSectionRepeat(partKey); return; }
+            // 이미 구간반복 중이면(같은 버튼) 정지, 전체 반복재생 중이었다면 정리만 하고 구간반복으로 전환
+            if (sectionRepeatState[partKey]) {
+                const wasSection = sectionRepeatState[partKey].mode === 'section';
+                window.stopSectionRepeat(partKey);
+                if (wasSection) return;
+            }
 
             const wrap = document.getElementById(`videoWrap_${partKey}`);
             const videoId = wrap ? wrap.dataset.videoId : null;
+            const partLabel = wrap ? wrap.dataset.partLabel : null;
             const startInput = document.getElementById(`startSec_${partKey}`);
             const endInput = document.getElementById(`endSec_${partKey}`);
             const msg = document.getElementById(`sectionMsg_${partKey}`);
@@ -1519,47 +1629,17 @@
             if (loopToggle && loopToggle.checked) { loopToggle.checked = false; window.toggleRepeat(videoId, partKey, false); }
 
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> 준비중...'; }
-            wrap.innerHTML = `<div id="player_${partKey}" class="absolute inset-0 w-full h-full"></div>`;
 
             try {
-                await ensureYouTubeApi();
+                await startLoopPlayback(partKey, videoId, start, end, 'section', partLabel, () => {
+                    if (msg) { msg.textContent = '이 영상은 구간 반복 재생을 지원하지 않습니다.'; msg.classList.remove('hidden'); }
+                });
             } catch (e) {
                 if (msg) { msg.textContent = '유튜브 플레이어를 불러오지 못했습니다.'; msg.classList.remove('hidden'); }
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-repeat mr-1"></i> 구간반복 시작'; }
-                restoreVideoIframe(wrap, videoId, partKey);
                 return;
             }
 
-            // 대기 중 화면이 전환되었으면 중단
-            if (!document.getElementById(`player_${partKey}`)) return;
-
-            const player = new YT.Player(`player_${partKey}`, {
-                width: '100%',
-                height: '100%',
-                videoId,
-                playerVars: { start, end, autoplay: 1, enablejsapi: 1, rel: 0 },
-                events: {
-                    onReady: (e) => { e.target.seekTo(start, true); e.target.playVideo(); },
-                    onStateChange: (e) => {
-                        if (e.data === YT.PlayerState.ENDED) { e.target.seekTo(start, true); e.target.playVideo(); }
-                    },
-                    onError: () => {
-                        if (msg) { msg.textContent = '이 영상은 구간 반복 재생을 지원하지 않습니다.'; msg.classList.remove('hidden'); }
-                        window.stopSectionRepeat(partKey);
-                    }
-                }
-            });
-
-            const interval = setInterval(() => {
-                const state = sectionRepeatState[partKey];
-                if (!state || !state.player || typeof state.player.getCurrentTime !== 'function') return;
-                try {
-                    const cur = state.player.getCurrentTime();
-                    if (typeof cur === 'number' && cur >= state.end - 0.15) state.player.seekTo(state.start, true);
-                } catch (e) { /* 아직 준비되지 않음 */ }
-            }, 250);
-
-            sectionRepeatState[partKey] = { player, interval, start, end, videoId };
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-stop mr-1"></i> 구간반복 정지';
@@ -1613,7 +1693,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="videoWrap_${partKey}" data-video-id="${videoId}" class="aspect-video w-full bg-cyan-950 relative flex-1 border-t-2 border-white/50">
+                    <div id="videoWrap_${partKey}" data-video-id="${videoId}" data-part-label="${subtitle}" class="aspect-video w-full bg-cyan-950 relative flex-1 border-t-2 border-white/50">
                         <iframe id="iframe_${partKey}" class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${videoId}" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <div class="p-3 border-t-2 border-sky-50 bg-sky-50/40">
