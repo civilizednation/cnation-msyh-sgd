@@ -737,6 +737,11 @@
                             class="w-full mt-6 py-4 bg-cyan-900 text-white text-lg font-black rounded-[1.5rem] shadow-[0_15px_30px_rgba(8,145,178,0.4)] hover:-translate-y-1 hover:bg-cyan-950 transition-all duration-300 border-b-4 border-slate-900 active:translate-y-0 active:border-b-0">
                             <i class="fas fa-save mr-2"></i> 고정곡 저장
                         </button>
+
+                        <button onclick="openStats()"
+                            class="w-full mt-3 py-4 bg-slate-500 text-white text-lg font-black rounded-[1.5rem] shadow-[0_15px_30px_rgba(100,116,139,0.3)] hover:-translate-y-1 hover:bg-slate-600 transition-all duration-300 border-b-4 border-slate-700 active:translate-y-0 active:border-b-0">
+                            <i class="fas fa-chart-column mr-2"></i> 통계
+                        </button>
                     </div>
                 </div>
             </div>
@@ -883,6 +888,19 @@
             </div>
         </div>
 
+        <div id="statsView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
+            <div
+                class="bg-gradient-to-r from-slate-600 to-slate-800 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-slate-500">
+                <button onclick="closeStats()"
+                    class="w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all flex items-center justify-center font-bold">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="font-black text-xl tracking-tight drop-shadow-md">통계</h2>
+                <div class="w-10"></div>
+            </div>
+            <div id="statsContainer" class="flex-1 px-3 md:px-5 max-w-2xl mx-auto w-full z-0"></div>
+        </div>
+
         <div id="pdfModal"
             class="hidden fixed inset-0 z-50 bg-cyan-950/90 backdrop-blur-xl flex flex-col transition-all duration-300">
             <div
@@ -908,13 +926,14 @@
                 document.getElementById('wechatOverlay').classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
             }
+            fetch('/api/log-visit', { method: 'POST' }).catch(() => { /* 접속 기록 실패는 무시 */ });
         });
         window.closeWechatOverlay = () => {
             document.getElementById('wechatOverlay').classList.add('hidden');
             document.body.style.overflow = '';
         };
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, addDoc, where, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         const firebaseConfig = {
             apiKey: "AIzaSyCTwOAC_LrrKH8CKepUOTf0pyd9qRv4y_8",
@@ -932,6 +951,9 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const WEEKLY_COL = "cnation-msyh-sgd-weekly";
         const FIXED_COL = "cnation-msyh-sgd-fixed";
+        const VISITS_COL = "cnation-msyh-sgd-visits";
+        const CLICKS_COL = "cnation-msyh-sgd-practice-clicks";
+        const STATS_PASSWORD = "1257";
 
         let currentSheetMusicUrl = '';
         let currentSheetMusicImages = [];
@@ -954,11 +976,18 @@
         };
         function getSelectedParts() { return Array.from(document.querySelectorAll('.part-checkbox:checked')).map(cb => cb.value); }
 
+        function logPracticeClick(parts, type) {
+            if (!parts || parts.length === 0) return;
+            addDoc(collection(db, CLICKS_COL), { parts, type: type || '', timestamp: serverTimestamp() })
+                .catch(() => { /* 통계 기록 실패는 무시 */ });
+        }
+
         window.goHome = () => {
             clearAllSectionPlayers();
             document.getElementById('practiceView').classList.add('hidden');
             document.getElementById('setupView').classList.add('hidden');
             document.getElementById('appsView').classList.add('hidden');
+            document.getElementById('statsView').classList.add('hidden');
             document.getElementById('pastDateSelector').classList.add('hidden');
             document.getElementById('practiceContainer').innerHTML = '';
             document.getElementById('homeView').classList.remove('hidden');
@@ -970,6 +999,224 @@
             document.getElementById('appsView').classList.remove('hidden');
             window.scrollTo(0, 0);
         };
+
+        // ===== 통계 (접속 기록 / 파트별 연습 현황) =====
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        window.openStats = () => {
+            const pw = prompt('통계 메뉴 비밀번호를 입력하세요.');
+            if (pw === null) return;
+            if (pw !== STATS_PASSWORD) { alert('비밀번호가 올바르지 않습니다.'); return; }
+            document.getElementById('setupView').classList.add('hidden');
+            document.getElementById('statsView').classList.remove('hidden');
+            window.scrollTo(0, 0);
+            renderStatsMenu();
+        };
+
+        window.closeStats = () => {
+            document.getElementById('statsView').classList.add('hidden');
+            document.getElementById('setupView').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        };
+
+        window.renderStatsMenu = function () {
+            document.getElementById('statsContainer').innerHTML = `
+                <div class="space-y-4 pt-2">
+                    <button onclick="showStatsPanel('visits')"
+                        class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(71,85,105,0.3)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-slate-200">
+                        <span class="flex items-center gap-3 text-slate-700 font-black text-base md:text-lg">
+                            <div class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-slate-100 text-slate-600 flex items-center justify-center shadow-inner">
+                                <i class="fas fa-right-to-bracket text-xl"></i>
+                            </div>
+                            접속 기록
+                        </span>
+                        <i class="fas fa-chevron-right text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+                    </button>
+                    <button onclick="showStatsPanel('clicks')"
+                        class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(71,85,105,0.3)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-slate-200">
+                        <span class="flex items-center gap-3 text-slate-700 font-black text-base md:text-lg">
+                            <div class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-slate-100 text-slate-600 flex items-center justify-center shadow-inner">
+                                <i class="fas fa-users text-xl"></i>
+                            </div>
+                            파트별 연습 현황
+                        </span>
+                        <i class="fas fa-chevron-right text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+                    </button>
+                </div>`;
+        }
+
+        window.showStatsPanel = (kind) => {
+            const title = kind === 'visits' ? '접속 기록' : '파트별 연습 현황';
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+            const monthStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+            const yearStr = String(now.getFullYear());
+            const weekStr = `${now.getFullYear()}-W${pad(getISOWeekNumber(now))}`;
+            window.statsDefaults = { day: todayStr, week: weekStr, month: monthStr, year: yearStr };
+            document.getElementById('statsContainer').innerHTML = `
+                <div class="mb-3">
+                    <button onclick="renderStatsMenu()" class="text-sm font-black text-slate-500 flex items-center gap-1.5 hover:text-slate-700 transition-colors">
+                        <i class="fas fa-arrow-left"></i> 통계 메뉴로
+                    </button>
+                </div>
+                <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] border-2 border-white p-4 md:p-5">
+                    <h3 class="font-black text-slate-800 text-lg mb-3">${title}</h3>
+                    <div class="grid grid-cols-4 gap-2 mb-3" id="statsPeriodTabs">
+                        <button data-period="day" onclick="setStatsPeriod('day')" class="stats-period-btn py-2.5 rounded-xl text-sm font-black border-2 transition-all">일</button>
+                        <button data-period="week" onclick="setStatsPeriod('week')" class="stats-period-btn py-2.5 rounded-xl text-sm font-black border-2 transition-all">주</button>
+                        <button data-period="month" onclick="setStatsPeriod('month')" class="stats-period-btn py-2.5 rounded-xl text-sm font-black border-2 transition-all">월</button>
+                        <button data-period="year" onclick="setStatsPeriod('year')" class="stats-period-btn py-2.5 rounded-xl text-sm font-black border-2 transition-all">연</button>
+                    </div>
+                    <div id="statsPeriodInputArea" class="mb-3"></div>
+                    <button onclick="runStatsQuery('${kind}')"
+                        class="w-full py-3 bg-slate-600 hover:bg-slate-700 text-white font-black rounded-xl shadow-sm hover:-translate-y-1 transition-all">
+                        <i class="fas fa-magnifying-glass mr-1"></i> 조회
+                    </button>
+                </div>
+                <div id="statsResultArea" class="mt-4"></div>`;
+            setStatsPeriod('day');
+        };
+
+        window.setStatsPeriod = (period) => {
+            window.statsPeriodType = period;
+            document.querySelectorAll('.stats-period-btn').forEach(btn => {
+                const active = btn.dataset.period === period;
+                btn.className = 'stats-period-btn py-2.5 rounded-xl text-sm font-black border-2 transition-all ' +
+                    (active ? 'bg-slate-600 text-white border-slate-700' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50');
+            });
+            const area = document.getElementById('statsPeriodInputArea');
+            const d = window.statsDefaults;
+            const inputClass = 'w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 focus:border-slate-400 outline-none shadow-inner';
+            if (period === 'day') area.innerHTML = `<input type="date" id="statsPeriodValue" value="${d.day}" class="${inputClass}">`;
+            else if (period === 'week') area.innerHTML = `<input type="week" id="statsPeriodValue" value="${d.week}" class="${inputClass}">`;
+            else if (period === 'month') area.innerHTML = `<input type="month" id="statsPeriodValue" value="${d.month}" class="${inputClass}">`;
+            else area.innerHTML = `<input type="number" id="statsPeriodValue" value="${d.year}" min="2020" max="2100" class="${inputClass}">`;
+        };
+
+        function getISOWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function getMondayOfISOWeek(year, week) {
+            const jan4 = new Date(year, 0, 4);
+            const jan4Day = (jan4.getDay() + 6) % 7; // 0=월 ... 6=일
+            const week1Monday = new Date(jan4);
+            week1Monday.setDate(jan4.getDate() - jan4Day);
+            const target = new Date(week1Monday);
+            target.setDate(week1Monday.getDate() + (week - 1) * 7);
+            target.setHours(0, 0, 0, 0);
+            return target;
+        }
+
+        function getStatsDateRange(period, value) {
+            if (period === 'day') {
+                const start = new Date(value + 'T00:00:00');
+                const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+                return { start, end, label: value };
+            }
+            if (period === 'week') {
+                const [yearStr, weekStr] = value.split('-W');
+                const year = parseInt(yearStr, 10); const week = parseInt(weekStr, 10);
+                const start = getMondayOfISOWeek(year, week);
+                const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+                return { start, end, label: `${year}년 ${week}주차` };
+            }
+            if (period === 'month') {
+                const [yearStr, monthStr] = value.split('-');
+                const year = parseInt(yearStr, 10); const month = parseInt(monthStr, 10);
+                const start = new Date(year, month - 1, 1);
+                const end = new Date(year, month, 1);
+                return { start, end, label: `${year}년 ${month}월` };
+            }
+            const year = parseInt(value, 10);
+            const start = new Date(year, 0, 1);
+            const end = new Date(year + 1, 0, 1);
+            return { start, end, label: `${year}년` };
+        }
+
+        window.runStatsQuery = async (kind) => {
+            const period = window.statsPeriodType;
+            const valueEl = document.getElementById('statsPeriodValue');
+            const value = valueEl ? valueEl.value : '';
+            if (!value) { alert('조회할 기간을 선택해주세요.'); return; }
+            const { start, end, label } = getStatsDateRange(period, value);
+            const resultArea = document.getElementById('statsResultArea');
+            resultArea.innerHTML = '<div class="flex justify-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-slate-400"></i></div>';
+            try {
+                const col = kind === 'visits' ? VISITS_COL : CLICKS_COL;
+                const q = query(collection(db, col), where('timestamp', '>=', Timestamp.fromDate(start)), where('timestamp', '<', Timestamp.fromDate(end)));
+                const snap = await getDocs(q);
+                if (kind === 'visits') renderVisitStats(snap, label); else renderClickStats(snap, label);
+            } catch (e) {
+                resultArea.innerHTML = '<div class="text-center py-10 text-red-500 font-bold bg-white/80 rounded-[1.5rem] border-2 border-red-100">조회 중 오류가 발생했습니다.</div>';
+            }
+        };
+
+        function renderVisitStats(snap, label) {
+            const groups = {};
+            let total = 0;
+            snap.forEach(docSnap => {
+                const data = docSnap.data();
+                total++;
+                const key = `${data.ip || '알수없음'}|||${data.device || '알수없음'}|||${data.browser || '알수없음'}`;
+                groups[key] = (groups[key] || 0) + 1;
+            });
+            const rows = Object.entries(groups).map(([key, count]) => {
+                const [ip, device, browser] = key.split('|||');
+                return { ip, device, browser, count };
+            }).sort((a, b) => b.count - a.count);
+            const uniqueIp = new Set(rows.map(r => r.ip)).size;
+            const rowsHtml = rows.length === 0
+                ? '<p class="text-center text-slate-400 font-bold py-8">해당 기간 접속 기록이 없습니다.</p>'
+                : rows.map(r => `
+                    <div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+                        <div class="min-w-0">
+                            <p class="font-black text-slate-800 text-sm truncate">${escapeHtml(r.ip)}</p>
+                            <p class="text-xs text-slate-400 font-bold mt-0.5">${escapeHtml(r.device)} · ${escapeHtml(r.browser)}</p>
+                        </div>
+                        <span class="shrink-0 ml-3 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg font-black text-sm">${r.count}회</span>
+                    </div>`).join('');
+            document.getElementById('statsResultArea').innerHTML = `
+                <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] border-2 border-white p-4 md:p-5">
+                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                        <h4 class="font-black text-slate-700">${escapeHtml(label)}</h4>
+                        <span class="text-xs font-bold text-slate-400">총 접속 ${total}회 · IP ${uniqueIp}개</span>
+                    </div>
+                    ${rowsHtml}
+                </div>`;
+        }
+
+        function renderClickStats(snap, label) {
+            const counts = {};
+            let total = 0;
+            snap.forEach(docSnap => {
+                const data = docSnap.data();
+                total++;
+                (data.parts || []).forEach(p => { counts[p] = (counts[p] || 0) + 1; });
+            });
+            const order = ['전체', '합창', '소프라노', '알토', '테너', '베이스'];
+            const keys = [...order, ...Object.keys(counts).filter(k => !order.includes(k))].filter(k => counts[k] !== undefined);
+            const rowsHtml = keys.map(k => `
+                <div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+                    <span class="font-black text-slate-800">${escapeHtml(k)}</span>
+                    <span class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg font-black text-sm">${counts[k]}회</span>
+                </div>`).join('');
+            document.getElementById('statsResultArea').innerHTML = `
+                <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] border-2 border-white p-4 md:p-5">
+                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                        <h4 class="font-black text-slate-700">${escapeHtml(label)}</h4>
+                        <span class="text-xs font-bold text-slate-400">총 연습 실행 ${total}회</span>
+                    </div>
+                    ${total === 0 ? '<p class="text-center text-slate-400 font-bold py-8">해당 기간 연습 기록이 없습니다.</p>' : rowsHtml}
+                </div>`;
+        }
 
         window.scrollPracticeTop = () => {
             const container = document.getElementById('practiceContainer');
@@ -1454,6 +1701,7 @@
             const container = document.getElementById('practiceContainer');
             container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-sky-100"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
             const parts = getSelectedParts(); const isAll = parts.includes('전체');
+            logPracticeClick(parts, type);
             try {
                 let videosHtml = '<div class="space-y-8">'; let sheetsHtml = '<div class="mt-10 pt-5 border-t-2 border-dashed border-sky-200">'; let sheetEntries = [];
                 if (type === '고정') {
@@ -1527,6 +1775,7 @@
             const date = document.getElementById('pastDateDropdown').value; const container = document.getElementById('practiceContainer'); if (!date) { container.innerHTML = renderPracticeFooter(); return; }
             container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-sky-100"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
             const parts = getSelectedParts(); const isAll = parts.includes('전체');
+            logPracticeClick(parts, '기존');
             try {
                 const docSnap = await getDoc(doc(db, WEEKLY_COL, date)); let videosHtml = '<div class="space-y-12">'; let sheetsHtml = ''; let hasData = false;
                 if (docSnap.exists()) {
