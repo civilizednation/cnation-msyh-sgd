@@ -955,6 +955,7 @@
         const CLICKS_COL = "cnation-msyh-sgd-practice-clicks";
         const LISTENS_COL = "cnation-msyh-sgd-video-listens";
         const STATS_PASSWORD = "1257";
+        const STATS_START_LABEL = "2026년 9월 4일";
 
         let currentSheetMusicUrl = '';
         let currentSheetMusicImages = [];
@@ -1030,7 +1031,10 @@
 
         window.renderStatsMenu = function () {
             document.getElementById('statsContainer').innerHTML = `
-                <div class="space-y-4 pt-2">
+                <p class="text-center text-sm font-bold text-slate-500 bg-slate-100 border-2 border-slate-200 rounded-2xl px-4 py-3 shadow-sm mt-2 mb-4">
+                    <i class="fas fa-circle-info mr-1"></i> 집계 시작일: ${STATS_START_LABEL} (그 이전 데이터는 없습니다)
+                </p>
+                <div class="space-y-4">
                     <button onclick="showStatsPanel('visits')"
                         class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(71,85,105,0.3)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-slate-200">
                         <span class="flex items-center gap-3 text-slate-700 font-black text-base md:text-lg">
