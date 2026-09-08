@@ -12,141 +12,144 @@
     <link rel="icon" type="image/png" sizes="192x192" href="./android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="./android-chrome-512x512.png">
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#3fb0e6">
+    <meta name="theme-color" content="#92400e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="성가대연습">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./dist/tailwind.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         body {
-            font-family: 'Nunito', 'Noto Sans KR', sans-serif;
+            font-family: 'Nanum Gothic', sans-serif;
         }
 
-        /* ===== 청량한 얼음 3D 입체 버튼 (파트 선택) ===== */
+        /* ===== 따뜻한 나뭇결 3D 입체 버튼 (파트 선택) ===== */
         .part-checkbox+div {
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 3px rgba(14, 165, 233, 0.08);
+            box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);
             transform: translateY(0);
-            border: 1px solid #bae6fd;
+            border: 1px solid #fde68a;
             background-color: rgba(255, 255, 255, 0.9);
-            color: #0284c7;
+            color: #b45309;
         }
 
         .part-checkbox:checked+div {
-            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.16);
+            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.16);
             transform: translateY(0);
             border-color: transparent;
             color: white;
         }
 
-        /* 여름 바다 테마 파트별 3D 버튼 컬러 */
-        /* 전체/합창: 깊은 바다색 */
+        /* 초가을 단풍 테마 파트별 3D 버튼 컬러 */
+        /* 전체/합창: 짙은 밤나무색 */
         .part-checkbox[value="전체"]:checked+div,
         .part-checkbox[value="합창"]:checked+div {
-            background: #0284c7;
-            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.22);
+            background: #78350f;
+            box-shadow: 0 2px 8px rgba(120, 53, 15, 0.22);
         }
 
-        /* 소프라노: 산호색(Coral Pink) - 시원한 대비 */
+        /* 소프라노: 단풍 테라코타 */
         .part-checkbox-sop:checked+div {
-            background: #fb7185;
-            box-shadow: 0 2px 8px rgba(251, 113, 133, 0.22);
+            background: #c2410c;
+            box-shadow: 0 2px 8px rgba(194, 65, 12, 0.22);
         }
 
-        /* 알토: 맑은 스카이블루 */
+        /* 알토: 호박(Pumpkin) 색 */
         .part-checkbox-alto:checked+div {
-            background: #38bdf8;
-            box-shadow: 0 2px 8px rgba(56, 189, 248, 0.22);
+            background: #d97706;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.22);
         }
 
-        /* 테너: 에메랄드/민트 바다 */
+        /* 테너: 겨자빛 올리브골드 */
         .part-checkbox-tenor:checked+div {
-            background: #2dd4bf;
-            box-shadow: 0 2px 8px rgba(45, 212, 191, 0.22);
+            background: #a16207;
+            box-shadow: 0 2px 8px rgba(161, 98, 7, 0.22);
         }
 
-        /* 베이스: 햇살 가득한 모래사장(Sand Yellow) */
+        /* 베이스: 짙은 커피브라운 */
         .part-checkbox-bass:checked+div {
-            background: #fbbf24;
-            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.22);
+            background: #57534e;
+            box-shadow: 0 2px 8px rgba(87, 83, 78, 0.22);
         }
 
-        /* ===== 동글동글 3D 토글 스위치 (물방울 느낌) ===== */
+        /* ===== 동글동글 3D 토글 스위치 (도토리 느낌) ===== */
         .toggle-checkbox:checked {
             left: 1.75rem;
         }
 
         .toggle-checkbox:checked+.toggle-label {
-            background-color: #0ea5e9;
+            background-color: #d97706;
         }
 
         .toggle-checkbox {
             left: 0;
             z-index: 1;
             border-color: #ffffff;
-            box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+            box-shadow: 0 4px 6px rgba(217, 119, 6, 0.2);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .toggle-label {
             width: 3.5rem;
             height: 1.75rem;
-            background-color: #e0f2fe;
+            background-color: #fef3c7;
             border-radius: 9999px;
-            box-shadow: inset 0 2px 5px rgba(2, 132, 199, 0.15);
+            box-shadow: inset 0 2px 5px rgba(146, 64, 14, 0.15);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== 시원한 과일/바다 뱃지 ===== */
+        /* ===== 따뜻한 낙엽 뱃지 ===== */
         .badge-soprano {
-            background: #ffe4e6;
-            color: #e11d48;
+            background: #ffedd5;
+            color: #c2410c;
             font-weight: 900;
         }
 
         .badge-alto {
-            background: #e0f2fe;
-            color: #0284c7;
-            font-weight: 900;
-        }
-
-        .badge-tenor {
-            background: #ccfbf1;
-            color: #0f766e;
-            font-weight: 900;
-        }
-
-        .badge-bass {
             background: #fef3c7;
             color: #b45309;
             font-weight: 900;
         }
 
+        .badge-tenor {
+            background: #fef9c3;
+            color: #854d0e;
+            font-weight: 900;
+        }
+
+        .badge-bass {
+            background: #f5f5f4;
+            color: #44403c;
+            font-weight: 900;
+        }
+
         .badge-full {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: #fde68a;
+            color: #78350f;
             font-weight: 900;
         }
 
         .label-soprano {
-            color: #e11d48;
+            color: #c2410c;
             font-weight: 900;
         }
 
         .label-alto {
-            color: #0284c7;
+            color: #b45309;
             font-weight: 900;
         }
 
         .label-tenor {
-            color: #0f766e;
+            color: #854d0e;
             font-weight: 900;
         }
 
         .label-bass {
-            color: #b45309;
+            color: #44403c;
             font-weight: 900;
         }
 
@@ -166,7 +169,7 @@
             animation: float-animation 3.5s ease-in-out infinite;
         }
 
-        /* ===== 얼음 조각 같은 이미지 슬롯 ===== */
+        /* ===== 나뭇잎 조각 같은 이미지 슬롯 ===== */
         .img-slot {
             position: relative;
         }
@@ -178,7 +181,7 @@
             object-fit: cover;
             border-radius: 20px;
             border: 3px solid white;
-            box-shadow: 0 10px 20px rgba(14, 165, 233, 0.15);
+            box-shadow: 0 10px 20px rgba(217, 119, 6, 0.15);
             transition: all 0.2s;
         }
 
@@ -215,26 +218,26 @@
         .img-slot-empty {
             width: 64px;
             height: 64px;
-            border: 3px dashed #7dd3fc;
+            border: 3px dashed #fcd34d;
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #38bdf8;
+            color: #f59e0b;
             font-size: 24px;
             cursor: pointer;
             background: rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 15px rgba(56, 189, 248, 0.05);
+            box-shadow: 0 8px 15px rgba(245, 158, 11, 0.05);
             transition: all 0.3s ease;
             backdrop-filter: blur(4px);
         }
 
         .img-slot-empty:hover {
-            border-color: #0ea5e9;
-            background: #e0f2fe;
-            color: #0284c7;
+            border-color: #d97706;
+            background: #fef3c7;
+            color: #b45309;
             transform: translateY(-3px);
-            box-shadow: 0 12px 20px rgba(14, 165, 233, 0.2);
+            box-shadow: 0 12px 20px rgba(217, 119, 6, 0.2);
         }
 
         .existing-img-thumb {
@@ -243,7 +246,7 @@
             margin-right: 8px;
         }
 
-        /* 시원한 물방울 스크롤바 */
+        /* 은행잎 낙엽 스크롤바 */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -254,35 +257,35 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #bae6fd;
+            background: #fde68a;
             border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #7dd3fc;
+            background: #fcd34d;
         }
     </style>
 </head>
 
 <body
-    class="bg-gradient-to-br from-cyan-50 via-sky-100 to-blue-50 font-sans text-gray-800 pb-24 relative min-h-screen selection:bg-sky-200">
+    class="bg-gradient-to-br from-amber-50 via-orange-100 to-orange-50 font-sans text-stone-800 pb-24 relative min-h-screen selection:bg-orange-200">
 
     <div id="wechatOverlay"
-        class="hidden fixed inset-0 z-[9999] bg-cyan-950/80 flex flex-col items-center pt-10 px-6 backdrop-blur-md overflow-y-auto pb-10">
+        class="hidden fixed inset-0 z-[9999] bg-amber-950/80 flex flex-col items-center pt-10 px-6 backdrop-blur-md overflow-y-auto pb-10">
         <div
-            class="w-full max-w-sm text-center mt-2 bg-white/95 rounded-[2.5rem] p-8 shadow-2xl relative animate-float border-2 border-cyan-100">
+            class="w-full max-w-sm text-center mt-2 bg-white/95 rounded-[2.5rem] p-8 shadow-2xl relative animate-float border-2 border-amber-100">
             <div
                 class="absolute -top-12 right-0 bg-yellow-400 w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-xl rotate-45">
                 <i class="fas fa-arrow-up text-3xl text-white"></i>
             </div>
-            <h2 class="text-2xl font-black mb-4 leading-tight text-cyan-900 mt-2">우측 상단의<br>
+            <h2 class="text-2xl font-black mb-4 leading-tight text-amber-900 mt-2">우측 상단의<br>
                 <span
-                    class="bg-cyan-50 px-4 py-2 rounded-2xl inline-block my-2 text-cyan-700 border-2 border-cyan-200 shadow-inner">···</span>
+                    class="bg-amber-50 px-4 py-2 rounded-2xl inline-block my-2 text-amber-700 border-2 border-amber-200 shadow-inner">···</span>
                 버튼 누르기
             </h2>
             <p
-                class="text-lg font-black text-white mb-6 bg-cyan-500 inline-block px-5 py-3 rounded-2xl shadow-[0_8px_20px_rgba(6,182,212,0.4)]">
-                '기본 브라우저에서 열기' 🏄‍♂️
+                class="text-lg font-black text-white mb-6 bg-amber-500 inline-block px-5 py-3 rounded-2xl shadow-[0_8px_20px_rgba(217,119,6,0.4)]">
+                '기본 브라우저에서 열기' 🍁
             </p>
             <div class="bg-red-50 p-5 rounded-3xl text-left w-full mb-6 border-2 border-red-100 shadow-sm">
                 <p class="text-sm text-red-600 font-black mb-2"><i
@@ -292,7 +295,7 @@
                 </p>
             </div>
             <button onclick="closeWechatOverlay()"
-                class="w-full px-6 py-4 bg-sky-50 hover:bg-sky-100 text-sky-600 text-sm font-black rounded-2xl transition shadow-inner border-2 border-sky-200">
+                class="w-full px-6 py-4 bg-orange-50 hover:bg-orange-100 text-orange-600 text-sm font-black rounded-2xl transition shadow-inner border-2 border-orange-200">
                 무시하고 그냥 위챗에서 열기
             </button>
         </div>
@@ -303,18 +306,18 @@
             <div class="flex-1 flex flex-col items-center justify-start pt-3 md:pt-5">
                 <div class="relative w-full max-w-2xl mb-4 md:mb-5">
                     <div
-                        class="absolute inset-0 bg-gradient-to-r from-cyan-300 to-blue-400 rounded-[3rem] blur-xl opacity-40 animate-pulse">
+                        class="absolute inset-0 bg-gradient-to-r from-amber-300 to-orange-400 rounded-[3rem] blur-xl opacity-40 animate-pulse">
                     </div>
                     <img src="msyhsgd.jpg" alt="무석연합교회 성가대"
-                        class="relative w-full h-auto object-contain rounded-[2rem] shadow-[0_20px_40px_rgba(14,165,233,0.2)] border-[5px] border-white/90 bg-white"
+                        class="relative w-full h-auto object-contain rounded-[2rem] shadow-[0_20px_40px_rgba(249,115,22,0.2)] border-[5px] border-white/90 bg-white"
                         onerror="this.src='https://via.placeholder.com/300x150?text=Choir+Image'">
                 </div>
 
                 <div
-                    class="w-full max-w-2xl bg-white/70 backdrop-blur-xl p-4 md:p-5 rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(2,132,199,0.15)] mb-4 md:mb-5 border-4 border-white">
+                    class="w-full max-w-2xl bg-white/70 backdrop-blur-xl p-4 md:p-5 rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(234,88,12,0.15)] mb-4 md:mb-5 border-4 border-white">
                     <h3
-                        class="text-base md:text-lg font-black text-sky-500 mb-3 uppercase tracking-widest text-center flex flex-wrap items-center justify-center gap-2">
-                        <i class="fas fa-water"></i> 연습할 파트 설정 <span class="font-bold text-sky-400 tracking-normal">(복수
+                        class="text-base md:text-lg font-black text-orange-500 mb-3 uppercase tracking-widest text-center flex flex-wrap items-center justify-center gap-2">
+                        <i class="fas fa-leaf"></i> 연습할 파트 설정 <span class="font-bold text-orange-400 tracking-normal">(복수
                             선택 가능)</span>
                     </h3>
                     <div class="grid grid-cols-6 gap-1.5 pt-1 pb-1" id="partSelectionContainer">
@@ -360,85 +363,85 @@
                 <div class="w-full max-w-2xl">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                         <button onclick="openPractice('이번주')"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(14,165,233,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(14,165,233,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-sky-200">
-                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(249,115,22,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(249,115,22,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-orange-200">
+                            <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-sky-100 text-sky-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-sky-500 group-hover:text-white transition-all shadow-inner">
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-orange-100 text-orange-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-orange-500 group-hover:text-white transition-all shadow-inner">
                                     <i class="fas fa-sun text-xl"></i>
                                 </div>
                                 이번주 곡 연습
                             </span>
-                            <i class="fas fa-chevron-right text-sky-300 group-hover:text-sky-500 transition-colors"></i>
+                            <i class="fas fa-chevron-right text-orange-300 group-hover:text-orange-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('다음주')"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(59,130,246,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(59,130,246,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-blue-200">
-                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(249,115,22,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(249,115,22,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-orange-200">
+                            <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-blue-100 text-blue-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-inner">
-                                    <i class="fas fa-umbrella-beach text-xl"></i>
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-orange-100 text-orange-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-orange-500 group-hover:text-white transition-all shadow-inner">
+                                    <i class="fas fa-wind text-xl"></i>
                                 </div>
                                 다음주 곡 연습
                             </span>
                             <i
-                                class="fas fa-chevron-right text-blue-300 group-hover:text-blue-500 transition-colors"></i>
+                                class="fas fa-chevron-right text-orange-300 group-hover:text-orange-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('이번주_다음주')"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(20,184,166,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(20,184,166,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-teal-200">
-                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(120,113,108,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(120,113,108,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-stone-200">
+                            <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-teal-100 text-teal-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-teal-500 group-hover:text-white transition-all shadow-inner">
-                                    <i class="fas fa-water text-xl"></i>
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-stone-100 text-stone-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-stone-500 group-hover:text-white transition-all shadow-inner">
+                                    <i class="fas fa-tree text-xl"></i>
                                 </div>
                                 이번주 + 다음주 연습
                             </span>
                             <i
-                                class="fas fa-chevron-right text-teal-300 group-hover:text-teal-500 transition-colors"></i>
+                                class="fas fa-chevron-right text-stone-300 group-hover:text-stone-500 transition-colors"></i>
                         </button>
                         <button onclick="openPastPractice()"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(99,102,241,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(99,102,241,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-indigo-200">
-                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(244,63,94,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(244,63,94,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-rose-200">
+                            <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-indigo-100 text-indigo-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-inner">
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-rose-100 text-rose-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all shadow-inner">
                                     <i class="fas fa-history text-xl"></i>
                                 </div>
                                 기존 곡 연습
                             </span>
                             <i
-                                class="fas fa-chevron-right text-indigo-300 group-hover:text-indigo-500 transition-colors"></i>
+                                class="fas fa-chevron-right text-rose-300 group-hover:text-rose-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('고정')"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(6,182,212,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(6,182,212,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-cyan-200">
-                            <span class="flex items-center gap-3 text-cyan-900 font-black text-base md:text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(217,119,6,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(217,119,6,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-amber-200">
+                            <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
                                 <div
-                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-cyan-100 text-cyan-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-white transition-all shadow-inner">
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-inner">
                                     <i class="fas fa-church text-xl"></i>
                                 </div>
                                 고정송 연습 (입례/기도)
                             </span>
                             <i
-                                class="fas fa-chevron-right text-cyan-300 group-hover:text-cyan-500 transition-colors"></i>
+                                class="fas fa-chevron-right text-amber-300 group-hover:text-amber-500 transition-colors"></i>
                         </button>
                     </div>
 
                     <div class="mt-4 pt-1">
                         <button onclick="openApps()"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(168,85,247,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(168,85,247,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-violet-200">
-                            <span class="flex items-center gap-3 text-violet-600 font-black text-base md:text-lg">
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(194,65,12,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(194,65,12,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-orange-200">
+                            <span class="flex items-center gap-3 text-orange-700 font-black text-base md:text-lg">
                                 <div
-                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-violet-100 text-violet-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-violet-500 group-hover:text-white transition-all shadow-inner">
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-orange-100 text-orange-700 flex items-center justify-center group-hover:scale-110 group-hover:bg-orange-600 group-hover:text-white transition-all shadow-inner">
                                     <i class="fas fa-gamepad text-xl"></i>
                                 </div>
                                 cnation 제작 게임/앱
                             </span>
                             <i
-                                class="fas fa-chevron-right text-violet-300 group-hover:text-violet-500 transition-colors"></i>
+                                class="fas fa-chevron-right text-orange-300 group-hover:text-orange-600 transition-colors"></i>
                         </button>
                     </div>
 
                     <div class="mt-4 pt-1">
                         <button onclick="openSetup()"
-                            class="w-full py-4 bg-gradient-to-r from-blue-900 to-cyan-900 rounded-[1.5rem] shadow-[0_10px_20px_rgba(8,145,178,0.3)] text-white font-black hover:shadow-[0_15px_30px_rgba(8,145,178,0.5)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3 border-b-4 border-slate-900 active:translate-y-0 active:border-b-0">
-                            <i class="fas fa-anchor text-xl"></i> 관리자 설정 (링크/악보)
+                            class="w-full py-4 bg-gradient-to-r from-orange-900 to-amber-900 rounded-[1.5rem] shadow-[0_10px_20px_rgba(180,83,9,0.3)] text-white font-black hover:shadow-[0_15px_30px_rgba(180,83,9,0.5)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-center gap-3 border-b-4 border-stone-900 active:transtone-y-0 active:border-b-0">
+                            <i class="fas fa-gear text-xl"></i> 관리자 설정 (링크/악보)
                         </button>
                     </div>
                 </div>
@@ -447,7 +450,7 @@
 
         <div id="practiceView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
             <div
-                class="bg-cyan-600 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-cyan-500">
+                class="bg-amber-600 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-amber-500">
                 <button onclick="goHome()"
                     class="w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all flex items-center justify-center font-bold">
                     <i class="fas fa-arrow-left"></i>
@@ -457,14 +460,14 @@
             </div>
 
             <div id="pastDateSelector"
-                class="hidden mx-3 md:mx-6 mb-3 bg-white p-3 rounded-[1.5rem] shadow-sm z-10 border-2 border-sky-100">
+                class="hidden mx-3 md:mx-6 mb-3 bg-white p-3 rounded-[1.5rem] shadow-sm z-10 border-2 border-orange-100">
                 <div class="max-w-xl mx-auto relative">
                     <select id="pastDateDropdown"
-                        class="w-full bg-sky-50 border-2 border-sky-100 rounded-2xl px-6 py-4 text-center font-black text-cyan-900 focus:outline-none focus:border-cyan-400 focus:bg-white transition-all appearance-none cursor-pointer shadow-inner text-lg"
+                        class="w-full bg-orange-50 border-2 border-orange-100 rounded-2xl px-6 py-4 text-center font-black text-amber-900 focus:outline-none focus:border-amber-400 focus:bg-white transition-all appearance-none cursor-pointer shadow-inner text-lg"
                         onchange="loadPastPractice()">
                         <option value="">날짜(일요일)를 선택하세요</option>
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-6 flex items-center text-cyan-500">
+                    <div class="pointer-events-none absolute inset-y-0 right-6 flex items-center text-amber-500">
                         <i class="fas fa-chevron-down text-xl"></i>
                     </div>
                 </div>
@@ -474,7 +477,7 @@
 
         <div id="setupView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
             <div
-                class="bg-gradient-to-r from-slate-800/95 to-cyan-900/95 backdrop-blur-2xl text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-[0_20px_40px_-10px_rgba(8,145,178,0.4)] sticky top-3 z-20 border border-white/20">
+                class="bg-gradient-to-r from-stone-800/95 to-amber-900/95 backdrop-blur-2xl text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-[0_20px_40px_-10px_rgba(180,83,9,0.4)] sticky top-3 z-20 border border-white/20">
                 <button onclick="goHome()"
                     class="w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white/30 hover:scale-110 transition-all flex items-center justify-center font-bold">
                     <i class="fas fa-arrow-left"></i>
@@ -485,10 +488,10 @@
 
             <div class="flex-1 px-3 md:px-5 space-y-5 overflow-y-auto max-w-4xl mx-auto w-full z-0">
                 <div
-                    class="bg-white/80 backdrop-blur-xl p-4 md:p-6 rounded-[1.5rem] shadow-[0_20px_50px_-15px_rgba(2,132,199,0.15)] border-2 border-white">
-                    <h3 class="font-black text-xl md:text-2xl text-cyan-900 mb-4 flex items-center">
+                    class="bg-white/80 backdrop-blur-xl p-4 md:p-6 rounded-[1.5rem] shadow-[0_20px_50px_-15px_rgba(234,88,12,0.15)] border-2 border-white">
+                    <h3 class="font-black text-xl md:text-2xl text-amber-900 mb-4 flex items-center">
                         <div
-                            class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-600 shadow-inner">
+                            class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center mr-3 text-amber-600 shadow-inner">
                             <i class="fas fa-calendar-alt text-2xl"></i>
                         </div>
                         주일 찬양 설정
@@ -496,15 +499,15 @@
                     <div class="space-y-5">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="min-w-0">
-                                <label class="block text-sm font-black text-cyan-600 mb-2 ml-2">적용 날짜 (일요일)</label>
+                                <label class="block text-sm font-black text-amber-600 mb-2 ml-2">적용 날짜 (일요일)</label>
                                 <input type="date" id="setupDate"
-                                    class="block w-full min-w-0 bg-sky-50 border-2 border-sky-100 rounded-xl px-4 py-3 shadow-inner focus:bg-white focus:border-cyan-400 outline-none transition-all text-cyan-900 font-bold text-base cursor-pointer"
+                                    class="block w-full min-w-0 bg-orange-50 border-2 border-orange-100 rounded-xl px-4 py-3 shadow-inner focus:bg-white focus:border-amber-400 outline-none transition-all text-amber-900 font-bold text-base cursor-pointer"
                                     onchange="loadSetupForDate()">
                             </div>
                             <div class="min-w-0">
-                                <label class="block text-sm font-black text-cyan-600 mb-2 ml-2">찬양 제목</label>
+                                <label class="block text-sm font-black text-amber-600 mb-2 ml-2">찬양 제목</label>
                                 <input type="text" id="setupTitle" placeholder="예: 나를 부르신 이유"
-                                    class="block w-full min-w-0 bg-sky-50 border-2 border-sky-100 rounded-xl px-4 py-3 shadow-inner focus:bg-white focus:border-cyan-400 outline-none transition-all text-cyan-900 font-bold text-base">
+                                    class="block w-full min-w-0 bg-orange-50 border-2 border-orange-100 rounded-xl px-4 py-3 shadow-inner focus:bg-white focus:border-amber-400 outline-none transition-all text-amber-900 font-bold text-base">
                             </div>
                         </div>
 
@@ -524,121 +527,121 @@
                                     class="text-sm font-bold text-red-400 mt-3 bg-white inline-block px-4 py-2 rounded-xl border border-red-100 shadow-sm">
                                     현재 등록된 악보가 없습니다.</div>
                                 <button id="deletePdfBtn" onclick="deleteCurrentPdf()"
-                                    class="hidden mt-4 px-6 py-3 bg-gradient-to-r from-red-400 to-red-500 text-white text-sm font-black rounded-xl hover:from-red-500 hover:to-red-600 shadow-[0_8px_15px_rgba(239,68,68,0.3)] transition-all hover:-translate-y-1">
+                                    class="hidden mt-4 px-6 py-3 bg-gradient-to-r from-red-400 to-red-500 text-white text-sm font-black rounded-xl hover:from-red-500 hover:to-red-600 shadow-[0_8px_15px_rgba(239,68,68,0.3)] transition-all hover:-transtone-y-1">
                                     <i class="fas fa-trash mr-2"></i>PDF 악보 삭제
                                 </button>
                             </div>
 
                             <div
-                                class="bg-sky-50/70 backdrop-blur-sm p-4 rounded-[1.5rem] border-2 border-sky-100 shadow-sm relative">
-                                <div class="flex items-center justify-between mb-3 border-b-2 border-sky-100 pb-3">
-                                    <label class="block text-base font-black text-sky-700 flex items-center">
+                                class="bg-orange-50/70 backdrop-blur-sm p-4 rounded-[1.5rem] border-2 border-orange-100 shadow-sm relative">
+                                <div class="flex items-center justify-between mb-3 border-b-2 border-orange-100 pb-3">
+                                    <label class="block text-base font-black text-orange-700 flex items-center">
                                         <div
-                                            class="bg-sky-100 w-10 h-10 rounded-xl flex items-center justify-center mr-3">
-                                            <i class="fas fa-images text-sky-500 text-lg"></i>
+                                            class="bg-orange-100 w-10 h-10 rounded-xl flex items-center justify-center mr-3">
+                                            <i class="fas fa-images text-orange-500 text-lg"></i>
                                         </div>
                                         악보 첨부 (이미지)
                                     </label>
                                     <span
-                                        class="bg-white px-4 py-2 rounded-full text-xs text-sky-600 font-black shadow-sm border border-sky-50">JPG
+                                        class="bg-white px-4 py-2 rounded-full text-xs text-orange-600 font-black shadow-sm border border-orange-50">JPG
                                         / PNG · 최대 20장</span>
                                 </div>
-                                <p class="text-[13px] text-sky-500 font-bold mb-3 ml-2">악보 순서대로 한 장씩 추가해 주세요.</p>
+                                <p class="text-[13px] text-orange-500 font-bold mb-3 ml-2">악보 순서대로 한 장씩 추가해 주세요.</p>
 
                                 <div id="existingImagesArea"
-                                    class="hidden mb-4 bg-white/80 p-4 rounded-[1.25rem] border border-sky-50 shadow-sm">
-                                    <p class="text-xs font-black text-sky-400 mb-4 ml-1">현재 등록된 이미지 악보</p>
+                                    class="hidden mb-4 bg-white/80 p-4 rounded-[1.25rem] border border-orange-50 shadow-sm">
+                                    <p class="text-xs font-black text-orange-400 mb-4 ml-1">현재 등록된 이미지 악보</p>
                                     <div id="existingImagesList" class="flex flex-wrap gap-4"></div>
                                     <button onclick="deleteAllExistingImages()"
-                                        class="mt-5 px-6 py-3 bg-red-50 text-red-500 text-sm font-black rounded-xl border-2 border-red-100 hover:bg-red-100 transition-all hover:-translate-y-1 shadow-sm">
+                                        class="mt-5 px-6 py-3 bg-red-50 text-red-500 text-sm font-black rounded-xl border-2 border-red-100 hover:bg-red-100 transition-all hover:-transtone-y-1 shadow-sm">
                                         <i class="fas fa-trash mr-2"></i>전체 삭제
                                     </button>
                                 </div>
 
                                 <div id="imageSlotArea" class="flex flex-wrap gap-3 items-center min-h-[72px]"></div>
 
-                                <div class="mt-4 flex flex-wrap gap-3 pt-3 border-t-2 border-sky-100">
+                                <div class="mt-4 flex flex-wrap gap-3 pt-3 border-t-2 border-orange-100">
                                     <button onclick="addImageSlot()"
-                                        class="px-6 py-3 bg-gradient-to-r from-sky-400 to-cyan-500 text-white text-sm font-black rounded-xl shadow-[0_8px_15px_rgba(14,165,233,0.3)] hover:from-sky-500 hover:to-cyan-600 transition-all hover:-translate-y-1 flex items-center">
+                                        class="px-6 py-3 bg-gradient-to-r from-orange-400 to-amber-500 text-white text-sm font-black rounded-xl shadow-[0_8px_15px_rgba(249,115,22,0.3)] hover:from-orange-500 hover:to-amber-600 transition-all hover:-transtone-y-1 flex items-center">
                                         <i class="fas fa-plus mr-2"></i>슬롯 추가
                                     </button>
                                     <button onclick="clearAllImageSlots()"
-                                        class="px-6 py-3 bg-white text-sky-600 text-sm font-black rounded-xl border-2 border-sky-100 hover:bg-sky-50 transition-all hover:-translate-y-1 flex items-center shadow-sm">
+                                        class="px-6 py-3 bg-white text-orange-600 text-sm font-black rounded-xl border-2 border-orange-100 hover:bg-orange-50 transition-all hover:-transtone-y-1 flex items-center shadow-sm">
                                         <i class="fas fa-times mr-2"></i>새 이미지 취소
                                     </button>
                                 </div>
                                 <p id="imageSlotCount"
-                                    class="text-xs text-sky-600 font-black mt-3 ml-2 bg-white inline-block px-4 py-2 rounded-xl shadow-sm border border-sky-50">
+                                    class="text-xs text-orange-600 font-black mt-3 ml-2 bg-white inline-block px-4 py-2 rounded-xl shadow-sm border border-orange-50">
                                     추가된 슬롯: 0개</p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-5 border-t-2 border-dashed border-sky-100">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-5 border-t-2 border-dashed border-orange-100">
                             <div
-                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-cyan-300 transition-all">
-                                <span class="w-16 text-sm font-black text-cyan-700 text-center">합창</span>
+                                class="flex items-center gap-4 bg-orange-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-amber-300 transition-all">
+                                <span class="w-16 text-sm font-black text-amber-700 text-center">합창</span>
                                 <input type="text" id="setupFull" placeholder="유튜브 링크"
-                                    class="min-w-0 flex-1 bg-white border border-sky-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-cyan-400 outline-none font-bold text-gray-700">
+                                    class="min-w-0 flex-1 bg-white border border-orange-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-amber-400 outline-none font-bold text-stone-700">
                             </div>
                             <div
-                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-pink-300 transition-all">
+                                class="flex items-center gap-4 bg-orange-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-pink-300 transition-all">
                                 <span class="w-16 text-sm font-black text-pink-500 text-center">소프</span>
                                 <input type="text" id="setupSop" placeholder="유튜브 링크"
-                                    class="min-w-0 flex-1 bg-white border border-pink-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-pink-400 outline-none font-bold text-gray-700">
+                                    class="min-w-0 flex-1 bg-white border border-pink-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-pink-400 outline-none font-bold text-stone-700">
                             </div>
                             <div
-                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-sky-400 transition-all">
-                                <span class="w-16 text-sm font-black text-sky-500 text-center">알토</span>
+                                class="flex items-center gap-4 bg-orange-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-orange-400 transition-all">
+                                <span class="w-16 text-sm font-black text-orange-500 text-center">알토</span>
                                 <input type="text" id="setupAlto" placeholder="유튜브 링크"
-                                    class="min-w-0 flex-1 bg-white border border-sky-200 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-sky-400 outline-none font-bold text-gray-700">
+                                    class="min-w-0 flex-1 bg-white border border-orange-200 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-orange-400 outline-none font-bold text-stone-700">
                             </div>
                             <div
-                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-teal-300 transition-all">
-                                <span class="w-16 text-sm font-black text-teal-500 text-center">테너</span>
+                                class="flex items-center gap-4 bg-orange-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-yellow-300 transition-all">
+                                <span class="w-16 text-sm font-black text-yellow-600 text-center">테너</span>
                                 <input type="text" id="setupTenor" placeholder="유튜브 링크"
-                                    class="min-w-0 flex-1 bg-white border border-teal-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-teal-400 outline-none font-bold text-gray-700">
+                                    class="min-w-0 flex-1 bg-white border border-yellow-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-yellow-400 outline-none font-bold text-stone-700">
                             </div>
                             <div
-                                class="flex items-center gap-4 bg-sky-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-amber-300 transition-all">
+                                class="flex items-center gap-4 bg-orange-50/50 p-3 rounded-[1.5rem] border-2 border-transparent focus-within:border-amber-300 transition-all">
                                 <span class="w-16 text-sm font-black text-amber-500 text-center">베이스</span>
                                 <input type="text" id="setupBass" placeholder="유튜브 링크"
-                                    class="min-w-0 flex-1 bg-white border border-amber-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-amber-400 outline-none font-bold text-gray-700">
+                                    class="min-w-0 flex-1 bg-white border border-amber-100 rounded-xl px-4 py-3 text-sm shadow-sm focus:border-amber-400 outline-none font-bold text-stone-700">
                             </div>
                         </div>
 
                         <button onclick="saveWeeklyLinks()" id="saveWeeklyBtn"
-                            class="w-full mt-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-lg font-black rounded-[1.5rem] shadow-[0_15px_30px_rgba(6,182,212,0.4)] hover:-translate-y-1 hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 border-b-4 border-blue-700 active:translate-y-0 active:border-b-0">
+                            class="w-full mt-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-lg font-black rounded-[1.5rem] shadow-[0_15px_30px_rgba(217,119,6,0.4)] hover:-transtone-y-1 hover:from-amber-600 hover:to-orange-600 transition-all duration-300 border-b-4 border-orange-700 active:transtone-y-0 active:border-b-0">
                             <i class="fas fa-save mr-2"></i> 주일 찬양 및 악보 저장
                         </button>
                     </div>
                 </div>
 
                 <div
-                    class="bg-white/80 backdrop-blur-xl p-4 md:p-6 rounded-[1.5rem] shadow-[0_20px_50px_-15px_rgba(2,132,199,0.15)] border-2 border-white mt-5">
-                    <h3 class="font-black text-xl md:text-2xl text-cyan-900 mb-3 flex items-center">
+                    class="bg-white/80 backdrop-blur-xl p-4 md:p-6 rounded-[1.5rem] shadow-[0_20px_50px_-15px_rgba(234,88,12,0.15)] border-2 border-white mt-5">
+                    <h3 class="font-black text-xl md:text-2xl text-amber-900 mb-3 flex items-center">
                         <div
-                            class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-600 shadow-inner">
+                            class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center mr-3 text-amber-600 shadow-inner">
                             <i class="fas fa-church text-2xl"></i>
                         </div>
                         고정곡 링크 입력
                     </h3>
                     <p
-                        class="text-[13px] text-cyan-600 font-bold mb-5 ml-2 bg-cyan-50 inline-block px-4 py-2 rounded-xl border border-cyan-100 shadow-sm">
+                        class="text-[13px] text-amber-600 font-bold mb-5 ml-2 bg-amber-50 inline-block px-4 py-2 rounded-xl border border-amber-100 shadow-sm">
                         한번 입력해두면 계속 유지됩니다.</p>
 
                     <div class="space-y-5">
-                        <div class="bg-sky-50/50 p-4 rounded-[1.5rem] border-2 border-sky-100 shadow-sm">
-                            <h4 class="text-lg font-black text-cyan-700 mb-3 flex items-center">
+                        <div class="bg-orange-50/50 p-4 rounded-[1.5rem] border-2 border-orange-100 shadow-sm">
+                            <h4 class="text-lg font-black text-amber-700 mb-3 flex items-center">
                                 <div
-                                    class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 text-cyan-500">
+                                    class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 text-amber-500">
                                     <i class="fas fa-music"></i>
                                 </div> 입례송
                             </h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <div class="flex items-center gap-3"><span
-                                        class="w-12 text-xs font-black text-cyan-600 text-center">합창</span><input
+                                        class="w-12 text-xs font-black text-amber-600 text-center">합창</span><input
                                         type="text" id="setupIntroitFull"
-                                        class="min-w-0 flex-1 bg-white border-2 border-sky-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-cyan-400 outline-none font-bold">
+                                        class="min-w-0 flex-1 bg-white border-2 border-orange-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-amber-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
                                         class="w-12 text-xs font-black text-pink-500 text-center">소프</span><input
@@ -646,14 +649,14 @@
                                         class="min-w-0 flex-1 bg-white border-2 border-pink-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-pink-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
-                                        class="w-12 text-xs font-black text-sky-500 text-center">알토</span><input
+                                        class="w-12 text-xs font-black text-orange-500 text-center">알토</span><input
                                         type="text" id="setupIntroitAlto"
-                                        class="min-w-0 flex-1 bg-white border-2 border-sky-200 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-sky-400 outline-none font-bold">
+                                        class="min-w-0 flex-1 bg-white border-2 border-orange-200 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-orange-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
-                                        class="w-12 text-xs font-black text-teal-500 text-center">테너</span><input
+                                        class="w-12 text-xs font-black text-yellow-600 text-center">테너</span><input
                                         type="text" id="setupIntroitTenor"
-                                        class="min-w-0 flex-1 bg-white border-2 border-teal-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-teal-400 outline-none font-bold">
+                                        class="min-w-0 flex-1 bg-white border-2 border-yellow-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-yellow-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
                                         class="w-12 text-xs font-black text-amber-500 text-center">베이스</span><input
@@ -662,18 +665,18 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-sky-50/50 p-4 rounded-[1.5rem] border-2 border-sky-100 shadow-sm">
-                            <h4 class="text-lg font-black text-cyan-700 mb-3 flex items-center">
+                        <div class="bg-orange-50/50 p-4 rounded-[1.5rem] border-2 border-orange-100 shadow-sm">
+                            <h4 class="text-lg font-black text-amber-700 mb-3 flex items-center">
                                 <div
-                                    class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 text-cyan-500">
+                                    class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 text-amber-500">
                                     <i class="fas fa-pray"></i>
                                 </div> 기도송
                             </h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <div class="flex items-center gap-3"><span
-                                        class="w-12 text-xs font-black text-cyan-600 text-center">합창</span><input
+                                        class="w-12 text-xs font-black text-amber-600 text-center">합창</span><input
                                         type="text" id="setupPrayerFull"
-                                        class="min-w-0 flex-1 bg-white border-2 border-sky-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-cyan-400 outline-none font-bold">
+                                        class="min-w-0 flex-1 bg-white border-2 border-orange-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-amber-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
                                         class="w-12 text-xs font-black text-pink-500 text-center">소프</span><input
@@ -681,14 +684,14 @@
                                         class="min-w-0 flex-1 bg-white border-2 border-pink-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-pink-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
-                                        class="w-12 text-xs font-black text-sky-500 text-center">알토</span><input
+                                        class="w-12 text-xs font-black text-orange-500 text-center">알토</span><input
                                         type="text" id="setupPrayerAlto"
-                                        class="min-w-0 flex-1 bg-white border-2 border-sky-200 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-sky-400 outline-none font-bold">
+                                        class="min-w-0 flex-1 bg-white border-2 border-orange-200 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-orange-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
-                                        class="w-12 text-xs font-black text-teal-500 text-center">테너</span><input
+                                        class="w-12 text-xs font-black text-yellow-600 text-center">테너</span><input
                                         type="text" id="setupPrayerTenor"
-                                        class="min-w-0 flex-1 bg-white border-2 border-teal-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-teal-400 outline-none font-bold">
+                                        class="min-w-0 flex-1 bg-white border-2 border-yellow-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-yellow-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
                                         class="w-12 text-xs font-black text-amber-500 text-center">베이스</span><input
@@ -697,18 +700,18 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-sky-50/50 p-4 rounded-[1.5rem] border-2 border-sky-100 shadow-sm">
-                            <h4 class="text-lg font-black text-cyan-700 mb-3 flex items-center">
+                        <div class="bg-orange-50/50 p-4 rounded-[1.5rem] border-2 border-orange-100 shadow-sm">
+                            <h4 class="text-lg font-black text-amber-700 mb-3 flex items-center">
                                 <div
-                                    class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 text-cyan-500">
+                                    class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 text-amber-500">
                                     <i class="fas fa-hands-blessing"></i>
                                 </div> 축도송
                             </h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <div class="flex items-center gap-3"><span
-                                        class="w-12 text-xs font-black text-cyan-600 text-center">합창</span><input
+                                        class="w-12 text-xs font-black text-amber-600 text-center">합창</span><input
                                         type="text" id="setupBeneFull"
-                                        class="min-w-0 flex-1 bg-white border-2 border-sky-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-cyan-400 outline-none font-bold">
+                                        class="min-w-0 flex-1 bg-white border-2 border-orange-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-amber-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
                                         class="w-12 text-xs font-black text-pink-500 text-center">소프</span><input
@@ -716,14 +719,14 @@
                                         class="min-w-0 flex-1 bg-white border-2 border-pink-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-pink-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
-                                        class="w-12 text-xs font-black text-sky-500 text-center">알토</span><input
+                                        class="w-12 text-xs font-black text-orange-500 text-center">알토</span><input
                                         type="text" id="setupBeneAlto"
-                                        class="min-w-0 flex-1 bg-white border-2 border-sky-200 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-sky-400 outline-none font-bold">
+                                        class="min-w-0 flex-1 bg-white border-2 border-orange-200 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-orange-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
-                                        class="w-12 text-xs font-black text-teal-500 text-center">테너</span><input
+                                        class="w-12 text-xs font-black text-yellow-600 text-center">테너</span><input
                                         type="text" id="setupBeneTenor"
-                                        class="min-w-0 flex-1 bg-white border-2 border-teal-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-teal-400 outline-none font-bold">
+                                        class="min-w-0 flex-1 bg-white border-2 border-yellow-100 rounded-xl px-3 py-2 text-sm shadow-inner focus:border-yellow-400 outline-none font-bold">
                                 </div>
                                 <div class="flex items-center gap-3"><span
                                         class="w-12 text-xs font-black text-amber-500 text-center">베이스</span><input
@@ -734,12 +737,12 @@
                         </div>
 
                         <button onclick="saveFixedLinks()" id="saveFixedBtn"
-                            class="w-full mt-6 py-4 bg-cyan-900 text-white text-lg font-black rounded-[1.5rem] shadow-[0_15px_30px_rgba(8,145,178,0.4)] hover:-translate-y-1 hover:bg-cyan-950 transition-all duration-300 border-b-4 border-slate-900 active:translate-y-0 active:border-b-0">
+                            class="w-full mt-6 py-4 bg-amber-900 text-white text-lg font-black rounded-[1.5rem] shadow-[0_15px_30px_rgba(180,83,9,0.4)] hover:-transtone-y-1 hover:bg-amber-950 transition-all duration-300 border-b-4 border-stone-900 active:transtone-y-0 active:border-b-0">
                             <i class="fas fa-save mr-2"></i> 고정곡 저장
                         </button>
 
                         <button onclick="openStats()"
-                            class="w-full mt-3 py-4 bg-slate-500 text-white text-lg font-black rounded-[1.5rem] shadow-[0_15px_30px_rgba(100,116,139,0.3)] hover:-translate-y-1 hover:bg-slate-600 transition-all duration-300 border-b-4 border-slate-700 active:translate-y-0 active:border-b-0">
+                            class="w-full mt-3 py-4 bg-stone-500 text-white text-lg font-black rounded-[1.5rem] shadow-[0_15px_30px_rgba(120,113,108,0.3)] hover:-transtone-y-1 hover:bg-stone-600 transition-all duration-300 border-b-4 border-stone-700 active:transtone-y-0 active:border-b-0">
                             <i class="fas fa-chart-column mr-2"></i> 통계
                         </button>
                     </div>
@@ -749,7 +752,7 @@
 
         <div id="appsView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
             <div
-                class="bg-gradient-to-r from-fuchsia-600 to-violet-700 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-violet-500">
+                class="bg-gradient-to-r from-orange-600 to-amber-800 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-orange-500">
                 <button onclick="goHome()"
                     class="w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all flex items-center justify-center font-bold">
                     <i class="fas fa-arrow-left"></i>
@@ -760,146 +763,146 @@
 
             <div class="flex-1 px-3 md:px-5 space-y-4 max-w-2xl mx-auto w-full z-0">
                 <p
-                    class="text-center text-sm font-bold text-violet-500 bg-violet-50 border-2 border-violet-100 rounded-2xl px-4 py-3 shadow-sm">
+                    class="text-center text-sm font-bold text-orange-600 bg-orange-50 border-2 border-orange-100 rounded-2xl px-4 py-3 shadow-sm">
                     <i class="fas fa-circle-info mr-1"></i> 눌러서 실행하면 새 창(탭)으로 열립니다.
                 </p>
 
                 <div
-                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(168,85,247,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
+                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(194,65,12,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
                     <div class="flex items-center gap-4">
                         <div
                             class="w-14 h-14 rounded-2xl bg-rose-100 text-rose-500 flex items-center justify-center shrink-0 shadow-inner">
                             <i class="fas fa-drum text-2xl"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-black text-cyan-900 text-lg">4x4 Drum</h3>
-                            <p class="text-sm text-cyan-500 font-bold mt-0.5">리듬 드럼 게임</p>
+                            <h3 class="font-black text-amber-900 text-lg">4x4 Drum</h3>
+                            <p class="text-sm text-amber-500 font-bold mt-0.5">리듬 드럼 게임</p>
                         </div>
                     </div>
                     <a href="https://cnation-4x4drum.vercel.app/" target="_blank" rel="noopener noreferrer"
-                        class="w-full py-3 bg-gradient-to-r from-rose-400 to-rose-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all">
+                        class="w-full py-3 bg-gradient-to-r from-rose-400 to-rose-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-transtone-y-1 hover:shadow-lg transition-all">
                         실행하기 <i class="fas fa-arrow-up-right-from-square ml-1 text-xs"></i>
                     </a>
                 </div>
 
                 <div
-                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(168,85,247,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
+                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(194,65,12,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
                     <div class="flex items-center gap-4">
                         <div
-                            class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-500 flex items-center justify-center shrink-0 shadow-inner">
+                            class="w-14 h-14 rounded-2xl bg-yellow-100 text-yellow-600 flex items-center justify-center shrink-0 shadow-inner">
                             <i class="fas fa-spell-check text-2xl"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-black text-cyan-900 text-lg">영어단어 지렁이 게임</h3>
-                            <p class="text-sm text-cyan-500 font-bold mt-0.5">영단어로 지렁이를 키우는 게임</p>
+                            <h3 class="font-black text-amber-900 text-lg">영어단어 지렁이 게임</h3>
+                            <p class="text-sm text-amber-500 font-bold mt-0.5">영단어로 지렁이를 키우는 게임</p>
                         </div>
                     </div>
                     <a href="https://cnation-jgame.vercel.app/" target="_blank" rel="noopener noreferrer"
-                        class="w-full py-3 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all">
+                        class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-center text-base font-black rounded-xl shadow-md hover:-transtone-y-1 hover:shadow-lg transition-all">
                         실행하기 <i class="fas fa-arrow-up-right-from-square ml-1 text-xs"></i>
                     </a>
                 </div>
 
                 <div
-                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(168,85,247,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
+                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(194,65,12,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
                     <div class="flex items-center gap-4">
                         <div
                             class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center shrink-0 shadow-inner">
                             <i class="fas fa-crown text-2xl"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-black text-cyan-900 text-lg">도미니언</h3>
-                            <p class="text-sm text-cyan-500 font-bold mt-0.5">카드 보드게임</p>
+                            <h3 class="font-black text-amber-900 text-lg">도미니언</h3>
+                            <p class="text-sm text-amber-500 font-bold mt-0.5">카드 보드게임</p>
                         </div>
                     </div>
                     <div class="flex gap-2">
                         <a href="https://cnation-dominion.vercel.app/" target="_blank" rel="noopener noreferrer"
-                            class="flex-1 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all">
+                            class="flex-1 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-transtone-y-1 hover:shadow-lg transition-all">
                             <i class="fas fa-mobile-screen-button mr-1"></i> 실행하기
                         </a>
                         <a href="https://civilizednation.github.io/cnation-dominion/index_pc.html" target="_blank"
                             rel="noopener noreferrer"
-                            class="flex-1 py-3 bg-white text-amber-600 text-center text-base font-black rounded-xl border-2 border-amber-200 shadow-sm hover:-translate-y-1 hover:bg-amber-50 transition-all">
+                            class="flex-1 py-3 bg-white text-amber-600 text-center text-base font-black rounded-xl border-2 border-amber-200 shadow-sm hover:-transtone-y-1 hover:bg-amber-50 transition-all">
                             <i class="fas fa-desktop mr-1"></i> PC용 실행
                         </a>
                     </div>
                 </div>
 
                 <div
-                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(168,85,247,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
+                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(194,65,12,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
                     <div class="flex items-center gap-4">
                         <div
                             class="w-14 h-14 rounded-2xl bg-orange-100 text-orange-500 flex items-center justify-center shrink-0 shadow-inner">
                             <i class="fas fa-music text-2xl"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-black text-cyan-900 text-lg">도미니언 BGM 플레이어</h3>
-                            <p class="text-sm text-cyan-500 font-bold mt-0.5">도미니언 게임 배경음악 재생</p>
+                            <h3 class="font-black text-amber-900 text-lg">도미니언 BGM 플레이어</h3>
+                            <p class="text-sm text-amber-500 font-bold mt-0.5">도미니언 게임 배경음악 재생</p>
                         </div>
                     </div>
                     <a href="https://cnation-dominion.vercel.app/echo/" target="_blank" rel="noopener noreferrer"
-                        class="w-full py-3 bg-gradient-to-r from-orange-400 to-orange-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all">
+                        class="w-full py-3 bg-gradient-to-r from-orange-400 to-orange-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-transtone-y-1 hover:shadow-lg transition-all">
                         실행하기 <i class="fas fa-arrow-up-right-from-square ml-1 text-xs"></i>
                     </a>
                 </div>
 
                 <div
-                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(168,85,247,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
+                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(194,65,12,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
                     <div class="flex items-center gap-4">
                         <div
-                            class="w-14 h-14 rounded-2xl bg-teal-100 text-teal-500 flex items-center justify-center shrink-0 shadow-inner">
+                            class="w-14 h-14 rounded-2xl bg-stone-100 text-stone-600 flex items-center justify-center shrink-0 shadow-inner">
                             <i class="fas fa-gem text-2xl"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-black text-cyan-900 text-lg">스플렌더</h3>
-                            <p class="text-sm text-cyan-500 font-bold mt-0.5">보석 수집 카드 보드게임</p>
+                            <h3 class="font-black text-amber-900 text-lg">스플렌더</h3>
+                            <p class="text-sm text-amber-500 font-bold mt-0.5">보석 수집 카드 보드게임</p>
                         </div>
                     </div>
                     <a href="https://cnation-splendor.vercel.app/" target="_blank" rel="noopener noreferrer"
-                        class="w-full py-3 bg-gradient-to-r from-teal-400 to-teal-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all">
+                        class="w-full py-3 bg-gradient-to-r from-stone-500 to-stone-600 text-white text-center text-base font-black rounded-xl shadow-md hover:-transtone-y-1 hover:shadow-lg transition-all">
                         실행하기 <i class="fas fa-arrow-up-right-from-square ml-1 text-xs"></i>
                     </a>
                 </div>
 
                 <div
-                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(168,85,247,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
+                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(194,65,12,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
                     <div class="flex items-center gap-4">
                         <div
-                            class="w-14 h-14 rounded-2xl bg-sky-100 text-sky-500 flex items-center justify-center shrink-0 shadow-inner">
+                            class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 shadow-inner">
                             <i class="fas fa-folder-open text-2xl"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-black text-cyan-900 text-lg">CCM 관리 프로그램</h3>
-                            <p class="text-sm text-cyan-500 font-bold mt-0.5">자작 CCM 목록/자료 관리</p>
+                            <h3 class="font-black text-amber-900 text-lg">CCM 관리 프로그램</h3>
+                            <p class="text-sm text-amber-500 font-bold mt-0.5">자작 CCM 목록/자료 관리</p>
                         </div>
                     </div>
                     <a href="https://cnation-ccm-list.vercel.app/" target="_blank" rel="noopener noreferrer"
-                        class="w-full py-3 bg-gradient-to-r from-sky-400 to-cyan-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all">
+                        class="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-center text-base font-black rounded-xl shadow-md hover:-transtone-y-1 hover:shadow-lg transition-all">
                         실행하기 <i class="fas fa-arrow-up-right-from-square ml-1 text-xs"></i>
                     </a>
                 </div>
 
                 <div
-                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(168,85,247,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
+                    class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(194,65,12,0.15)] border-2 border-white p-4 md:p-5 flex flex-col gap-3">
                     <div class="flex items-center gap-4">
                         <div
-                            class="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-500 flex items-center justify-center shrink-0 shadow-inner">
+                            class="w-14 h-14 rounded-2xl bg-orange-100 text-orange-500 flex items-center justify-center shrink-0 shadow-inner">
                             <i class="fas fa-headphones text-2xl"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-black text-cyan-900 text-lg">CCM 재생 플레이어</h3>
-                            <p class="text-sm text-cyan-500 font-bold mt-0.5">자작 CCM 재생기</p>
+                            <h3 class="font-black text-amber-900 text-lg">CCM 재생 플레이어</h3>
+                            <p class="text-sm text-amber-500 font-bold mt-0.5">자작 CCM 재생기</p>
                         </div>
                     </div>
                     <a href="https://cnation-ccm-list.vercel.app/player/" target="_blank" rel="noopener noreferrer"
-                        class="w-full py-3 bg-gradient-to-r from-indigo-400 to-indigo-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all">
+                        class="w-full py-3 bg-gradient-to-r from-orange-400 to-orange-500 text-white text-center text-base font-black rounded-xl shadow-md hover:-transtone-y-1 hover:shadow-lg transition-all">
                         실행하기 <i class="fas fa-arrow-up-right-from-square ml-1 text-xs"></i>
                     </a>
                 </div>
 
                 <div class="pt-1">
                     <button onclick="goHome()"
-                        class="w-full py-3 px-3 rounded-xl bg-white text-violet-600 border-2 border-violet-100 font-black shadow-sm hover:bg-violet-50 transition-all flex items-center justify-center gap-2">
+                        class="w-full py-3 px-3 rounded-xl bg-white text-orange-700 border-2 border-orange-100 font-black shadow-sm hover:bg-orange-50 transition-all flex items-center justify-center gap-2">
                         <i class="fas fa-home"></i> 메인메뉴로 가기
                     </button>
                 </div>
@@ -908,7 +911,7 @@
 
         <div id="statsView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
             <div
-                class="bg-gradient-to-r from-slate-600 to-slate-800 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-slate-500">
+                class="bg-gradient-to-r from-stone-600 to-stone-800 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-stone-500">
                 <button onclick="closeStats()"
                     class="w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all flex items-center justify-center font-bold">
                     <i class="fas fa-arrow-left"></i>
@@ -920,9 +923,9 @@
         </div>
 
         <div id="pdfModal"
-            class="hidden fixed inset-0 z-50 bg-cyan-950/90 backdrop-blur-xl flex flex-col transition-all duration-300">
+            class="hidden fixed inset-0 z-50 bg-amber-950/90 backdrop-blur-xl flex flex-col transition-all duration-300">
             <div
-                class="bg-cyan-900/80 text-white p-5 flex items-center justify-between shadow-2xl border-b border-cyan-700">
+                class="bg-amber-900/80 text-white p-5 flex items-center justify-between shadow-2xl border-b border-amber-700">
                 <h3 id="pdfModalTitle" class="font-black text-lg tracking-wide flex-1 truncate pr-4 text-center">악보 크게보기
                 </h3>
                 <button onclick="closePdfModal()"
@@ -1053,11 +1056,11 @@
                 <div class="grid ${showBackToMenu ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mb-4">
                     ${showBackToMenu ? `
                     <button onclick="renderStatsMenu()"
-                        class="py-3 px-3 rounded-xl bg-white text-slate-700 border-2 border-slate-300 font-black shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                        class="py-3 px-3 rounded-xl bg-white text-stone-700 border-2 border-stone-300 font-black shadow-sm hover:bg-stone-50 transition-all flex items-center justify-center gap-2">
                         <i class="fas fa-arrow-left"></i> 통계 메뉴로
                     </button>` : ''}
                     <button onclick="goHome()"
-                        class="py-3 px-3 rounded-xl bg-slate-700 text-white border-2 border-slate-800 font-black shadow-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                        class="py-3 px-3 rounded-xl bg-stone-700 text-white border-2 border-stone-800 font-black shadow-sm hover:bg-stone-800 transition-all flex items-center justify-center gap-2">
                         <i class="fas fa-home"></i> 홈화면으로
                     </button>
                 </div>`;
@@ -1066,29 +1069,29 @@
         window.renderStatsMenu = function () {
             document.getElementById('statsContainer').innerHTML = `
                 ${renderStatsNav(false)}
-                <p class="text-center text-sm font-bold text-slate-500 bg-slate-100 border-2 border-slate-200 rounded-2xl px-4 py-3 shadow-sm mt-2 mb-4">
+                <p class="text-center text-sm font-bold text-stone-500 bg-stone-100 border-2 border-stone-200 rounded-2xl px-4 py-3 shadow-sm mt-2 mb-4">
                     <i class="fas fa-circle-info mr-1"></i> 집계 시작일: ${STATS_START_LABEL} (그 이전 데이터는 없습니다)
                 </p>
                 <div class="space-y-4">
                     <button onclick="showStatsPanel('visits')"
-                        class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(71,85,105,0.3)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-slate-200">
-                        <span class="flex items-center gap-3 text-slate-700 font-black text-base md:text-lg">
-                            <div class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-slate-100 text-slate-600 flex items-center justify-center shadow-inner">
+                        class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(87,83,78,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(87,83,78,0.3)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-stone-200">
+                        <span class="flex items-center gap-3 text-stone-700 font-black text-base md:text-lg">
+                            <div class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-stone-100 text-stone-600 flex items-center justify-center shadow-inner">
                                 <i class="fas fa-right-to-bracket text-xl"></i>
                             </div>
                             접속 기록
                         </span>
-                        <i class="fas fa-chevron-right text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+                        <i class="fas fa-chevron-right text-stone-300 group-hover:text-stone-500 transition-colors"></i>
                     </button>
                     <button onclick="showStatsPanel('clicks')"
-                        class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(71,85,105,0.3)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-slate-200">
-                        <span class="flex items-center gap-3 text-slate-700 font-black text-base md:text-lg">
-                            <div class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-slate-100 text-slate-600 flex items-center justify-center shadow-inner">
+                        class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(87,83,78,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(87,83,78,0.3)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-stone-200">
+                        <span class="flex items-center gap-3 text-stone-700 font-black text-base md:text-lg">
+                            <div class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-stone-100 text-stone-600 flex items-center justify-center shadow-inner">
                                 <i class="fas fa-users text-xl"></i>
                             </div>
                             파트별 연습 현황
                         </span>
-                        <i class="fas fa-chevron-right text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+                        <i class="fas fa-chevron-right text-stone-300 group-hover:text-stone-500 transition-colors"></i>
                     </button>
                 </div>`;
         }
@@ -1104,8 +1107,8 @@
             window.statsDefaults = { day: todayStr, week: weekStr, month: monthStr, year: yearStr };
             document.getElementById('statsContainer').innerHTML = `
                 ${renderStatsNav(true)}
-                <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] border-2 border-white p-4 md:p-5">
-                    <h3 class="font-black text-slate-800 text-lg mb-3">${title}</h3>
+                <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(87,83,78,0.15)] border-2 border-white p-4 md:p-5">
+                    <h3 class="font-black text-stone-800 text-lg mb-3">${title}</h3>
                     <div class="grid grid-cols-4 gap-2 mb-3" id="statsPeriodTabs">
                         <button data-period="day" onclick="setStatsPeriod('day')" class="stats-period-btn py-2.5 rounded-xl text-sm font-black border-2 transition-all">일</button>
                         <button data-period="week" onclick="setStatsPeriod('week')" class="stats-period-btn py-2.5 rounded-xl text-sm font-black border-2 transition-all">주</button>
@@ -1114,7 +1117,7 @@
                     </div>
                     <div id="statsPeriodInputArea" class="mb-3"></div>
                     <button onclick="runStatsQuery('${kind}')"
-                        class="w-full py-3 bg-slate-600 hover:bg-slate-700 text-white font-black rounded-xl shadow-sm hover:-translate-y-1 transition-all">
+                        class="w-full py-3 bg-stone-600 hover:bg-stone-700 text-white font-black rounded-xl shadow-sm hover:-transtone-y-1 transition-all">
                         <i class="fas fa-magnifying-glass mr-1"></i> 조회
                     </button>
                 </div>
@@ -1127,11 +1130,11 @@
             document.querySelectorAll('.stats-period-btn').forEach(btn => {
                 const active = btn.dataset.period === period;
                 btn.className = 'stats-period-btn py-2.5 rounded-xl text-sm font-black border-2 transition-all ' +
-                    (active ? 'bg-slate-600 text-white border-slate-700' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50');
+                    (active ? 'bg-stone-600 text-white border-stone-700' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50');
             });
             const area = document.getElementById('statsPeriodInputArea');
             const d = window.statsDefaults;
-            const inputClass = 'w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 focus:border-slate-400 outline-none shadow-inner';
+            const inputClass = 'w-full bg-white border-2 border-stone-200 rounded-xl px-4 py-3 font-bold text-stone-700 focus:border-stone-400 outline-none shadow-inner';
             if (period === 'day') area.innerHTML = `<input type="date" id="statsPeriodValue" value="${d.day}" class="${inputClass}">`;
             else if (period === 'week') area.innerHTML = `<input type="week" id="statsPeriodValue" value="${d.week}" class="${inputClass}">`;
             else if (period === 'month') area.innerHTML = `<input type="month" id="statsPeriodValue" value="${d.month}" class="${inputClass}">`;
@@ -1190,7 +1193,7 @@
             if (!value) { alert('조회할 기간을 선택해주세요.'); return; }
             const { start, end, label } = getStatsDateRange(period, value);
             const resultArea = document.getElementById('statsResultArea');
-            resultArea.innerHTML = '<div class="flex justify-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-slate-400"></i></div>';
+            resultArea.innerHTML = '<div class="flex justify-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-stone-400"></i></div>';
             try {
                 if (kind === 'visits') {
                     const q = query(collection(db, VISITS_COL), where('timestamp', '>=', Timestamp.fromDate(start)), where('timestamp', '<', Timestamp.fromDate(end)));
@@ -1222,20 +1225,20 @@
             }).sort((a, b) => b.count - a.count);
             const uniqueIp = new Set(rows.map(r => r.ip)).size;
             const rowsHtml = rows.length === 0
-                ? '<p class="text-center text-slate-400 font-bold py-8">해당 기간 접속 기록이 없습니다.</p>'
+                ? '<p class="text-center text-stone-400 font-bold py-8">해당 기간 접속 기록이 없습니다.</p>'
                 : rows.map(r => `
-                    <div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+                    <div class="flex items-center justify-between py-3 border-b border-stone-100 last:border-0">
                         <div class="min-w-0">
-                            <p class="font-black text-slate-800 text-sm truncate">${escapeHtml(r.ip)}</p>
-                            <p class="text-xs text-slate-400 font-bold mt-0.5">${escapeHtml(r.device)} · ${escapeHtml(r.browser)}</p>
+                            <p class="font-black text-stone-800 text-sm truncate">${escapeHtml(r.ip)}</p>
+                            <p class="text-xs text-stone-400 font-bold mt-0.5">${escapeHtml(r.device)} · ${escapeHtml(r.browser)}</p>
                         </div>
-                        <span class="shrink-0 ml-3 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg font-black text-sm">${r.count}회</span>
+                        <span class="shrink-0 ml-3 px-3 py-1.5 bg-stone-100 text-stone-700 rounded-lg font-black text-sm">${r.count}회</span>
                     </div>`).join('');
             document.getElementById('statsResultArea').innerHTML = `
-                <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] border-2 border-white p-4 md:p-5">
+                <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(87,83,78,0.15)] border-2 border-white p-4 md:p-5">
                     <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <h4 class="font-black text-slate-700">${escapeHtml(label)}</h4>
-                        <span class="text-xs font-bold text-slate-400">총 접속 ${total}회 · IP ${uniqueIp}개</span>
+                        <h4 class="font-black text-stone-700">${escapeHtml(label)}</h4>
+                        <span class="text-xs font-bold text-stone-400">총 접속 ${total}회 · IP ${uniqueIp}개</span>
                     </div>
                     ${rowsHtml}
                 </div>`;
@@ -1260,20 +1263,20 @@
             const extra = Object.keys(Object.assign({}, clickCounts, listenCounts)).filter(k => !order.includes(k));
             const keys = [...order, ...extra].filter(k => clickCounts[k] !== undefined || listenCounts[k] !== undefined);
             const rowsHtml = keys.map(k => `
-                <div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
-                    <span class="font-black text-slate-800">${escapeHtml(k)}</span>
+                <div class="flex items-center justify-between py-3 border-b border-stone-100 last:border-0">
+                    <span class="font-black text-stone-800">${escapeHtml(k)}</span>
                     <div class="text-right leading-tight">
-                        <p class="text-xs text-slate-400 font-bold">버튼 클릭 <span class="text-slate-700 font-black">${clickCounts[k] || 0}회</span></p>
-                        <p class="text-xs text-slate-400 font-bold mt-0.5">곡 청취 <span class="text-slate-700 font-black">${listenCounts[k] || 0}회</span></p>
+                        <p class="text-xs text-stone-400 font-bold">버튼 클릭 <span class="text-stone-700 font-black">${clickCounts[k] || 0}회</span></p>
+                        <p class="text-xs text-stone-400 font-bold mt-0.5">곡 청취 <span class="text-stone-700 font-black">${listenCounts[k] || 0}회</span></p>
                     </div>
                 </div>`).join('');
             document.getElementById('statsResultArea').innerHTML = `
-                <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(71,85,105,0.15)] border-2 border-white p-4 md:p-5">
+                <div class="bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(87,83,78,0.15)] border-2 border-white p-4 md:p-5">
                     <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <h4 class="font-black text-slate-700">${escapeHtml(label)}</h4>
-                        <span class="text-xs font-bold text-slate-400">버튼 클릭 ${totalClicks}회 · 곡 청취 ${totalListens}회</span>
+                        <h4 class="font-black text-stone-700">${escapeHtml(label)}</h4>
+                        <span class="text-xs font-bold text-stone-400">버튼 클릭 ${totalClicks}회 · 곡 청취 ${totalListens}회</span>
                     </div>
-                    ${keys.length === 0 ? '<p class="text-center text-slate-400 font-bold py-8">해당 기간 연습 기록이 없습니다.</p>' : rowsHtml}
+                    ${keys.length === 0 ? '<p class="text-center text-stone-400 font-bold py-8">해당 기간 연습 기록이 없습니다.</p>' : rowsHtml}
                 </div>`;
         }
 
@@ -1287,11 +1290,11 @@
             return `
                 <div class="mt-8 mb-4 grid grid-cols-2 gap-3 max-w-2xl mx-auto">
                     <button onclick="scrollPracticeTop()"
-                        class="py-3 px-3 rounded-xl bg-white text-cyan-700 border-2 border-cyan-100 font-black shadow-sm hover:bg-cyan-50 transition-all flex items-center justify-center gap-2">
+                        class="py-3 px-3 rounded-xl bg-white text-amber-700 border-2 border-amber-100 font-black shadow-sm hover:bg-amber-50 transition-all flex items-center justify-center gap-2">
                         <i class="fas fa-arrow-up"></i> 위로 가기
                     </button>
                     <button onclick="goHome()"
-                        class="py-3 px-3 rounded-xl bg-cyan-700 text-white border-2 border-cyan-800 font-black shadow-sm hover:bg-cyan-800 transition-all flex items-center justify-center gap-2">
+                        class="py-3 px-3 rounded-xl bg-amber-700 text-white border-2 border-amber-800 font-black shadow-sm hover:bg-amber-800 transition-all flex items-center justify-center gap-2">
                         <i class="fas fa-home"></i> 메인메뉴로 가기
                     </button>
                 </div>`;
@@ -1365,10 +1368,10 @@
                 if (slot.previewUrl) {
                     div.innerHTML = `
                         <div style="position:relative;display:inline-block;">
-                            <img src="${slot.previewUrl}" class="preview-thumb border-sky-300" alt="악보${idx + 1}">
+                            <img src="${slot.previewUrl}" class="preview-thumb border-orange-300" alt="악보${idx + 1}">
                             <span class="remove-img-btn" onclick="removeImageSlot(${idx})"><i class="fas fa-times"></i></span>
                         </div>
-                        <span style="font-size:11px;color:#0284c7;font-weight:900;background:#e0f2fe;padding:4px 10px;border-radius:12px;border:1px solid #bae6fd;">${idx + 1}번</span>
+                        <span style="font-size:11px;color:#b45309;font-weight:900;background:#fef3c7;padding:4px 10px;border-radius:12px;border:1px solid #fde68a;">${idx + 1}번</span>
                     `;
                 } else {
                     div.innerHTML = `
@@ -1376,7 +1379,7 @@
                             <i class="fas fa-plus"></i>
                         </div>
                         <input type="file" id="imgInput_${idx}" accept="image/jpeg,image/png" class="hidden" onchange="onImageSlotFileSelected(${idx}, this)">
-                        <span style="font-size:11px;color:#38bdf8;font-weight:900;background:#f0f9ff;padding:4px 10px;border-radius:12px;border:1px solid #e0f2fe;">${idx + 1}번</span>
+                        <span style="font-size:11px;color:#f59e0b;font-weight:900;background:#fffbeb;padding:4px 10px;border-radius:12px;border:1px solid #fef3c7;">${idx + 1}번</span>
                     `;
                 }
                 area.appendChild(div);
@@ -1424,9 +1427,9 @@
                 if (!url) return;
                 const div = document.createElement('div'); div.className = 'existing-img-thumb mb-3';
                 div.innerHTML = `
-                    <img src="${url}" alt="악보${idx + 1}" onerror="this.src=''" class="border-sky-300">
+                    <img src="${url}" alt="악보${idx + 1}" onerror="this.src=''" class="border-orange-300">
                     <span class="del-btn" onclick="markExistingImageDeleted(${idx})"><i class="fas fa-times"></i></span>
-                    <div style="font-size:11px;color:#0284c7;font-weight:900;text-align:center;margin-top:8px;background:#e0f2fe;padding:4px;border-radius:8px;border:1px solid #bae6fd;">${idx + 1}번</div>
+                    <div style="font-size:11px;color:#b45309;font-weight:900;text-align:center;margin-top:8px;background:#fef3c7;padding:4px;border-radius:8px;border:1px solid #fde68a;">${idx + 1}번</div>
                 `;
                 list.appendChild(div);
             });
@@ -1448,9 +1451,9 @@
                     const statusEl = document.getElementById('currentSheetMusicStatus');
                     if (data.sheetMusicUrl) {
                         currentSheetMusicUrl = data.sheetMusicUrl;
-                        statusEl.innerHTML = `<span class="text-cyan-800 font-black bg-cyan-100 px-4 py-2 rounded-xl border border-cyan-200 shadow-sm"><i class="fas fa-file-pdf mr-2 text-red-500"></i>PDF 등록됨</span>`;
+                        statusEl.innerHTML = `<span class="text-amber-800 font-black bg-amber-100 px-4 py-2 rounded-xl border border-amber-200 shadow-sm"><i class="fas fa-file-pdf mr-2 text-red-500"></i>PDF 등록됨</span>`;
                         document.getElementById('deletePdfBtn').classList.remove('hidden');
-                    } else { statusEl.innerHTML = '<span class="bg-gray-100 text-gray-500 font-bold px-4 py-2 rounded-xl border border-gray-200">등록된 PDF 없음</span>'; }
+                    } else { statusEl.innerHTML = '<span class="bg-stone-100 text-stone-500 font-bold px-4 py-2 rounded-xl border border-stone-200">등록된 PDF 없음</span>'; }
                     if (data.sheetMusicImages && data.sheetMusicImages.length > 0) {
                         currentSheetMusicImages = [...data.sheetMusicImages];
                         document.getElementById('existingImagesArea').classList.remove('hidden');
@@ -1713,7 +1716,7 @@
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-stop mr-1"></i> 구간반복 정지';
-                btn.classList.remove('bg-cyan-500', 'hover:bg-cyan-600');
+                btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
                 btn.classList.add('bg-red-500', 'hover:bg-red-600');
             }
         };
@@ -1732,7 +1735,7 @@
             if (btn) {
                 btn.innerHTML = '<i class="fas fa-repeat mr-1"></i> 구간반복 시작';
                 btn.classList.remove('bg-red-500', 'hover:bg-red-600');
-                btn.classList.add('bg-cyan-500', 'hover:bg-cyan-600');
+                btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
             }
             const wrap = document.getElementById(`videoWrap_${partKey}`);
             if (wrap) restoreVideoIframe(wrap, videoId, partKey);
@@ -1748,34 +1751,34 @@
             if (!videoId) return '';
             const badgeClass = getPartBadgeClass(subtitle);
             return `
-                <div class="bg-white rounded-[1.5rem] shadow-lg border-2 border-sky-50 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-transform duration-300 relative group">
-                    <div class="p-3 border-b border-sky-50 bg-sky-50/40 flex justify-between items-center z-10">
+                <div class="bg-white rounded-[1.5rem] shadow-lg border-2 border-orange-50 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-transtone-y-1 transition-transform duration-300 relative group">
+                    <div class="p-3 border-b border-orange-50 bg-orange-50/40 flex justify-between items-center z-10">
                         <div>
-                            <span class="text-xs px-3 py-1.5 rounded-xl border border-sky-100 shadow-sm ${badgeClass}">${subtitle}</span>
-                            <h3 class="font-black text-cyan-900 mt-2 text-[15px] line-clamp-1">${title}</h3>
+                            <span class="text-xs px-3 py-1.5 rounded-xl border border-orange-100 shadow-sm ${badgeClass}">${subtitle}</span>
+                            <h3 class="font-black text-amber-900 mt-2 text-[15px] line-clamp-1">${title}</h3>
                         </div>
                         <div class="flex flex-col items-end gap-2">
-                            <span class="text-[10px] font-black text-sky-400">반복재생</span>
+                            <span class="text-[10px] font-black text-orange-400">반복재생</span>
                             <div class="relative inline-block w-[3.5rem] align-middle select-none">
                                 <input type="checkbox" id="toggle_${partKey}" onchange="toggleRepeat('${videoId}', '${partKey}', this.checked)"
                                     class="toggle-checkbox absolute block w-7 h-7 rounded-full bg-white border-[4px] appearance-none cursor-pointer"/>
-                                <label for="toggle_${partKey}" class="toggle-label block overflow-hidden h-7 rounded-full bg-sky-100 cursor-pointer border-2 border-white shadow-inner"></label>
+                                <label for="toggle_${partKey}" class="toggle-label block overflow-hidden h-7 rounded-full bg-orange-100 cursor-pointer border-2 border-white shadow-inner"></label>
                             </div>
                         </div>
                     </div>
-                    <div id="videoWrap_${partKey}" data-video-id="${videoId}" data-part-label="${subtitle}" class="aspect-video w-full bg-cyan-950 relative flex-1 border-t-2 border-white/50">
+                    <div id="videoWrap_${partKey}" data-video-id="${videoId}" data-part-label="${subtitle}" class="aspect-video w-full bg-amber-950 relative flex-1 border-t-2 border-white/50">
                         ${videoIframeHtml(partKey, videoId)}
                     </div>
-                    <div class="p-3 border-t-2 border-sky-50 bg-sky-50/40">
-                        <p class="text-[11px] font-black text-cyan-500 mb-2 flex items-center gap-1"><i class="fas fa-repeat"></i> 구간 반복 연습</p>
+                    <div class="p-3 border-t-2 border-orange-50 bg-orange-50/40">
+                        <p class="text-[11px] font-black text-amber-500 mb-2 flex items-center gap-1"><i class="fas fa-repeat"></i> 구간 반복 연습</p>
                         <div class="flex items-center gap-2">
                             <input type="number" min="0" step="1" inputmode="numeric" id="startSec_${partKey}" placeholder="시작(초)"
-                                class="w-0 flex-1 min-w-0 bg-white border-2 border-sky-100 rounded-lg px-2 py-2 text-sm font-bold text-cyan-900 focus:border-cyan-400 outline-none">
-                            <span class="text-cyan-300 font-black">~</span>
+                                class="w-0 flex-1 min-w-0 bg-white border-2 border-orange-100 rounded-lg px-2 py-2 text-sm font-bold text-amber-900 focus:border-amber-400 outline-none">
+                            <span class="text-amber-300 font-black">~</span>
                             <input type="number" min="0" step="1" inputmode="numeric" id="endSec_${partKey}" placeholder="종료(초)"
-                                class="w-0 flex-1 min-w-0 bg-white border-2 border-sky-100 rounded-lg px-2 py-2 text-sm font-bold text-cyan-900 focus:border-cyan-400 outline-none">
+                                class="w-0 flex-1 min-w-0 bg-white border-2 border-orange-100 rounded-lg px-2 py-2 text-sm font-bold text-amber-900 focus:border-amber-400 outline-none">
                             <button id="sectionBtn_${partKey}" onclick="toggleSectionRepeat('${partKey}')"
-                                class="shrink-0 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-black rounded-lg shadow-sm transition-all whitespace-nowrap">
+                                class="shrink-0 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-lg shadow-sm transition-all whitespace-nowrap">
                                 <i class="fas fa-repeat mr-1"></i>구간반복 시작
                             </button>
                         </div>
@@ -1787,39 +1790,39 @@
         function renderPdfContainer(title, date, url, index) {
             if (!url) return ''; const containerId = `pdf-container-${index}`;
             return `
-                <div class="bg-white rounded-[1.5rem] shadow-lg border border-sky-100 overflow-hidden mb-6 mt-4 w-full max-w-none mx-0">
-                    <div class="p-3 md:p-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white sticky top-0 z-10 flex justify-between items-center shadow-sm">
-                        <h3 class="font-black text-cyan-900 text-base md:text-lg truncate pr-2 flex items-center">
-                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center mr-3 shadow-sm border border-sky-50"><i class="fas fa-file-pdf text-red-500 text-xl"></i></div>
+                <div class="bg-white rounded-[1.5rem] shadow-lg border border-orange-100 overflow-hidden mb-6 mt-4 w-full max-w-none mx-0">
+                    <div class="p-3 md:p-4 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white sticky top-0 z-10 flex justify-between items-center shadow-sm">
+                        <h3 class="font-black text-amber-900 text-base md:text-lg truncate pr-2 flex items-center">
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center mr-3 shadow-sm border border-orange-50"><i class="fas fa-file-pdf text-red-500 text-xl"></i></div>
                             [${date}] ${title} 악보
                         </h3>
                         <button onclick="openPdfModal('${containerId}', '[${date}] ${title}')"
-                            class="text-sm font-black text-white bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 rounded-xl shadow-md hover:from-cyan-500 hover:to-blue-600 hover:-translate-y-1 transition-transform whitespace-nowrap flex items-center gap-2">
+                            class="text-sm font-black text-white bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2 rounded-xl shadow-md hover:from-amber-500 hover:to-orange-600 hover:-transtone-y-1 transition-transform whitespace-nowrap flex items-center gap-2">
                             <i class="fas fa-expand"></i>확대
                         </button>
                     </div>
-                    <div id="${containerId}" data-pdf-url="${url}" class="pdf-viewer w-full bg-gray-50 p-0 flex flex-col gap-2 min-h-[240px]"></div>
+                    <div id="${containerId}" data-pdf-url="${url}" class="pdf-viewer w-full bg-stone-50 p-0 flex flex-col gap-2 min-h-[240px]"></div>
                 </div>`;
         }
 
         function renderImagesContainer(title, date, images, index) {
             if (!images || images.length === 0) return '';
-            const imgsHtml = images.map((url, i) => `<img src="${url}" alt="${title} 악보 ${i + 1}페이지" loading="lazy" class="w-full h-auto bg-white shadow-sm border border-gray-100 mb-2 max-w-full object-contain" onerror="this.style.display='none'">`).join('');
+            const imgsHtml = images.map((url, i) => `<img src="${url}" alt="${title} 악보 ${i + 1}페이지" loading="lazy" class="w-full h-auto bg-white shadow-sm border border-stone-100 mb-2 max-w-full object-contain" onerror="this.style.display='none'">`).join('');
             return `
-                <div class="bg-white rounded-[1.5rem] shadow-lg border border-sky-100 overflow-hidden mb-6 mt-4 w-full max-w-none mx-0">
-                    <div class="p-3 md:p-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white sticky top-0 z-10 flex items-center shadow-sm">
-                        <h3 class="font-black text-cyan-900 text-base md:text-lg truncate flex items-center">
-                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center mr-3 shadow-sm border border-sky-50"><i class="fas fa-images text-cyan-500 text-xl"></i></div>
-                            [${date}] ${title} 악보 <span class="bg-cyan-100 text-cyan-700 px-3 py-1.5 rounded-xl ml-3 text-sm border border-cyan-200">${images.length}장</span>
+                <div class="bg-white rounded-[1.5rem] shadow-lg border border-orange-100 overflow-hidden mb-6 mt-4 w-full max-w-none mx-0">
+                    <div class="p-3 md:p-4 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white sticky top-0 z-10 flex items-center shadow-sm">
+                        <h3 class="font-black text-amber-900 text-base md:text-lg truncate flex items-center">
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center mr-3 shadow-sm border border-orange-50"><i class="fas fa-images text-amber-500 text-xl"></i></div>
+                            [${date}] ${title} 악보 <span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl ml-3 text-sm border border-amber-200">${images.length}장</span>
                         </h3>
                     </div>
-                    <div class="w-full bg-gray-50 p-1 md:p-2 flex flex-col gap-2">${imgsHtml}</div>
+                    <div class="w-full bg-stone-50 p-1 md:p-2 flex flex-col gap-2">${imgsHtml}</div>
                 </div>`;
         }
 
         async function loadPdfToCanvas(url, containerId) {
             const container = document.getElementById(containerId); if (!container) return;
-            container.innerHTML = '<div class="py-16 text-center bg-white/80 rounded-3xl animate-pulse border-2 border-sky-100 shadow-sm"><i class="fas fa-spinner fa-spin text-4xl text-cyan-400 mb-4"></i><p class="text-cyan-800 font-black">악보를 예쁘게 그리는 중...</p></div>';
+            container.innerHTML = '<div class="py-16 text-center bg-white/80 rounded-3xl animate-pulse border-2 border-orange-100 shadow-sm"><i class="fas fa-spinner fa-spin text-4xl text-amber-400 mb-4"></i><p class="text-amber-800 font-black">악보를 예쁘게 그리는 중...</p></div>';
             try {
                 const pdf = await pdfjsLib.getDocument(url).promise; container.innerHTML = '';
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -1849,11 +1852,11 @@
             clearAllSectionPlayers();
             document.getElementById('homeView').classList.add('hidden'); document.getElementById('practiceView').classList.remove('hidden'); window.scrollTo(0, 0);
             const container = document.getElementById('practiceContainer');
-            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-sky-100"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
+            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-orange-100"><i class="fas fa-compact-disc fa-spin text-5xl text-amber-400 mb-6 block"></i><p class="text-amber-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
             const parts = getSelectedParts(); const isAll = parts.includes('전체');
             logPracticeClick(parts, type);
             try {
-                let videosHtml = '<div class="space-y-8">'; let sheetsHtml = '<div class="mt-10 pt-5 border-t-2 border-dashed border-sky-200">'; let sheetEntries = [];
+                let videosHtml = '<div class="space-y-8">'; let sheetsHtml = '<div class="mt-10 pt-5 border-t-2 border-dashed border-orange-200">'; let sheetEntries = [];
                 if (type === '고정') {
                     document.getElementById('practiceTitle').innerText = '고정송 연습';
                     const docSnap = await getDoc(doc(db, FIXED_COL, "current"));
@@ -1873,7 +1876,7 @@
                         const docSnap = weeklyDocs[idx];
                         if (docSnap.exists()) {
                             const data = docSnap.data(); const title = data.title || `${date} 찬양`;
-                            videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-cyan-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-sky-50"><div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
+                            videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-amber-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-orange-50"><div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center mr-3 text-amber-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
                             videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">`;
                             if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); }
                             if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); }
@@ -1885,7 +1888,7 @@
                             if (data.sheetMusicUrl) { sheetEntries.push({ type: 'pdf', url: data.sheetMusicUrl, title, date, idx }); sheetsHtml += renderPdfContainer(title, date, data.sheetMusicUrl, idx); }
                             else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) { sheetEntries.push({ type: 'images', images: data.sheetMusicImages, title, date, idx }); sheetsHtml += renderImagesContainer(title, date, data.sheetMusicImages, idx); }
                         } else {
-                            videosHtml += `<div class="bg-white p-12 rounded-[2rem] text-center border-2 border-dashed border-sky-200 mb-12 shadow-sm"><i class="fas fa-box-open mb-6 text-6xl text-sky-300"></i><br><span class="font-black text-2xl text-cyan-800">${date}</span><p class="text-cyan-600 font-bold mt-3 text-lg">아직 등록된 곡이 없습니다.</p></div>`;
+                            videosHtml += `<div class="bg-white p-12 rounded-[2rem] text-center border-2 border-dashed border-orange-200 mb-12 shadow-sm"><i class="fas fa-box-open mb-6 text-6xl text-orange-300"></i><br><span class="font-black text-2xl text-amber-800">${date}</span><p class="text-amber-600 font-bold mt-3 text-lg">아직 등록된 곡이 없습니다.</p></div>`;
                         }
                     }
                     videosHtml += '</div>'; sheetsHtml += '</div>';
@@ -1896,7 +1899,7 @@
         };
 
         function buildFixedSection(name, icon, data, isAll, parts, prefix) {
-            let html = `<div><h2 class="font-black text-2xl md:text-3xl text-cyan-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-sky-50"><div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-500 shadow-inner"><i class="fas ${icon}"></i></div> ${name}</h2>`;
+            let html = `<div><h2 class="font-black text-2xl md:text-3xl text-amber-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-orange-50"><div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center mr-3 text-amber-500 shadow-inner"><i class="fas ${icon}"></i></div> ${name}</h2>`;
             html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">`;
             if (isAll || parts.includes('합창')) html += renderVideo(name, '합창', getYoutubeId(data.full), `${prefix}_full`);
             if (isAll || parts.includes('소프라노')) html += renderVideo(name, '소프라노', getYoutubeId(data.soprano), `${prefix}_sop`);
@@ -1911,7 +1914,7 @@
             document.getElementById('homeView').classList.add('hidden'); document.getElementById('practiceView').classList.remove('hidden');
             document.getElementById('pastDateSelector').classList.remove('hidden'); document.getElementById('practiceTitle').innerText = '기존 곡 연습'; window.scrollTo(0, 0);
             const container = document.getElementById('practiceContainer');
-            container.innerHTML = '<div class="flex justify-center py-20"><div class="bg-sky-50 p-6 rounded-[1.5rem] border-2 border-sky-200 text-center shadow-sm"><i class="fas fa-hand-point-up text-4xl text-cyan-400 mb-4 block"></i><p class="text-cyan-900 font-black text-xl">위에서 날짜를 콕! 찍어주세요.</p></div></div>' + renderPracticeFooter();
+            container.innerHTML = '<div class="flex justify-center py-20"><div class="bg-orange-50 p-6 rounded-[1.5rem] border-2 border-orange-200 text-center shadow-sm"><i class="fas fa-hand-point-up text-4xl text-amber-400 mb-4 block"></i><p class="text-amber-900 font-black text-xl">위에서 날짜를 콕! 찍어주세요.</p></div></div>' + renderPracticeFooter();
             const dropdown = document.getElementById('pastDateDropdown'); dropdown.innerHTML = '<option value="">날짜 목록 불러오는 중...</option>';
             try {
                 const snap = await getDocs(query(collection(db, WEEKLY_COL))); let dates = []; snap.forEach(d => dates.push({ date: d.id, title: d.data().title || '' }));
@@ -1923,14 +1926,14 @@
         window.loadPastPractice = async () => {
             clearAllSectionPlayers();
             const date = document.getElementById('pastDateDropdown').value; const container = document.getElementById('practiceContainer'); if (!date) { container.innerHTML = renderPracticeFooter(); return; }
-            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-sky-100"><i class="fas fa-compact-disc fa-spin text-5xl text-cyan-400 mb-6 block"></i><p class="text-cyan-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
+            container.innerHTML = '<div class="flex justify-center py-32"><div class="bg-white p-8 rounded-[2rem] shadow-lg text-center border-2 border-orange-100"><i class="fas fa-compact-disc fa-spin text-5xl text-amber-400 mb-6 block"></i><p class="text-amber-900 font-black text-xl">찬양 연습 준비중...</p></div></div>';
             const parts = getSelectedParts(); const isAll = parts.includes('전체');
             logPracticeClick(parts, '기존');
             try {
                 const docSnap = await getDoc(doc(db, WEEKLY_COL, date)); let videosHtml = '<div class="space-y-12">'; let sheetsHtml = ''; let hasData = false;
                 if (docSnap.exists()) {
                     const data = docSnap.data(); const title = data.title || `${date} 찬양`;
-                    videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-cyan-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-sky-50"><div class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center mr-3 text-cyan-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
+                    videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-amber-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-orange-50"><div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center mr-3 text-amber-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
                     videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">`;
                     if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); hasData = true; }
                     if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); hasData = true; }
@@ -1938,14 +1941,14 @@
                     if (isAll || parts.includes('테너')) { videosHtml += renderVideo(title, '테너', getYoutubeId(data.tenor), `tenor_${date}`); hasData = true; }
                     if (isAll || parts.includes('베이스')) { videosHtml += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`); hasData = true; }
                     videosHtml += `</div></div>`;
-                    if (data.sheetMusicUrl) { sheetsHtml = `<div class="mt-10 pt-5 border-t-2 border-dashed border-sky-200">${renderPdfContainer(title, date, data.sheetMusicUrl, 'past')}</div>`; hasData = true; }
-                    else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) { sheetsHtml = `<div class="mt-10 pt-5 border-t-2 border-dashed border-sky-200">${renderImagesContainer(title, date, data.sheetMusicImages, 'past')}</div>`; hasData = true; }
+                    if (data.sheetMusicUrl) { sheetsHtml = `<div class="mt-10 pt-5 border-t-2 border-dashed border-orange-200">${renderPdfContainer(title, date, data.sheetMusicUrl, 'past')}</div>`; hasData = true; }
+                    else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) { sheetsHtml = `<div class="mt-10 pt-5 border-t-2 border-dashed border-orange-200">${renderImagesContainer(title, date, data.sheetMusicImages, 'past')}</div>`; hasData = true; }
                 }
                 videosHtml += '</div>';
                 if (hasData) {
                     container.innerHTML = videosHtml + sheetsHtml + renderPracticeFooter(); const d = docSnap.data();
                     if (d && d.sheetMusicUrl) { setTimeout(() => loadPdfToCanvas(d.sheetMusicUrl, 'pdf-container-past'), 100); }
-                } else { container.innerHTML = '<div class="py-20 text-center"><div class="bg-white p-8 rounded-[1.5rem] inline-block shadow-sm border-2 border-sky-100"><i class="fas fa-folder-open text-5xl text-sky-300 mb-4 block"></i><p class="text-cyan-700 font-black text-xl">이 파트에는 등록된 곡이 없어요.</p></div></div>' + renderPracticeFooter(); }
+                } else { container.innerHTML = '<div class="py-20 text-center"><div class="bg-white p-8 rounded-[1.5rem] inline-block shadow-sm border-2 border-orange-100"><i class="fas fa-folder-open text-5xl text-orange-300 mb-4 block"></i><p class="text-amber-700 font-black text-xl">이 파트에는 등록된 곡이 없어요.</p></div></div>' + renderPracticeFooter(); }
             } catch (e) { container.innerHTML = '<div class="py-20 text-center"><div class="bg-red-50/90 p-8 rounded-[1.5rem] inline-block border-2 border-red-200 shadow-lg"><p class="text-red-600 font-black text-xl">데이터 로드 실패 😭</p></div></div>' + renderPracticeFooter(); }
         };
     </script>
