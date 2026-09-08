@@ -1146,18 +1146,16 @@
             coverSongsNextPromptDelay = 5000;
             armCoverSongsSlowTimer(myToken, coverSongsNextPromptDelay);
 
+            const coverSongsQuery = query(collection(db, COVER_SONGS_COL), where('type', '==', '커버송'));
             while (myToken === coverSongsLoadToken) {
                 try {
-                    const snapshot = await coverSongsWithTimeout(getDocs(collection(db, COVER_SONGS_COL)), 8000);
+                    const snapshot = await coverSongsWithTimeout(getDocs(coverSongsQuery), 8000);
                     if (myToken !== coverSongsLoadToken) return;
 
                     const songs = [];
-                    snapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        if (data.type === '커버송') songs.push({ id: docSnap.id, ...data });
-                    });
+                    snapshot.forEach(docSnap => songs.push({ id: docSnap.id, ...docSnap.data() }));
 
-                    if (songs.length > 0 || !snapshot.empty) {
+                    if (!snapshot.empty) {
                         clearTimeout(coverSongsSlowTimer);
                         songs.sort((a, b) => (b.creationDate || '').localeCompare(a.creationDate || ''));
                         coverSongsCache = songs;
