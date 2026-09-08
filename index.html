@@ -1081,6 +1081,12 @@
 
         // ===== 성가대곡 커버송 듣기 (cnation-ccm-list 컬렉션을 그대로 조회) =====
         const COVER_SONGS_COL = "cnation-ccm-list";
+        // 무석연합교회 성가대에서 실제로 부른 곡 중 cnation이 커버한 곡만, 정확히 이 문서 ID로 짚어서 가져온다
+        // (전체 곡을 불러온 뒤 걸러내지 않음 — 새 곡이 추가되면 cnation-ccm-list에서 문서 ID를 확인해 아래에 추가).
+        const COVER_SONG_IDS = [
+            "jV6ZzzAGxqY3aBkMY1bR", // 믿음 위에 굳게 서라 (2026-09-06)
+            "0QsF1kfpwixbpFRo4bl9", // 날 기도하게 하시려고 (2025-09-26)
+        ];
         let coverSongsCache = [];
         let coverSongsLoadToken = 0;
         let coverSongsSlowTimer = null;
@@ -1136,9 +1142,10 @@
                 '<p class="text-center text-stone-400 font-bold py-10">목록을 불러오지 못했습니다. 뒤로 갔다가 다시 들어와 주세요.</p>';
         };
 
-        // 곡은 항상 등록되어 있다는 전제이므로, 빈 결과/에러는 성공할 때까지 재시도한다.
+        // 곡은 항상 등록되어 있다는 전제이므로, 실패는 성공할 때까지 재시도한다.
         // (cnation-ccm-list 앱에서 같은 이유로 겪었던 "네트워크가 스트리밍 연결을 막아 요청이
         //  응답도 에러도 없이 매달리는" 문제를 피하기 위해 각 시도에 타임아웃을 둔다.)
+        // 정확히 정해진 문서 2개만 가져오므로 getDocs 대신 getDoc을 병렬로 호출한다 — 더 가볍고 빠르다.
         async function loadCoverSongs() {
             const myToken = ++coverSongsLoadToken;
             clearTimeout(coverSongsSlowTimer);
@@ -1146,25 +1153,25 @@
             coverSongsNextPromptDelay = 5000;
             armCoverSongsSlowTimer(myToken, coverSongsNextPromptDelay);
 
-            const coverSongsQuery = query(collection(db, COVER_SONGS_COL), where('type', '==', '커버송'));
             while (myToken === coverSongsLoadToken) {
                 try {
-                    const snapshot = await coverSongsWithTimeout(getDocs(coverSongsQuery), 8000);
+                    const snaps = await coverSongsWithTimeout(
+                        Promise.all(COVER_SONG_IDS.map(id => getDoc(doc(db, COVER_SONGS_COL, id)))),
+                        8000
+                    );
                     if (myToken !== coverSongsLoadToken) return;
 
-                    const songs = [];
-                    snapshot.forEach(docSnap => songs.push({ id: docSnap.id, ...docSnap.data() }));
-
-                    if (!snapshot.empty) {
+                    const songs = snaps.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() }));
+                    if (songs.length === COVER_SONG_IDS.length) {
                         clearTimeout(coverSongsSlowTimer);
                         songs.sort((a, b) => (b.creationDate || '').localeCompare(a.creationDate || ''));
                         coverSongsCache = songs;
                         renderCoverSongsList(songs);
                         return;
                     }
-                    // 빈 결과 -> 아직 못 불러온 것으로 보고 재시도
+                    // 문서를 다 못 불러옴 -> 아직 못 불러온 것으로 보고 재시도
                 } catch (error) {
-                    console.error('커버송 목록 로딩 에러 (재시도함):', error);
+                    console.error('커버송 로딩 에러 (재시도함):', error);
                 }
                 await new Promise(r => setTimeout(r, 1500));
             }
@@ -1176,16 +1183,26 @@
                 list.innerHTML = '<p class="text-center text-stone-400 font-bold py-10">등록된 커버송이 아직 없습니다.</p>';
                 return;
             }
+            list.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4';
             list.innerHTML = songs.map(song => {
                 const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '날짜 미상';
+                const bg = song.thumbnailUrl
+                    ? `<img src="${escapeHtml(song.thumbnailUrl)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="">`
+                    : `<div class="absolute inset-0 bg-gradient-to-br from-indigo-400 to-indigo-700 flex items-center justify-center text-white/90 font-black text-7xl">${getCoverSongTitleInitial(song.title)}</div>`;
                 return `
                     <button onclick="openCoverSongDetail('${song.id}')"
-                        class="w-full flex items-center justify-between gap-3 p-4 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_10px_20px_-10px_rgba(79,70,229,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(79,70,229,0.35)] border-2 border-white hover:border-indigo-200 transition-all text-left">
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-black text-amber-900 text-base truncate">${escapeHtml(song.title || '')}</h3>
-                            <p class="text-xs text-indigo-500 font-bold mt-1"><i class="fas fa-calendar-days mr-1"></i>${dateStr} 성가대 찬양</p>
+                        class="group relative w-full aspect-square rounded-[1.75rem] overflow-hidden shadow-[0_20px_40px_-15px_rgba(79,70,229,0.35)] border-4 border-white hover:-translate-y-1 hover:shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-300 text-left">
+                        ${bg}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent"></div>
+                        <div class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/90 backdrop-blur flex items-center justify-center text-indigo-600 shadow-lg group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <i class="fas fa-play ml-0.5"></i>
                         </div>
-                        <i class="fas fa-chevron-right text-indigo-300 shrink-0"></i>
+                        <div class="absolute inset-x-0 bottom-0 p-4">
+                            <span class="inline-flex items-center gap-1 text-[10px] font-black text-amber-200 bg-black/40 backdrop-blur px-2.5 py-1 rounded-full mb-2">
+                                <i class="fas fa-calendar-days"></i> ${dateStr} 성가대 찬양
+                            </span>
+                            <h3 class="text-white font-black text-xl leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">${escapeHtml(song.title || '')}</h3>
+                        </div>
                     </button>`;
             }).join('');
         }
