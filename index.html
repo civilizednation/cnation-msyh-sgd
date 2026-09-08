@@ -1050,8 +1050,18 @@
                 osc.stop(now + 0.035);
             } catch (e) { /* 오디오 재생 실패는 조용히 무시 (눌림 효과는 CSS로 이미 표시됨) */ }
         }
+        // 터치 즉시 화면이 넘어가버리면 눌림 효과(밝아짐/축소)를 볼 틈이 없어서,
+        // 실제 클릭 동작은 아주 짧게 지연시켜 눌린 느낌이 눈에 보이게 한 뒤 실행한다.
+        // (target.click()으로 재실행된 클릭은 isTrusted가 false라 무한루프 없이 그대로 통과됨)
+        const PRESS_DELAY_MS = 90;
         document.addEventListener('click', (e) => {
-            if (e.target.closest('button, a[target="_blank"]')) playUiTick();
+            if (!e.isTrusted) return;
+            const target = e.target.closest('button, a[target="_blank"]');
+            if (!target) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            playUiTick();
+            setTimeout(() => target.click(), PRESS_DELAY_MS);
         }, true);
 
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
