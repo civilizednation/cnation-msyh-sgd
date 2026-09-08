@@ -264,6 +264,21 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #fcd34d;
         }
+
+        /* 앱 전체 공통 버튼 눌림 효과: 살짝 밝아지면서 눌리는 느낌 (개별 버튼 클래스 건드릴 필요 없음)
+           브라우저 기본 :active는 스크롤 중에도 눌린 상태가 그대로 남는 경우가 있어서,
+           스크롤 여부를 JS로 판별해 붙이는 .ui-pressed 클래스로 대신 표시한다. */
+        button, a[target="_blank"] {
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 110ms ease, filter 110ms ease;
+        }
+        button.ui-pressed, a[target="_blank"].ui-pressed {
+            filter: brightness(1.15);
+            transform: scale(0.96);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            button.ui-pressed, a[target="_blank"].ui-pressed { transform: none; }
+        }
     </style>
 </head>
 
@@ -420,6 +435,18 @@
                             </span>
                             <i
                                 class="fas fa-chevron-right text-amber-300 group-hover:text-amber-500 transition-colors"></i>
+                        </button>
+                        <button onclick="openCoverSongs()"
+                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(79,70,229,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(79,70,229,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-indigo-200">
+                            <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
+                                <div
+                                    class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
+                                    <i class="fas fa-headphones-simple text-xl"></i>
+                                </div>
+                                성가대곡 커버송 듣기
+                            </span>
+                            <i
+                                class="fas fa-chevron-right text-indigo-300 group-hover:text-indigo-500 transition-colors"></i>
                         </button>
                     </div>
 
@@ -909,6 +936,38 @@
             </div>
         </div>
 
+        <div id="coverSongsView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
+            <div
+                class="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-indigo-500">
+                <button onclick="goHome()"
+                    class="w-10 h-10 rounded-full bg-white/20 text-white hover:bg-white/40 hover:scale-110 transition-all flex items-center justify-center font-bold">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="font-black text-xl tracking-tight drop-shadow-md">성가대곡 커버송 듣기</h2>
+                <div class="w-10"></div>
+            </div>
+            <div class="flex-1 px-3 md:px-5 max-w-2xl mx-auto w-full z-0">
+                <p class="text-center text-xs font-bold text-indigo-500 bg-indigo-50 border-2 border-indigo-100 rounded-2xl px-4 py-3 shadow-sm mb-4">
+                    <i class="fas fa-circle-info mr-1"></i> 성가대에서 불렀던 찬양을 직접 편곡해서 커버송으로 만들었습니다.
+                </p>
+                <div id="coverSongsList" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="coverSongDetailModal"
+            class="hidden fixed inset-0 z-50 bg-amber-950/90 backdrop-blur-xl flex flex-col transition-all duration-300">
+            <div
+                class="bg-amber-900/80 text-white p-5 flex items-center justify-between shadow-2xl border-b border-amber-700">
+                <h3 id="coverSongDetailTitle" class="font-black text-lg tracking-wide flex-1 truncate pr-4 text-center">
+                    곡 상세보기</h3>
+                <button onclick="closeCoverSongDetail()"
+                    class="w-12 h-12 bg-white/10 rounded-full text-white text-2xl flex items-center justify-center hover:bg-red-500 hover:scale-110 transition-all shadow-sm border border-white/20">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="coverSongDetailContent" class="flex-1 overflow-y-auto bg-white"></div>
+        </div>
+
         <div id="statsView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
             <div
                 class="bg-gradient-to-r from-stone-600 to-stone-800 text-white mx-3 md:mx-6 mt-3 mb-3 rounded-[1.5rem] p-3 flex items-center justify-between shadow-md sticky top-3 z-20 border border-stone-500">
@@ -968,6 +1027,77 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
+
+        // ===== 앱 전체 공통 버튼 클릭 효과음 ("틱") =====
+        // 음원 파일 없이 Web Audio API로 짧은 클릭음을 그 자리에서 합성한다.
+        // 개별 버튼마다 코드를 넣지 않고, document 레벨에서 클릭을 위임받아 모든 버튼/실행 링크에 자동 적용한다.
+        let uiClickCtx = null;
+        function playUiTick() {
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx) return;
+                if (!uiClickCtx) uiClickCtx = new Ctx();
+                if (uiClickCtx.state === 'suspended') uiClickCtx.resume();
+                const now = uiClickCtx.currentTime;
+                const osc = uiClickCtx.createOscillator();
+                const gain = uiClickCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1000, now);
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.08, now + 0.004);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+                osc.connect(gain);
+                gain.connect(uiClickCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.035);
+            } catch (e) { /* 오디오 재생 실패는 조용히 무시 (눌림 효과는 CSS로 이미 표시됨) */ }
+        }
+        // 터치 즉시 화면이 넘어가버리면 눌림 효과(밝아짐/축소)를 볼 틈이 없어서,
+        // 실제 클릭 동작은 짧게 지연시켜 눌린 느낌이 눈에 보이게 한 뒤 실행한다.
+        // (target.click()으로 재실행된 클릭은 isTrusted가 false라 무한루프 없이 그대로 통과됨)
+        const PRESS_DELAY_MS = 135;
+
+        // 스크롤 하다가 손가락이 버튼 위를 지나가도 눌림 효과가 나오지 않도록,
+        // pointerdown~pointerup 사이 이동 거리로 "스크롤 중이었는지"를 판별한다.
+        // 스크롤 없이 같은 자리에서 눌렀다 뗀 경우에만 .ui-pressed를 붙인다.
+        const PRESS_MOVE_THRESHOLD = 10;
+        let pressTarget = null, pressStartX = 0, pressStartY = 0, pressScrolled = false;
+
+        document.addEventListener('pointerdown', (e) => {
+            pressTarget = e.target.closest('button, a[target="_blank"]');
+            pressStartX = e.clientX;
+            pressStartY = e.clientY;
+            pressScrolled = false;
+        }, true);
+
+        document.addEventListener('pointermove', (e) => {
+            if (!pressTarget) return;
+            if (Math.hypot(e.clientX - pressStartX, e.clientY - pressStartY) > PRESS_MOVE_THRESHOLD) {
+                pressScrolled = true;
+            }
+        }, true);
+
+        document.addEventListener('pointerup', () => {
+            if (pressTarget && !pressScrolled) {
+                const target = pressTarget;
+                target.classList.add('ui-pressed');
+                setTimeout(() => target.classList.remove('ui-pressed'), PRESS_DELAY_MS + 60);
+            }
+            pressTarget = null;
+        }, true);
+
+        document.addEventListener('pointercancel', () => { pressTarget = null; }, true);
+
+        document.addEventListener('click', (e) => {
+            if (!e.isTrusted) return;
+            const target = e.target.closest('button, a[target="_blank"]');
+            if (!target) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            playUiTick();
+            setTimeout(() => target.click(), PRESS_DELAY_MS);
+        }, true);
+
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const WEEKLY_COL = "cnation-msyh-sgd-weekly";
@@ -1017,6 +1147,7 @@
             document.getElementById('setupView').classList.add('hidden');
             document.getElementById('appsView').classList.add('hidden');
             document.getElementById('statsView').classList.add('hidden');
+            document.getElementById('coverSongsView').classList.add('hidden');
             document.getElementById('pastDateSelector').classList.add('hidden');
             document.getElementById('practiceContainer').innerHTML = '';
             document.getElementById('homeView').classList.remove('hidden');
@@ -1033,6 +1164,180 @@
         function escapeHtml(str) {
             return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
+
+        // ===== 성가대곡 커버송 듣기 (cnation-ccm-list 컬렉션을 그대로 조회) =====
+        const COVER_SONGS_COL = "cnation-ccm-list";
+        // 무석연합교회 성가대에서 실제로 부른 곡 중 cnation이 커버한 곡만, 정확히 이 문서 ID로 짚어서 가져온다
+        // (전체 곡을 불러온 뒤 걸러내지 않음 — 새 곡이 추가되면 cnation-ccm-list에서 문서 ID를 확인해 아래에 추가).
+        const COVER_SONG_IDS = [
+            "jV6ZzzAGxqY3aBkMY1bR", // 믿음 위에 굳게 서라 (2026-09-06)
+            "0QsF1kfpwixbpFRo4bl9", // 날 기도하게 하시려고 (2025-09-26)
+        ];
+        let coverSongsCache = [];
+        let coverSongsLoadToken = 0;
+        let coverSongsSlowTimer = null;
+        let coverSongsNextPromptDelay = 5000;
+
+        function getCoverSongTitleInitial(title) {
+            const t = (title || '').replace(/\s/g, '');
+            return escapeHtml(Array.from(t)[0] || '?');
+        }
+        function coverSongsWithTimeout(promise, ms) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('요청 타임아웃')), ms))
+            ]);
+        }
+        function armCoverSongsSlowTimer(myToken, delay) {
+            clearTimeout(coverSongsSlowTimer);
+            coverSongsSlowTimer = setTimeout(() => {
+                if (myToken === coverSongsLoadToken) renderCoverSongsRetryPrompt();
+            }, delay);
+        }
+
+        window.openCoverSongs = () => {
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('coverSongsView').classList.remove('hidden');
+            window.scrollTo(0, 0);
+            loadCoverSongs();
+        };
+
+        function renderCoverSongsLoading() {
+            document.getElementById('coverSongsList').innerHTML =
+                '<p class="text-center text-amber-500 font-bold py-10"><i class="fas fa-spinner fa-spin mr-2"></i>커버송 목록을 불러오는 중...</p>';
+        }
+        function renderCoverSongsRetryPrompt() {
+            document.getElementById('coverSongsList').innerHTML = `
+                <div class="text-center bg-white/80 border-2 border-indigo-100 rounded-[1.5rem] p-6">
+                    <p class="text-sm text-indigo-500 font-bold mb-4 leading-relaxed">네트워크 지연으로 목록 불러오기가 지연되고 있습니다.<br>다시 불러오기를 시도할까요?</p>
+                    <div class="flex gap-2">
+                        <button onclick="cancelCoverSongsLoad()" class="flex-1 py-2.5 rounded-xl bg-stone-100 text-stone-600 font-black">취소</button>
+                        <button onclick="continueCoverSongsLoad()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white font-black">계속 기다리기</button>
+                    </div>
+                </div>`;
+        }
+        window.continueCoverSongsLoad = () => {
+            renderCoverSongsLoading();
+            coverSongsNextPromptDelay = Math.min(coverSongsNextPromptDelay * 2, 60000); // 5→10→20→40→60초
+            armCoverSongsSlowTimer(coverSongsLoadToken, coverSongsNextPromptDelay);
+        };
+        window.cancelCoverSongsLoad = () => {
+            clearTimeout(coverSongsSlowTimer);
+            coverSongsLoadToken++; // 재시도 루프 종료
+            document.getElementById('coverSongsList').innerHTML =
+                '<p class="text-center text-stone-400 font-bold py-10">목록을 불러오지 못했습니다. 뒤로 갔다가 다시 들어와 주세요.</p>';
+        };
+
+        // 곡은 항상 등록되어 있다는 전제이므로, 실패는 성공할 때까지 재시도한다.
+        // (cnation-ccm-list 앱에서 같은 이유로 겪었던 "네트워크가 스트리밍 연결을 막아 요청이
+        //  응답도 에러도 없이 매달리는" 문제를 피하기 위해 각 시도에 타임아웃을 둔다.)
+        // 정확히 정해진 문서 2개만 가져오므로 getDocs 대신 getDoc을 병렬로 호출한다 — 더 가볍고 빠르다.
+        async function loadCoverSongs() {
+            const myToken = ++coverSongsLoadToken;
+            clearTimeout(coverSongsSlowTimer);
+            renderCoverSongsLoading();
+            coverSongsNextPromptDelay = 5000;
+            armCoverSongsSlowTimer(myToken, coverSongsNextPromptDelay);
+
+            while (myToken === coverSongsLoadToken) {
+                try {
+                    const snaps = await coverSongsWithTimeout(
+                        Promise.all(COVER_SONG_IDS.map(id => getDoc(doc(db, COVER_SONGS_COL, id)))),
+                        8000
+                    );
+                    if (myToken !== coverSongsLoadToken) return;
+
+                    const songs = snaps.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() }));
+                    if (songs.length === COVER_SONG_IDS.length) {
+                        clearTimeout(coverSongsSlowTimer);
+                        songs.sort((a, b) => (b.creationDate || '').localeCompare(a.creationDate || ''));
+                        coverSongsCache = songs;
+                        renderCoverSongsList(songs);
+                        return;
+                    }
+                    // 문서를 다 못 불러옴 -> 아직 못 불러온 것으로 보고 재시도
+                } catch (error) {
+                    console.error('커버송 로딩 에러 (재시도함):', error);
+                }
+                await new Promise(r => setTimeout(r, 1500));
+            }
+        }
+
+        function renderCoverSongsList(songs) {
+            const list = document.getElementById('coverSongsList');
+            if (songs.length === 0) {
+                list.innerHTML = '<p class="text-center text-stone-400 font-bold py-10">등록된 커버송이 아직 없습니다.</p>';
+                return;
+            }
+            list.className = 'space-y-3';
+            list.innerHTML = songs.map(song => {
+                const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '날짜 미상';
+                const thumb = song.thumbnailUrl
+                    ? `<img src="${escapeHtml(song.thumbnailUrl)}" loading="lazy" class="w-16 h-16 rounded-2xl object-cover shadow-sm shrink-0" alt="">`
+                    : `<div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-400 to-indigo-700 text-white flex items-center justify-center font-black text-2xl shrink-0">${getCoverSongTitleInitial(song.title)}</div>`;
+                return `
+                    <button onclick="openCoverSongDetail('${song.id}')"
+                        class="group w-full flex items-center gap-4 p-3 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_10px_20px_-10px_rgba(79,70,229,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(79,70,229,0.35)] border-2 border-white hover:border-indigo-200 transition-all text-left">
+                        ${thumb}
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-black text-amber-900 text-base truncate">${escapeHtml(song.title || '')}</h3>
+                            <p class="text-xs text-indigo-500 font-bold mt-1 truncate"><i class="fas fa-calendar-days mr-1"></i>${dateStr} 성가대 찬양</p>
+                        </div>
+                        <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <i class="fas fa-play text-xs ml-0.5"></i>
+                        </div>
+                    </button>`;
+            }).join('');
+        }
+
+        // cnation-ccm-list 앱의 곡 상세 화면과 동일한 구성(앨범 이미지, 제목/작사작곡, 오디오 플레이어,
+        // 유튜브 임베드, 곡 설명, 가사, 제작 정보)으로 보여준다.
+        window.openCoverSongDetail = (id) => {
+            const song = coverSongsCache.find(s => s.id === id);
+            if (!song) return;
+
+            document.getElementById('coverSongDetailTitle').textContent = song.title || '곡 상세보기';
+
+            let ytEmbed = '';
+            if (song.youtubeUrl) {
+                const videoId = getYoutubeId(song.youtubeUrl);
+                if (videoId) {
+                    ytEmbed = `<iframe class="w-full aspect-video mb-4 rounded-lg shadow-sm" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                }
+            }
+            const audioPlayer = song.mp3Url
+                ? `<audio controls class="w-full mt-2 mb-4"><source src="${escapeHtml(song.mp3Url)}" type="audio/mp3"></audio>`
+                : '';
+            const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '';
+            const coverHtml = song.imageUrl
+                ? `<img src="${escapeHtml(song.imageUrl)}" class="w-full aspect-square object-cover" alt="cover">`
+                : `<div class="w-full aspect-square bg-indigo-100 text-indigo-500 flex items-center justify-center font-black text-6xl">${getCoverSongTitleInitial(song.title)}</div>`;
+
+            document.getElementById('coverSongDetailContent').innerHTML = `
+                <div>${coverHtml}</div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-1">
+                        <h2 class="text-2xl font-bold text-gray-800">${escapeHtml(song.title || '')}</h2>
+                        <span class="text-xs text-gray-500 mt-2 font-medium shrink-0">${dateStr} 제작</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">작사/작곡: ${escapeHtml(song.creator || '')} | ${escapeHtml(song.type || '')}</p>
+                    ${audioPlayer}${ytEmbed}
+                    <div class="space-y-4 mt-6">
+                        ${song.desc ? `<div><h4 class="text-[11px] font-bold text-indigo-600 mb-1 tracking-widest uppercase">📖 곡 설명 / 말씀</h4><p class="text-sm text-gray-700 bg-gray-50 p-4 rounded-xl leading-relaxed whitespace-pre-line">${escapeHtml(song.desc)}</p></div>` : ''}
+                        ${song.lyrics ? `<div><h4 class="text-[11px] font-bold text-indigo-600 mb-1 tracking-widest uppercase">🎤 가사</h4><p class="text-sm text-gray-700 bg-gray-50 p-4 rounded-xl whitespace-pre-line leading-relaxed">${escapeHtml(song.lyrics)}</p></div>` : ''}
+                        ${song.prompt ? `<div><h4 class="text-[11px] font-bold text-indigo-600 mb-1 tracking-widest uppercase">🛠️ 제작 정보</h4><p class="text-[11px] text-gray-500 bg-gray-100 p-4 rounded-xl whitespace-pre-line">${escapeHtml(song.prompt)}</p></div>` : ''}
+                    </div>
+                </div>`;
+            document.getElementById('coverSongDetailModal').classList.remove('hidden');
+        };
+
+        window.closeCoverSongDetail = () => {
+            const modal = document.getElementById('coverSongDetailModal');
+            modal.classList.add('hidden');
+            const audio = modal.querySelector('audio');
+            if (audio) audio.pause();
+            document.getElementById('coverSongDetailContent').innerHTML = '';
+        };
 
         window.openStats = () => {
             const pw = prompt('통계 메뉴 비밀번호를 입력하세요.');
