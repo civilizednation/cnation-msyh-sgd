@@ -264,10 +264,23 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #fcd34d;
         }
+
+        /* 앱 전체 공통 버튼 눌림 효과: 살짝 밝아지면서 눌리는 느낌 (개별 버튼 클래스 건드릴 필요 없음) */
+        button, a[target="_blank"] {
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 110ms ease, filter 110ms ease;
+        }
+        button:active, a[target="_blank"]:active {
+            filter: brightness(1.15);
+            transform: scale(0.96);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            button:active, a[target="_blank"]:active { transform: none; }
+        }
     </style>
 </head>
 
-<body
+<body ontouchstart=""
     class="bg-gradient-to-br from-amber-50 via-orange-100 to-orange-50 font-sans text-stone-800 pb-24 relative min-h-screen selection:bg-orange-200">
 
     <div id="wechatOverlay"
@@ -1012,6 +1025,35 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
+
+        // ===== 앱 전체 공통 버튼 클릭 효과음 ("틱") =====
+        // 음원 파일 없이 Web Audio API로 짧은 클릭음을 그 자리에서 합성한다.
+        // 개별 버튼마다 코드를 넣지 않고, document 레벨에서 클릭을 위임받아 모든 버튼/실행 링크에 자동 적용한다.
+        let uiClickCtx = null;
+        function playUiTick() {
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx) return;
+                if (!uiClickCtx) uiClickCtx = new Ctx();
+                if (uiClickCtx.state === 'suspended') uiClickCtx.resume();
+                const now = uiClickCtx.currentTime;
+                const osc = uiClickCtx.createOscillator();
+                const gain = uiClickCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1000, now);
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.16, now + 0.004);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+                osc.connect(gain);
+                gain.connect(uiClickCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.035);
+            } catch (e) { /* 오디오 재생 실패는 조용히 무시 (눌림 효과는 CSS로 이미 표시됨) */ }
+        }
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('button, a[target="_blank"]')) playUiTick();
+        }, true);
+
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const WEEKLY_COL = "cnation-msyh-sgd-weekly";
