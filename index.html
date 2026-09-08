@@ -1183,25 +1183,22 @@
                 list.innerHTML = '<p class="text-center text-stone-400 font-bold py-10">등록된 커버송이 아직 없습니다.</p>';
                 return;
             }
-            list.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4';
+            list.className = 'space-y-3';
             list.innerHTML = songs.map(song => {
                 const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '날짜 미상';
-                const bg = song.thumbnailUrl
-                    ? `<img src="${escapeHtml(song.thumbnailUrl)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="">`
-                    : `<div class="absolute inset-0 bg-gradient-to-br from-indigo-400 to-indigo-700 flex items-center justify-center text-white/90 font-black text-7xl">${getCoverSongTitleInitial(song.title)}</div>`;
+                const thumb = song.thumbnailUrl
+                    ? `<img src="${escapeHtml(song.thumbnailUrl)}" loading="lazy" class="w-16 h-16 rounded-2xl object-cover shadow-sm shrink-0" alt="">`
+                    : `<div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-400 to-indigo-700 text-white flex items-center justify-center font-black text-2xl shrink-0">${getCoverSongTitleInitial(song.title)}</div>`;
                 return `
                     <button onclick="openCoverSongDetail('${song.id}')"
-                        class="group relative w-full aspect-square rounded-[1.75rem] overflow-hidden shadow-[0_20px_40px_-15px_rgba(79,70,229,0.35)] border-4 border-white hover:-translate-y-1 hover:shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-300 text-left">
-                        ${bg}
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent"></div>
-                        <div class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/90 backdrop-blur flex items-center justify-center text-indigo-600 shadow-lg group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                            <i class="fas fa-play ml-0.5"></i>
+                        class="group w-full flex items-center gap-4 p-3 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_10px_20px_-10px_rgba(79,70,229,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(79,70,229,0.35)] border-2 border-white hover:border-indigo-200 transition-all text-left">
+                        ${thumb}
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-black text-amber-900 text-base truncate">${escapeHtml(song.title || '')}</h3>
+                            <p class="text-xs text-indigo-500 font-bold mt-1 truncate"><i class="fas fa-calendar-days mr-1"></i>${dateStr} 성가대 찬양</p>
                         </div>
-                        <div class="absolute inset-x-0 bottom-0 p-4">
-                            <span class="inline-flex items-center gap-1 text-[10px] font-black text-amber-200 bg-black/40 backdrop-blur px-2.5 py-1 rounded-full mb-2">
-                                <i class="fas fa-calendar-days"></i> ${dateStr} 성가대 찬양
-                            </span>
-                            <h3 class="text-white font-black text-xl leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">${escapeHtml(song.title || '')}</h3>
+                        <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <i class="fas fa-play text-xs ml-0.5"></i>
                         </div>
                     </button>`;
             }).join('');
