@@ -1179,20 +1179,15 @@
                 return;
             }
             list.innerHTML = songs.map(song => {
-                const thumb = song.thumbnailUrl
-                    ? `<img src="${escapeHtml(song.thumbnailUrl)}" loading="lazy" class="w-16 h-16 rounded-2xl object-cover shadow-sm shrink-0" alt="">`
-                    : `<div class="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-500 flex items-center justify-center font-black text-xl shrink-0">${getCoverSongTitleInitial(song.title)}</div>`;
-                const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '';
+                const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '날짜 미상';
                 return `
                     <button onclick="openCoverSongDetail('${song.id}')"
-                        class="w-full flex items-center gap-4 p-3 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_10px_20px_-10px_rgba(79,70,229,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(79,70,229,0.35)] border-2 border-white hover:border-indigo-200 transition-all text-left">
-                        ${thumb}
+                        class="w-full flex items-center justify-between gap-3 p-4 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_10px_20px_-10px_rgba(79,70,229,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(79,70,229,0.35)] border-2 border-white hover:border-indigo-200 transition-all text-left">
                         <div class="flex-1 min-w-0">
                             <h3 class="font-black text-amber-900 text-base truncate">${escapeHtml(song.title || '')}</h3>
-                            <p class="text-xs text-amber-500 font-bold mt-0.5 truncate">${escapeHtml(song.creator || '')}</p>
-                            <p class="text-[11px] text-stone-400 font-bold mt-0.5">${dateStr}</p>
+                            <p class="text-xs text-indigo-500 font-bold mt-1"><i class="fas fa-calendar-days mr-1"></i>${dateStr} 성가대 찬양</p>
                         </div>
-                        <i class="fas fa-chevron-right text-indigo-300"></i>
+                        <i class="fas fa-chevron-right text-indigo-300 shrink-0"></i>
                     </button>`;
             }).join('');
         }
