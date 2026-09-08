@@ -3,7 +3,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Nunito", "Noto Sans KR", "sans-serif"]
+        sans: ["Nanum Gothic", "sans-serif"]
       }
     }
   },
