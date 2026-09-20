@@ -2165,7 +2165,25 @@
                     canvas.className = 'w-full h-auto bg-white shadow-none border-0 rounded-none mb-2 max-w-full';
                     await page.render({ canvasContext: context, viewport }).promise; container.appendChild(canvas);
                 }
-            } catch (error) { container.innerHTML = '<div class="py-12 text-center bg-red-50/90 rounded-3xl border-2 border-red-200 shadow-sm"><i class="fas fa-life-ring text-4xl text-red-400 mb-4"></i><p class="text-red-700 font-black text-lg">악보를 불러오지 못했어요.</p></div>'; }
+            } catch (error) {
+                console.warn('PDF.js 로딩 실패, 브라우저 기본 PDF 뷰어로 전환합니다.', error);
+                container.innerHTML = `
+                    <div class="w-full bg-white">
+                        <iframe
+                            src="${url}"
+                            title="악보 PDF"
+                            class="w-full border-0 bg-white"
+                            style="height:78vh; min-height:520px;"
+                            loading="lazy">
+                        </iframe>
+                        <div class="p-3 text-center bg-orange-50 border-t border-orange-100">
+                            <a href="${url}" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 text-white font-black text-sm shadow-sm">
+                                <i class="fas fa-file-pdf"></i> 악보 새 창에서 열기
+                            </a>
+                        </div>
+                    </div>`;
+            }
         }
 
         window.openPdfModal = (containerId, title) => {
