@@ -2159,10 +2159,16 @@
             container.innerHTML = '<div class="py-16 text-center bg-white/80 rounded-3xl animate-pulse border-2 border-orange-100 shadow-sm"><i class="fas fa-spinner fa-spin text-4xl text-amber-400 mb-4"></i><p class="text-amber-800 font-black">악보를 예쁘게 그리는 중...</p></div>';
 
             try {
-                // Firebase Storage의 다운로드 URL을 PDF.js가 직접 읽는다.
-                // 이전 버전에서 정상 로딩되던 방식은 유지하고, 모든 페이지만 순서대로 렌더링한다.
-                const loadingTask = pdfjsLib.getDocument({ url: url });
-                const pdf = await loadingTask.promise;
+                // 새 Firebase Storage 버킷은 브라우저의 교차 출처 읽기를 허용하지 않으므로,
+                // 동일한 Vercel 도메인의 읽기 전용 프록시에서 PDF 바이트를 받아 PDF.js에 전달한다.
+                const proxyUrl = `/api/pdf-proxy?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`PDF download failed: ${response.status}`);
+
+                const pdfData = new Uint8Array(await response.arrayBuffer());
+                if (pdfData.byteLength < 5) throw new Error('PDF file is empty');
+
+                const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
                 container.innerHTML = '';
                 container.style.overflow = 'hidden';
@@ -2175,14 +2181,15 @@
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     const page = await pdf.getPage(pageNum);
                     const baseViewport = page.getViewport({ scale: 1 });
-                    const scale = availableWidth / baseViewport.width;
-                    const viewport = page.getViewport({ scale });
+                    const cssScale = availableWidth / baseViewport.width;
+                    const outputScale = Math.min(window.devicePixelRatio || 1, 1.5);
+                    const renderViewport = page.getViewport({ scale: cssScale * outputScale });
 
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d', { alpha: false });
 
-                    canvas.width = Math.ceil(viewport.width);
-                    canvas.height = Math.ceil(viewport.height);
+                    canvas.width = Math.ceil(renderViewport.width);
+                    canvas.height = Math.ceil(renderViewport.height);
                     canvas.style.width = '100%';
                     canvas.style.height = 'auto';
                     canvas.style.display = 'block';
@@ -2192,7 +2199,7 @@
 
                     await page.render({
                         canvasContext: context,
-                        viewport
+                        viewport: renderViewport
                     }).promise;
 
                     container.appendChild(canvas);
@@ -2201,7 +2208,7 @@
                     await new Promise(resolve => requestAnimationFrame(resolve));
                 }
             } catch (error) {
-                console.error('PDF 전체 페이지 렌더링 실패:', error);
+                console.error('PDF 전체 페이지 렌더링 실패:', error?.name, error?.message, error);
                 container.innerHTML = `
                     <div class="w-full bg-red-50/90 p-6 text-center border-2 border-red-200 rounded-3xl">
                         <div class="text-red-500 text-4xl mb-3"><i class="fas fa-circle-exclamation"></i></div>
