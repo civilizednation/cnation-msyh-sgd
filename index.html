@@ -2153,35 +2153,65 @@
         }
 
         async function loadPdfToCanvas(url, containerId) {
-            const container = document.getElementById(containerId); if (!container) return;
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
             container.innerHTML = '<div class="py-16 text-center bg-white/80 rounded-3xl animate-pulse border-2 border-orange-100 shadow-sm"><i class="fas fa-spinner fa-spin text-4xl text-amber-400 mb-4"></i><p class="text-amber-800 font-black">악보를 예쁘게 그리는 중...</p></div>';
+
             try {
-                const pdf = await pdfjsLib.getDocument(url).promise; container.innerHTML = '';
+                // Firebase Storage 다운로드 URL을 먼저 직접 읽어 ArrayBuffer로 넘긴다.
+                // 이렇게 하면 PDF.js가 URL을 다시 해석하는 과정에서 생기는 모바일 브라우저 문제를 줄일 수 있다.
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`PDF download failed: ${response.status}`);
+                const pdfData = await response.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+
+                container.innerHTML = '';
+                container.style.overflow = 'hidden';
+
+                // 컨테이너 실제 가로폭에 맞춰 모든 페이지를 순서대로 렌더링한다.
+                const containerWidth = Math.max(1, container.clientWidth);
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     if (pageNum > 1) await new Promise(resolve => requestAnimationFrame(resolve));
-                    const page = await pdf.getPage(pageNum); const viewport = page.getViewport({ scale: 1.2 });
-                    const canvas = document.createElement('canvas'); const context = canvas.getContext('2d');
-                    canvas.width = viewport.width; canvas.height = viewport.height;
-                    canvas.className = 'w-full h-auto bg-white shadow-none border-0 rounded-none mb-2 max-w-full';
-                    await page.render({ canvasContext: context, viewport }).promise; container.appendChild(canvas);
+
+                    const page = await pdf.getPage(pageNum);
+                    const baseViewport = page.getViewport({ scale: 1 });
+                    const cssScale = containerWidth / baseViewport.width;
+                    const renderScale = cssScale * dpr;
+                    const renderViewport = page.getViewport({ scale: renderScale });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d', { alpha: false });
+
+                    canvas.width = Math.floor(renderViewport.width);
+                    canvas.height = Math.floor(renderViewport.height);
+                    canvas.style.width = '100%';
+                    canvas.style.height = 'auto';
+                    canvas.style.display = 'block';
+                    canvas.style.maxWidth = '100%';
+                    canvas.style.margin = '0';
+                    canvas.style.padding = '0';
+                    canvas.className = 'bg-white border-0 rounded-none';
+
+                    await page.render({
+                        canvasContext: context,
+                        viewport: renderViewport
+                    }).promise;
+
+                    container.appendChild(canvas);
                 }
             } catch (error) {
-                console.warn('PDF.js 로딩 실패, 브라우저 기본 PDF 뷰어로 전환합니다.', error);
+                console.error('PDF 전체 페이지 렌더링 실패:', error);
                 container.innerHTML = `
-                    <div class="w-full bg-white">
-                        <iframe
-                            src="${url}"
-                            title="악보 PDF"
-                            class="w-full border-0 bg-white"
-                            style="height:78vh; min-height:520px;"
-                            loading="lazy">
-                        </iframe>
-                        <div class="p-3 text-center bg-orange-50 border-t border-orange-100">
-                            <a href="${url}" target="_blank" rel="noopener noreferrer"
-                               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 text-white font-black text-sm shadow-sm">
-                                <i class="fas fa-file-pdf"></i> 악보 새 창에서 열기
-                            </a>
-                        </div>
+                    <div class="w-full bg-white p-6 text-center">
+                        <div class="text-red-500 text-4xl mb-3"><i class="fas fa-circle-exclamation"></i></div>
+                        <p class="font-black text-red-700 mb-4">악보를 불러오지 못했어요.</p>
+                        <a href="${url}" target="_blank" rel="noopener noreferrer"
+                           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 text-white font-black text-sm shadow-sm">
+                            <i class="fas fa-file-pdf"></i> 악보 새 창에서 열기
+                        </a>
                     </div>`;
             }
         }
