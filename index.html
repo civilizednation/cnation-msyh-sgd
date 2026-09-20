@@ -287,232 +287,9 @@
 
 
 
-<!-- ===== Firebase 장애 긴급 안내 시작 ===== -->
-<style>
-    #firebaseEmergencyOverlay {
-        position: fixed;
-        inset: 0;
-        z-index: 999999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 22px;
-        background: rgba(69, 26, 3, 0.84);
-        backdrop-filter: blur(9px);
-        -webkit-backdrop-filter: blur(9px);
-    }
 
-    #firebaseEmergencyOverlay .emergency-card {
-        width: min(92vw, 540px);
-        max-height: 90vh;
-        overflow-y: auto;
-        padding: 30px 22px 22px;
-        background: rgba(255, 255, 255, 0.98);
-        border: 4px solid #f59e0b;
-        border-radius: 30px;
-        text-align: center;
-        box-shadow:
-            0 30px 80px rgba(0, 0, 0, 0.5),
-            0 0 0 7px rgba(255, 255, 255, 0.16);
-    }
 
-    #firebaseEmergencyOverlay .emergency-icon {
-        width: 76px;
-        height: 76px;
-        margin: 0 auto 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        color: #ffffff;
-        background: linear-gradient(145deg, #ef4444, #b91c1c);
-        font-size: 35px;
-        box-shadow: 0 12px 25px rgba(220, 38, 38, 0.38);
-    }
 
-    #firebaseEmergencyOverlay .emergency-title {
-        margin: 0 0 18px;
-        color: #991b1b;
-        font-size: 25px;
-        font-weight: 900;
-        line-height: 1.35;
-        word-break: keep-all;
-    }
-
-    #firebaseEmergencyOverlay .emergency-message {
-        margin: 0;
-        color: #44403c;
-        font-size: 17px;
-        font-weight: 800;
-        line-height: 1.8;
-        word-break: keep-all;
-    }
-
-    #firebaseEmergencyOverlay .playlist-label {
-        display: block;
-        margin-top: 22px;
-        margin-bottom: 10px;
-        color: #92400e;
-        font-size: 17px;
-        font-weight: 900;
-    }
-
-    #firebaseEmergencyOverlay .youtube-button {
-        display: block;
-        width: 100%;
-        padding: 16px 12px;
-        border-radius: 17px;
-        color: #ffffff;
-        background: linear-gradient(145deg, #ef4444, #dc2626);
-        font-size: 17px;
-        font-weight: 900;
-        line-height: 1.45;
-        text-decoration: none;
-        box-shadow: 0 9px 20px rgba(220, 38, 38, 0.32);
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    #firebaseEmergencyOverlay .youtube-button:active {
-        transform: scale(0.97);
-        filter: brightness(1.08);
-    }
-
-    #firebaseEmergencyOverlay .youtube-url {
-        display: block;
-        margin-top: 5px;
-        font-size: 13px;
-        font-weight: 700;
-        opacity: 0.92;
-    }
-
-    #firebaseEmergencyOverlay .emergency-signature {
-        margin: 18px 0 0;
-        color: #78716c;
-        font-size: 14px;
-        font-weight: 900;
-    }
-
-    #firebaseEmergencyOverlay .close-app-button {
-        width: 100%;
-        margin-top: 19px;
-        padding: 15px 12px;
-        border: 0;
-        border-radius: 17px;
-        color: #ffffff;
-        background: linear-gradient(145deg, #57534e, #292524);
-        font-family: 'Nanum Gothic', sans-serif;
-        font-size: 17px;
-        font-weight: 900;
-        cursor: pointer;
-        box-shadow: 0 8px 18px rgba(41, 37, 36, 0.28);
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    #firebaseEmergencyOverlay .close-app-button:active {
-        transform: scale(0.97);
-        filter: brightness(1.15);
-    }
-
-    @media (max-width: 480px) {
-        #firebaseEmergencyOverlay {
-            padding: 17px;
-        }
-
-        #firebaseEmergencyOverlay .emergency-card {
-            padding: 26px 17px 19px;
-            border-radius: 25px;
-        }
-
-        #firebaseEmergencyOverlay .emergency-icon {
-            width: 68px;
-            height: 68px;
-            font-size: 31px;
-        }
-
-        #firebaseEmergencyOverlay .emergency-title {
-            font-size: 22px;
-        }
-
-        #firebaseEmergencyOverlay .emergency-message {
-            font-size: 16px;
-            line-height: 1.75;
-        }
-    }
-</style>
-
-<div id="firebaseEmergencyOverlay"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="firebaseEmergencyTitle">
-
-    <div class="emergency-card">
-        <div class="emergency-icon">
-            <i class="fas fa-triangle-exclamation"></i>
-        </div>
-
-        <h2 id="firebaseEmergencyTitle" class="emergency-title">
-            성가대 연습앱 이용 안내
-        </h2>
-
-        <p class="emergency-message">
-            데이터서버(Firebase)와 연결에 문제가 생겨
-            성가대 연습곡 정보를 제대로 불러오지 못하고 있습니다.
-            <br><br>
-            조치할 때까지 아래의 성가대 연습곡
-            유튜브 재생목록을 이용해 주세요.
-        </p>
-
-        <span class="playlist-label">
-            성가대 연습곡 유튜브 재생목록
-        </span>
-
-        <a href="https://bit.ly/msyhsgd"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="youtube-button">
-            <i class="fab fa-youtube"></i>
-            재생목록 열기
-            <span class="youtube-url">https://bit.ly/msyhsgd</span>
-        </a>
-
-        <p class="emergency-signature">
-            - cnation(문명국)
-        </p>
-
-        <button type="button"
-            class="close-app-button"
-            onclick="closeChoirEmergencyApp()">
-            <i class="fas fa-times"></i>
-            닫기
-        </button>
-    </div>
-</div>
-
-<script>
-    (function () {
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'hidden';
-
-        window.closeChoirEmergencyApp = function () {
-            try {
-                window.close();
-            } catch (error) {
-                /* 브라우저에서 창 닫기가 제한되면 아래 방식으로 처리 */
-            }
-
-            setTimeout(function () {
-                if (window.closed) return;
-
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.location.replace('about:blank');
-                }
-            }, 150);
-        };
-    })();
-</script>
-<!-- ===== Firebase 장애 긴급 안내 끝 ===== -->
 
 
 
@@ -560,6 +337,12 @@
                     <img src="msyhsgd.jpg" alt="무석연합교회 성가대"
                         class="relative w-full h-auto object-contain rounded-[2rem] shadow-[0_20px_40px_rgba(249,115,22,0.2)] border-[5px] border-white/90 bg-white"
                         onerror="this.src='https://via.placeholder.com/300x150?text=Choir+Image'">
+                </div>
+
+                <div class="w-full max-w-2xl mb-3 px-3 py-2 rounded-xl bg-amber-50/95 border border-amber-200 text-center shadow-sm">
+                    <p class="text-[11px] md:text-xs leading-relaxed font-bold text-amber-800">
+                        현재 데이터 복구 작업 중으로 지금은 이번주와 다음주곡 연습만 가능 합니다. @cnation(문명국)
+                    </p>
                 </div>
 
                 <div
@@ -635,7 +418,7 @@
                                 class="fas fa-chevron-right text-orange-300 group-hover:text-orange-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('이번주_다음주')"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(120,113,108,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(120,113,108,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-stone-200">
+                            class="hidden group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(120,113,108,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(120,113,108,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-stone-200">
                             <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
                                 <div
                                     class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-stone-100 text-stone-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-stone-500 group-hover:text-white transition-all shadow-inner">
@@ -647,7 +430,7 @@
                                 class="fas fa-chevron-right text-stone-300 group-hover:text-stone-500 transition-colors"></i>
                         </button>
                         <button onclick="openPastPractice()"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(244,63,94,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(244,63,94,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-rose-200">
+                            class="hidden group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(244,63,94,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(244,63,94,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-rose-200">
                             <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
                                 <div
                                     class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-rose-100 text-rose-500 flex items-center justify-center group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all shadow-inner">
@@ -659,7 +442,7 @@
                                 class="fas fa-chevron-right text-rose-300 group-hover:text-rose-500 transition-colors"></i>
                         </button>
                         <button onclick="openPractice('고정')"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(217,119,6,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(217,119,6,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-amber-200">
+                            class="hidden group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(217,119,6,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(217,119,6,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between border-2 border-white hover:border-amber-200">
                             <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
                                 <div
                                     class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-inner">
@@ -671,7 +454,7 @@
                                 class="fas fa-chevron-right text-amber-300 group-hover:text-amber-500 transition-colors"></i>
                         </button>
                         <button onclick="openCoverSongs()"
-                            class="group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(79,70,229,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(79,70,229,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-indigo-200">
+                            class="hidden group w-full p-4 md:p-5 bg-white/80 backdrop-blur-lg rounded-[1.5rem] shadow-[0_15px_30px_-10px_rgba(79,70,229,0.15)] hover:shadow-[0_25px_40px_-15px_rgba(79,70,229,0.4)] hover:-transtone-y-1 transition-all duration-300 flex items-center justify-between md:col-span-2 border-2 border-white hover:border-indigo-200">
                             <span class="flex items-center gap-3 text-amber-900 font-black text-base md:text-lg">
                                 <div
                                     class="w-10 h-10 md:w-11 md:h-11 rounded-[1rem] bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
@@ -1268,13 +1051,12 @@
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, addDoc, where, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         const firebaseConfig = {
-            apiKey: "AIzaSyCTwOAC_LrrKH8CKepUOTf0pyd9qRv4y_8",
-            authDomain: "cnation-project.firebaseapp.com",
-            projectId: "cnation-project",
-            storageBucket: "cnation-project.firebasestorage.app",
-            messagingSenderId: "1004154104261",
-            appId: "1:1004154104261:web:0eac4c7ded38262ae5c3ac",
-            measurementId: "G-7PW1NSP5EQ"
+            apiKey: "AIzaSyDRx_eMXIfoERYx7ESQtccyumVwEhdEkuU",
+            authDomain: "cnation-project-2.firebaseapp.com",
+            projectId: "cnation-project-2",
+            storageBucket: "cnation-project-2.firebasestorage.app",
+            messagingSenderId: "344541318425",
+            appId: "1:344541318425:web:b0c4b4bb26d6d93d03c988"
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -1381,17 +1163,10 @@
         };
         function getSelectedParts() { return Array.from(document.querySelectorAll('.part-checkbox:checked')).map(cb => cb.value); }
 
-        function logPracticeClick(parts, type) {
-            if (!parts || parts.length === 0) return;
-            addDoc(collection(db, CLICKS_COL), { parts, type: type || '', timestamp: serverTimestamp() })
-                .catch(() => { /* 통계 기록 실패는 무시 */ });
-        }
-
-        function logVideoListen(partLabel, mode) {
-            if (!partLabel) return;
-            addDoc(collection(db, LISTENS_COL), { part: partLabel, mode: mode || '', timestamp: serverTimestamp() })
-                .catch(() => { /* 통계 기록 실패는 무시 */ });
-        }
+        // 임시 복구 운영: 새 Firebase에는 이번주/다음주 연습 데이터만 사용합니다.
+        // 기존 통계 기록은 원 프로젝트 복구 전까지 중지합니다.
+        function logPracticeClick(parts, type) { /* 임시 중지 */ }
+        function logVideoListen(partLabel, mode) { /* 임시 중지 */ }
 
         window.goHome = () => {
             clearAllSectionPlayers();
