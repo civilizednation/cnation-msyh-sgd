@@ -323,9 +323,11 @@
                     <div
                         class="absolute inset-0 bg-gradient-to-r from-amber-300 to-orange-400 rounded-[3rem] blur-xl opacity-40 animate-pulse">
                     </div>
-                    <img src="msyhsgd.jpg" alt="무석연합교회 성가대"
-                        class="relative w-full h-auto object-contain rounded-[2rem] shadow-[0_20px_40px_rgba(249,115,22,0.2)] border-[5px] border-white/90 bg-white"
-                        onerror="this.src='https://via.placeholder.com/300x150?text=Choir+Image'">
+                    <video id="heroVideo" autoplay muted loop playsinline preload="auto" poster="msyhsgd.jpg"
+                        aria-label="무석연합교회 성가대"
+                        class="relative w-full h-auto object-contain rounded-[2rem] shadow-[0_20px_40px_rgba(249,115,22,0.2)] border-[5px] border-white/90 bg-white">
+                        <source src="msyhsgd.mp4" type="video/mp4">
+                    </video>
                 </div>
 
                 <div
@@ -1023,6 +1025,10 @@
             if (isWeChat) {
                 document.getElementById('wechatOverlay').classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
+            }
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                const heroVideo = document.getElementById('heroVideo');
+                if (heroVideo) heroVideo.pause();
             }
             fetch('/api/log-visit', { method: 'POST' }).catch(() => { /* 접속 기록 실패는 무시 */ });
         });
