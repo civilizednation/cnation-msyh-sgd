@@ -339,12 +339,6 @@
                         onerror="this.src='https://via.placeholder.com/300x150?text=Choir+Image'">
                 </div>
 
-                <div class="w-full max-w-2xl mb-3 px-3 py-2 rounded-xl bg-amber-50/95 border border-amber-200 text-center shadow-sm">
-                    <p class="text-[11px] md:text-xs leading-relaxed font-bold text-amber-800">
-                        현재 데이터 복구 작업 중으로 지금은 이번주와 다음주곡 연습만 가능 합니다. @cnation(문명국)
-                    </p>
-                </div>
-
                 <div
                     class="w-full max-w-2xl bg-white/70 backdrop-blur-xl p-4 md:p-5 rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(234,88,12,0.15)] mb-4 md:mb-5 border-4 border-white">
                     <h3
@@ -1051,12 +1045,12 @@
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, addDoc, where, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         const firebaseConfig = {
-            apiKey: "AIzaSyDRx_eMXIfoERYx7ESQtccyumVwEhdEkuU",
-            authDomain: "cnation-project-2.firebaseapp.com",
-            projectId: "cnation-project-2",
-            storageBucket: "cnation-project-2.firebasestorage.app",
-            messagingSenderId: "344541318425",
-            appId: "1:344541318425:web:b0c4b4bb26d6d93d03c988"
+            apiKey: "AIzaSyCTwOAC_LrrKH8CKepUOTf0pyd9qRv4y_8",
+            authDomain: "cnation-project.firebaseapp.com",
+            projectId: "cnation-project",
+            storageBucket: "cnation-project.firebasestorage.app",
+            messagingSenderId: "1004154104261",
+            appId: "1:1004154104261:web:0eac4c7ded38262ae5c3ac"
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -1163,10 +1157,16 @@
         };
         function getSelectedParts() { return Array.from(document.querySelectorAll('.part-checkbox:checked')).map(cb => cb.value); }
 
-        // 임시 복구 운영: 새 Firebase에는 이번주/다음주 연습 데이터만 사용합니다.
-        // 기존 통계 기록은 원 프로젝트 복구 전까지 중지합니다.
-        function logPracticeClick(parts, type) { /* 임시 중지 */ }
-        function logVideoListen(partLabel, mode) { /* 임시 중지 */ }
+        async function logPracticeClick(parts, type) {
+            try {
+                await addDoc(collection(db, CLICKS_COL), { parts, type, timestamp: serverTimestamp() });
+            } catch (e) { /* 통계 기록 실패는 무시 */ }
+        }
+        async function logVideoListen(partLabel, mode) {
+            try {
+                await addDoc(collection(db, LISTENS_COL), { part: partLabel, mode, timestamp: serverTimestamp() });
+            } catch (e) { /* 통계 기록 실패는 무시 */ }
+        }
 
         window.goHome = () => {
             clearAllSectionPlayers();
