@@ -1123,7 +1123,6 @@
         const VISITS_COL = "cnation-msyh-sgd-visits";
         const CLICKS_COL = "cnation-msyh-sgd-practice-clicks";
         const LISTENS_COL = "cnation-msyh-sgd-video-listens";
-        const STATS_PASSWORD = "1257";
         const STATS_START_LABEL = "2026년 9월 4일";
 
         let currentSheetMusicUrl = '';
@@ -1357,10 +1356,19 @@
             document.getElementById('coverSongDetailContent').innerHTML = '';
         };
 
-        window.openStats = () => {
+        window.openStats = async () => {
             const pw = prompt('통계 메뉴 비밀번호를 입력하세요.');
             if (pw === null) return;
-            if (pw !== STATS_PASSWORD) { alert('비밀번호가 올바르지 않습니다.'); return; }
+            let ok = false;
+            try {
+                const res = await fetch('/api/check-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pw })
+                });
+                ok = !!(await res.json()).ok;
+            } catch (e) { ok = false; }
+            if (!ok) { alert('비밀번호가 올바르지 않습니다.'); return; }
             document.getElementById('setupView').classList.add('hidden');
             document.getElementById('statsView').classList.remove('hidden');
             window.scrollTo(0, 0);
