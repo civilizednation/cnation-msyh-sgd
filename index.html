@@ -1446,6 +1446,12 @@
                         10000
                     );
                     if (myToken !== coverSongsPickerLoadToken) return;
+                    // 흔들리는 연결에서 스트림이 응답을 빈 결과로 잘못 끝내는 경우가 있어,
+                    // 0건은 바로 "곡 없음"으로 믿지 않고(코드 에러 없이도 발생 가능) 남은 시도만큼 재시도한다.
+                    if (snap.docs.length === 0 && attempt < maxAttempts) {
+                        await new Promise(r => setTimeout(r, 1200));
+                        continue;
+                    }
                     const existingIds = new Set(coverSongsCache.map(s => s.id));
                     coverSongsPickerSongs = snap.docs
                         .map(d => ({ id: d.id, ...d.data() }))
