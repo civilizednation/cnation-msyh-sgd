@@ -1000,7 +1000,7 @@
             document.body.style.overflow = '';
         };
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { initializeFirestore, collection, doc, setDoc, getDoc, getDocs, query, orderBy, addDoc, where, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeFirestore, collection, doc, setDoc, getDoc, getDocs, query, orderBy, limit, startAfter, addDoc, where, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         const firebaseConfig = {
             apiKey: "AIzaSyCTwOAC_LrrKH8CKepUOTf0pyd9qRv4y_8",
@@ -1419,60 +1419,83 @@
 
         let coverSongsPickerSongs = [];
         let coverSongsPickerChecked = new Set();
+        let coverSongsPickerLastDoc = null;
+        let coverSongsPickerExhausted = false;
+        const COVER_SONGS_PICKER_PAGE_SIZE = 10; // cnation-ccm-list 앱도 전체를 한 번에 안 가져오고 페이지 단위로 가져옴
 
         window.openCoverSongsPicker = () => {
             coverSongsPickerChecked = new Set();
             document.getElementById('coverSongsPickerModal').classList.remove('hidden');
-            loadCoverSongsPicker();
+            loadCoverSongsPickerPage(true);
         };
 
         window.closeCoverSongsPicker = () => {
             document.getElementById('coverSongsPickerModal').classList.add('hidden');
         };
 
-        // cnation-ccm-list에 등록된 전체 곡을 최신 등록순으로 불러오되, 이미 커버송 목록에 있는 곡은 제외한다.
-        // 앱 진입 직후 등 Firestore 연결이 막 열리는 시점에는 첫 시도가 타임아웃될 수 있어 몇 차례 재시도한다.
+        // cnation-ccm-list에 등록된 곡을 최신 등록순으로 "한 번에 전체가 아니라 페이지 단위로" 불러온다.
+        // (전체 컬렉션을 한 번에 조회하는 방식은 문서 수가 많을 때 일부 네트워크에서 응답이 끝나지
+        //  않는 문제가 있었다 — 같은 컬렉션을 쓰는 cnation-ccm-list 앱도 처음부터 limit()으로
+        //  페이지 단위 조회만 쓰고 있고 실제로 안정적으로 동작한다.)
+        // 이미 커버송으로 등록된 곡은 걸러내고, 그 결과 이번 페이지에 새로 보여줄 곡이 하나도 없으면
+        // (옛날 곡들이 먼저 추가돼 있는 경우 등) 다음 페이지를 자동으로 이어서 가져온다.
         let coverSongsPickerLoadToken = 0;
-        async function loadCoverSongsPicker() {
-            const myToken = ++coverSongsPickerLoadToken;
+        window.loadCoverSongsPickerPage = async (isInitial) => {
+            const myToken = isInitial ? ++coverSongsPickerLoadToken : coverSongsPickerLoadToken;
             const list = document.getElementById('coverSongsPickerList');
-            list.innerHTML = '<p class="text-center text-amber-500 font-bold py-10"><i class="fas fa-spinner fa-spin mr-2"></i>목록을 불러오는 중...</p>';
-
-            const maxAttempts = 4;
-            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-                try {
-                    const snap = await coverSongsWithTimeout(
-                        getDocs(query(collection(db, COVER_SONGS_COL), orderBy("creationDate", "desc"))),
-                        10000
-                    );
-                    if (myToken !== coverSongsPickerLoadToken) return;
-                    // 흔들리는 연결에서 스트림이 응답을 빈 결과로 잘못 끝내는 경우가 있어,
-                    // 0건은 바로 "곡 없음"으로 믿지 않고(코드 에러 없이도 발생 가능) 남은 시도만큼 재시도한다.
-                    if (snap.docs.length === 0 && attempt < maxAttempts) {
-                        await new Promise(r => setTimeout(r, 1200));
-                        continue;
-                    }
-                    const existingIds = new Set(coverSongsCache.map(s => s.id));
-                    coverSongsPickerSongs = snap.docs
-                        .map(d => ({ id: d.id, ...d.data() }))
-                        .filter(s => !existingIds.has(s.id));
-                    renderCoverSongsPickerList();
-                    return;
-                } catch (error) {
-                    console.error(`곡 목록 로딩 에러 (시도 ${attempt}/${maxAttempts}):`, error);
-                    if (myToken !== coverSongsPickerLoadToken) return;
-                    if (attempt === maxAttempts) {
-                        list.innerHTML = `
-                            <div class="text-center py-10">
-                                <p class="text-red-400 font-bold mb-4">목록을 불러오지 못했습니다.<br>네트워크 상태를 확인해주세요.</p>
-                                <button onclick="loadCoverSongsPicker()" class="py-2.5 px-6 rounded-xl bg-indigo-600 text-white font-black">다시 시도</button>
-                            </div>`;
-                        return;
-                    }
-                    await new Promise(r => setTimeout(r, 1200));
-                }
+            if (isInitial) {
+                coverSongsPickerSongs = [];
+                coverSongsPickerLastDoc = null;
+                coverSongsPickerExhausted = false;
+                list.innerHTML = '<p class="text-center text-amber-500 font-bold py-10"><i class="fas fa-spinner fa-spin mr-2"></i>목록을 불러오는 중...</p>';
+            } else {
+                list.insertAdjacentHTML('beforeend', '<p id="coverSongsPickerMoreSpinner" class="text-center text-amber-500 font-bold py-4"><i class="fas fa-spinner fa-spin mr-2"></i>더 불러오는 중...</p>');
             }
-        }
+
+            const existingIds = new Set(coverSongsCache.map(s => s.id));
+            const startCount = coverSongsPickerSongs.length;
+
+            while (coverSongsPickerSongs.length === startCount && !coverSongsPickerExhausted) {
+                let succeeded = false;
+                for (let attempt = 1; attempt <= 4; attempt++) {
+                    try {
+                        const q = coverSongsPickerLastDoc
+                            ? query(collection(db, COVER_SONGS_COL), orderBy("creationDate", "desc"), startAfter(coverSongsPickerLastDoc), limit(COVER_SONGS_PICKER_PAGE_SIZE))
+                            : query(collection(db, COVER_SONGS_COL), orderBy("creationDate", "desc"), limit(COVER_SONGS_PICKER_PAGE_SIZE));
+                        const snap = await coverSongsWithTimeout(getDocs(q), 10000);
+                        if (myToken !== coverSongsPickerLoadToken) return;
+
+                        if (snap.empty) {
+                            coverSongsPickerExhausted = true;
+                        } else {
+                            coverSongsPickerLastDoc = snap.docs[snap.docs.length - 1];
+                            if (snap.docs.length < COVER_SONGS_PICKER_PAGE_SIZE) coverSongsPickerExhausted = true;
+                            const newSongs = snap.docs
+                                .map(d => ({ id: d.id, ...d.data() }))
+                                .filter(s => !existingIds.has(s.id));
+                            coverSongsPickerSongs = [...coverSongsPickerSongs, ...newSongs];
+                        }
+                        succeeded = true;
+                        break;
+                    } catch (error) {
+                        console.error(`곡 목록 로딩 에러 (시도 ${attempt}/4):`, error);
+                        if (myToken !== coverSongsPickerLoadToken) return;
+                        if (attempt === 4) {
+                            list.innerHTML = `
+                                <div class="text-center py-10">
+                                    <p class="text-red-400 font-bold mb-4">목록을 불러오지 못했습니다.<br>네트워크 상태를 확인해주세요.</p>
+                                    <button onclick="loadCoverSongsPickerPage(true)" class="py-2.5 px-6 rounded-xl bg-indigo-600 text-white font-black">다시 시도</button>
+                                </div>`;
+                            return;
+                        }
+                        await new Promise(r => setTimeout(r, 1200));
+                    }
+                }
+                if (!succeeded) return;
+            }
+
+            renderCoverSongsPickerList();
+        };
 
         function renderCoverSongsPickerList() {
             const list = document.getElementById('coverSongsPickerList');
@@ -1480,6 +1503,9 @@
                 list.innerHTML = '<p class="text-center text-stone-400 font-bold py-10 text-sm">추가할 수 있는 곡이 없습니다.<br>(cnation-ccm-list의 곡이 모두 이미 추가되었거나, 등록된 곡이 없습니다)</p>';
                 return;
             }
+            const moreBtnHtml = coverSongsPickerExhausted ? '' : `
+                <button onclick="loadCoverSongsPickerPage(false)"
+                    class="w-full py-2.5 rounded-xl bg-stone-100 text-stone-600 font-black text-sm">더 불러오기</button>`;
             list.innerHTML = coverSongsPickerSongs.map(song => `
                 <label class="flex items-center gap-3 bg-stone-50 rounded-xl p-3 border-2 border-stone-100 cursor-pointer">
                     <input type="checkbox" value="${song.id}" onchange="toggleCoverSongPick('${song.id}', this.checked)"
@@ -1488,7 +1514,7 @@
                         <p class="font-black text-amber-900 text-sm truncate">${escapeHtml(song.title || '')}</p>
                         <p class="text-[11px] text-stone-400 font-bold truncate">${escapeHtml(song.creationDate || '날짜 미상')}</p>
                     </div>
-                </label>`).join('');
+                </label>`).join('') + moreBtnHtml;
         }
 
         window.toggleCoverSongPick = (id, checked) => {
