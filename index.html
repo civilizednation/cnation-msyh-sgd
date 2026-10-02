@@ -1524,7 +1524,7 @@
         window.addCheckedCoverSongs = async () => {
             if (coverSongsPickerChecked.size === 0) { alert('추가할 곡을 선택해주세요.'); return; }
             const toAdd = coverSongsPickerSongs.filter(s => coverSongsPickerChecked.has(s.id));
-            coverSongsCache = [...coverSongsCache, ...toAdd];
+            coverSongsCache = [...toAdd, ...coverSongsCache]; // 새로 추가한 곡이 기존 곡보다 위에 오도록
             await saveCoverSongsOrder();
             closeCoverSongsPicker();
             renderCoverSongsAdminList();
