@@ -1000,7 +1000,7 @@
             document.body.style.overflow = '';
         };
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { initializeFirestore, collection, doc, setDoc, getDoc, getDocs, query, orderBy, limit, startAfter, addDoc, where, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeFirestore, collection, doc, setDoc, getDoc, getDocs, query, orderBy, limit, startAfter, addDoc, where, documentId, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         const firebaseConfig = {
             apiKey: "AIzaSyCTwOAC_LrrKH8CKepUOTf0pyd9qRv4y_8",
@@ -2353,6 +2353,26 @@
             document.getElementById('pdfModal').classList.add('hidden'); document.body.style.overflow = '';
         };
 
+        // "다음주" 메뉴에 다음 주 곡이 아직 등록 안 돼 있으면, 그 이후 주차 중 가장 가까운(날짜가 빠른)
+        // 등록된 주를 대신 보여준다. ("이번주"는 이 대체 로직을 적용하지 않고 항상 정확히 이번 주 데이터만 본다.)
+        async function resolveWeeklyEntry(nominalDate, allowForwardFallback) {
+            const docSnap = await getDoc(doc(db, WEEKLY_COL, nominalDate));
+            if (docSnap.exists() || !allowForwardFallback) {
+                return { nominalDate, date: nominalDate, docSnap, isFallback: false };
+            }
+            try {
+                const q = query(collection(db, WEEKLY_COL), where(documentId(), '>', nominalDate), orderBy(documentId()), limit(1));
+                const snap = await getDocs(q);
+                if (!snap.empty) {
+                    const fallbackDoc = snap.docs[0];
+                    return { nominalDate, date: fallbackDoc.id, docSnap: fallbackDoc, isFallback: true };
+                }
+            } catch (error) {
+                console.error('다음주 대체 데이터 조회 에러:', error);
+            }
+            return { nominalDate, date: nominalDate, docSnap, isFallback: false };
+        }
+
         window.openPractice = async (type) => {
             clearAllSectionPlayers();
             document.getElementById('homeView').classList.add('hidden'); document.getElementById('practiceView').classList.remove('hidden'); window.scrollTo(0, 0);
@@ -2374,14 +2394,18 @@
                     videosHtml += '</div>'; container.innerHTML = videosHtml + renderPracticeFooter();
                 } else {
                     const thisSunday = getNextSunday(); const d = new Date(thisSunday); d.setDate(d.getDate() + 7); const nextSunday = d.toISOString().split('T')[0];
-                    const datesToFetch = []; if (type === '이번주' || type === '이번주_다음주') datesToFetch.push(thisSunday); if (type === '다음주' || type === '이번주_다음주') datesToFetch.push(nextSunday);
+                    const weekEntries = [];
+                    if (type === '이번주' || type === '이번주_다음주') weekEntries.push({ nominalDate: thisSunday, allowForwardFallback: false });
+                    if (type === '다음주' || type === '이번주_다음주') weekEntries.push({ nominalDate: nextSunday, allowForwardFallback: true });
                     document.getElementById('practiceTitle').innerText = type.replace('_', ', ') + ' 곡 연습';
-                    const weeklyDocs = await Promise.all(datesToFetch.map(date => getDoc(doc(db, WEEKLY_COL, date))));
-                    for (const [idx, date] of datesToFetch.entries()) {
-                        const docSnap = weeklyDocs[idx];
+                    const resolvedWeeks = await Promise.all(weekEntries.map(e => resolveWeeklyEntry(e.nominalDate, e.allowForwardFallback)));
+                    for (const { nominalDate, date, docSnap, isFallback } of resolvedWeeks) {
                         if (docSnap.exists()) {
                             const data = docSnap.data(); const title = data.title || `${date} 찬양`;
-                            videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-amber-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-orange-50"><div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center mr-3 text-amber-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}</h2>`;
+                            const fallbackNoticeHtml = isFallback
+                                ? `<span class="block md:inline md:ml-2 text-sm font-bold text-orange-500">(다음주 곡이 아직 없어 가장 가까운 다음 주 곡을 보여드려요)</span>`
+                                : '';
+                            videosHtml += `<div><h2 class="font-black text-2xl md:text-3xl text-amber-900 mb-5 flex items-center bg-white py-3 px-4 rounded-[1.5rem] shadow-sm inline-flex border-2 border-orange-50"><div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center mr-3 text-amber-500 shadow-inner"><i class="fas fa-calendar-check"></i></div> ${date}${fallbackNoticeHtml}</h2>`;
                             videosHtml += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">`;
                             if (isAll || parts.includes('합창')) { videosHtml += renderVideo(title, '합창', getYoutubeId(data.full), `full_${date}`); }
                             if (isAll || parts.includes('소프라노')) { videosHtml += renderVideo(title, '소프라노', getYoutubeId(data.soprano), `sop_${date}`); }
@@ -2389,11 +2413,11 @@
                             if (isAll || parts.includes('테너')) { videosHtml += renderVideo(title, '테너', getYoutubeId(data.tenor), `tenor_${date}`); }
                             if (isAll || parts.includes('베이스')) { videosHtml += renderVideo(title, '베이스', getYoutubeId(data.bass), `bass_${date}`); }
                             videosHtml += `</div></div>`;
-                            const idx = sheetEntries.length;
-                            if (data.sheetMusicUrl) { sheetEntries.push({ type: 'pdf', url: data.sheetMusicUrl, title, date, idx }); sheetsHtml += renderPdfContainer(title, date, data.sheetMusicUrl, idx); }
-                            else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) { sheetEntries.push({ type: 'images', images: data.sheetMusicImages, title, date, idx }); sheetsHtml += renderImagesContainer(title, date, data.sheetMusicImages, idx); }
+                            const sIdx = sheetEntries.length;
+                            if (data.sheetMusicUrl) { sheetEntries.push({ type: 'pdf', url: data.sheetMusicUrl, title, date, idx: sIdx }); sheetsHtml += renderPdfContainer(title, date, data.sheetMusicUrl, sIdx); }
+                            else if (data.sheetMusicImages && data.sheetMusicImages.length > 0) { sheetEntries.push({ type: 'images', images: data.sheetMusicImages, title, date, idx: sIdx }); sheetsHtml += renderImagesContainer(title, date, data.sheetMusicImages, sIdx); }
                         } else {
-                            videosHtml += `<div class="bg-white p-12 rounded-[2rem] text-center border-2 border-dashed border-orange-200 mb-12 shadow-sm"><i class="fas fa-box-open mb-6 text-6xl text-orange-300"></i><br><span class="font-black text-2xl text-amber-800">${date}</span><p class="text-amber-600 font-bold mt-3 text-lg">아직 등록된 곡이 없습니다.</p></div>`;
+                            videosHtml += `<div class="bg-white p-12 rounded-[2rem] text-center border-2 border-dashed border-orange-200 mb-12 shadow-sm"><i class="fas fa-box-open mb-6 text-6xl text-orange-300"></i><br><span class="font-black text-2xl text-amber-800">${nominalDate}</span><p class="text-amber-600 font-bold mt-3 text-lg">아직 등록된 곡이 없습니다.</p></div>`;
                         }
                     }
                     videosHtml += '</div>'; sheetsHtml += '</div>';
