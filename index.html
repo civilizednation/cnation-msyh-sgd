@@ -529,9 +529,28 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="min-w-0">
                                 <label class="block text-sm font-black text-amber-600 mb-2 ml-2">적용 날짜 (일요일)</label>
-                                <input type="date" id="setupDate"
-                                    class="block w-full min-w-0 bg-orange-50 border-2 border-orange-100 rounded-xl px-4 py-3 shadow-inner focus:bg-white focus:border-amber-400 outline-none transition-all text-amber-900 font-bold text-base cursor-pointer"
-                                    onchange="loadSetupForDate()">
+                                <div class="flex items-stretch gap-2">
+                                    <input type="date" id="setupDate"
+                                        class="block w-3/5 min-w-0 bg-orange-50 border-2 border-orange-100 rounded-xl px-3 py-3 shadow-inner focus:bg-white focus:border-amber-400 outline-none transition-all text-amber-900 font-bold text-base cursor-pointer"
+                                        onchange="loadSetupForDate()">
+                                    <button type="button" onclick="openDateEditPanel()"
+                                        class="flex-1 min-w-0 px-2 py-3 bg-white border-2 border-amber-200 text-amber-700 font-black text-sm rounded-xl shadow-sm hover:bg-amber-50 transition-all whitespace-nowrap">
+                                        <i class="fas fa-pen-to-square mr-1"></i>날짜수정
+                                    </button>
+                                </div>
+                                <div id="dateEditPanel" class="hidden mt-3 bg-amber-50 border-2 border-amber-200 rounded-[1.25rem] p-4 space-y-3">
+                                    <p class="text-xs font-bold text-amber-600 leading-relaxed">
+                                        화면의 곡 정보를 아래 새 날짜로 옮깁니다. 기존(<span id="dateEditOldLabel" class="font-black"></span>) 데이터는 삭제됩니다.
+                                    </p>
+                                    <input type="date" id="setupDateEditTarget"
+                                        class="block w-full max-w-[200px] min-w-0 bg-white border-2 border-amber-200 rounded-xl px-4 py-2.5 text-amber-900 font-bold text-base outline-none focus:border-amber-400">
+                                    <div class="flex gap-2">
+                                        <button type="button" onclick="closeDateEditPanel()"
+                                            class="flex-1 py-2.5 rounded-xl bg-white text-stone-600 border-2 border-stone-200 font-black text-sm">취소</button>
+                                        <button type="button" id="moveDateBtn" onclick="moveWeeklyDate()"
+                                            class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black text-sm shadow-md">이동 저장</button>
+                                    </div>
+                                </div>
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-sm font-black text-amber-600 mb-2 ml-2">찬양 제목</label>
@@ -1018,7 +1037,7 @@
             document.body.style.overflow = '';
         };
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { initializeFirestore, collection, doc, setDoc, getDoc, getDocs, query, orderBy, limit, startAfter, addDoc, where, documentId, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, orderBy, limit, startAfter, addDoc, where, documentId, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         const firebaseConfig = {
             apiKey: "AIzaSyCTwOAC_LrrKH8CKepUOTf0pyd9qRv4y_8",
@@ -1988,40 +2007,91 @@
             } catch (e) { console.error(e); }
         };
 
+        // 화면에 입력된 주일 찬양 데이터를 date 기준으로 만든다(새 PDF/이미지가 있으면 그 날짜 경로로 업로드).
+        // saveWeeklyLinks(같은 날짜 저장)와 moveWeeklyDate(다른 날짜로 이동 저장) 양쪽에서 함께 쓴다.
+        // 사용자가 PDF/이미지 충돌 확인을 취소하면 null을 반환한다.
+        async function buildWeeklyPayload(date) {
+            const pdfInput = document.getElementById('setupSheetMusic');
+            const hasPdfFile = pdfInput.files.length > 0; const hasNewImages = imageSlots.some(s => s.file);
+            if (hasPdfFile && hasNewImages) {
+                if (!confirm('PDF 우선 저장 (이미지 무시) 계속?')) return null;
+            }
+            let finalPdfUrl = pendingDeletePdf ? '' : currentSheetMusicUrl;
+            let finalImages = pendingDeleteImages ? [] : currentSheetMusicImages.filter(u => u !== null);
+
+            if (hasPdfFile) {
+                const file = pdfInput.files[0];
+                const storageRef = ref(storage, `sheet_music/${date}_${file.name}`);
+                await uploadBytes(storageRef, file); finalPdfUrl = await getDownloadURL(storageRef); finalImages = [];
+            } else if (hasNewImages) {
+                finalPdfUrl = ''; const uploadedUrls = [];
+                for (let i = 0; i < imageSlots.length; i++) {
+                    const slot = imageSlots[i]; if (!slot.file) continue;
+                    const ext = slot.file.name.split('.').pop();
+                    const storageRef = ref(storage, `sheet_music_images/${date}_img${String(i + 1).padStart(2, '0')}.${ext}`);
+                    await uploadBytes(storageRef, slot.file); uploadedUrls.push(await getDownloadURL(storageRef));
+                }
+                finalImages = [...finalImages, ...uploadedUrls];
+            }
+            return {
+                title: document.getElementById('setupTitle').value, full: document.getElementById('setupFull').value,
+                soprano: document.getElementById('setupSop').value, alto: document.getElementById('setupAlto').value,
+                tenor: document.getElementById('setupTenor').value, bass: document.getElementById('setupBass').value,
+                sheetMusicUrl: finalPdfUrl, sheetMusicImages: finalImages
+            };
+        }
+
         window.saveWeeklyLinks = async () => {
             const date = document.getElementById('setupDate').value; if (!date) { alert("날짜 선택 요망"); return; }
             const btn = document.getElementById('saveWeeklyBtn'); btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> 저장 중...'; btn.disabled = true;
             try {
-                const pdfInput = document.getElementById('setupSheetMusic');
-                const hasPdfFile = pdfInput.files.length > 0; const hasNewImages = imageSlots.some(s => s.file);
-                if (hasPdfFile && hasNewImages) {
-                    if (!confirm('PDF 우선 저장 (이미지 무시) 계속?')) { btn.innerHTML = '<i class="fas fa-save mr-2"></i> 주일 찬양 및 악보 저장'; btn.disabled = false; return; }
-                }
-                let finalPdfUrl = pendingDeletePdf ? '' : currentSheetMusicUrl;
-                let finalImages = pendingDeleteImages ? [] : currentSheetMusicImages.filter(u => u !== null);
-
-                if (hasPdfFile) {
-                    const file = pdfInput.files[0];
-                    const storageRef = ref(storage, `sheet_music/${date}_${file.name}`);
-                    await uploadBytes(storageRef, file); finalPdfUrl = await getDownloadURL(storageRef); finalImages = [];
-                } else if (hasNewImages) {
-                    finalPdfUrl = ''; const uploadedUrls = [];
-                    for (let i = 0; i < imageSlots.length; i++) {
-                        const slot = imageSlots[i]; if (!slot.file) continue;
-                        const ext = slot.file.name.split('.').pop();
-                        const storageRef = ref(storage, `sheet_music_images/${date}_img${String(i + 1).padStart(2, '0')}.${ext}`);
-                        await uploadBytes(storageRef, slot.file); uploadedUrls.push(await getDownloadURL(storageRef));
-                    }
-                    finalImages = [...finalImages, ...uploadedUrls];
-                }
-                await setDoc(doc(db, WEEKLY_COL, date), {
-                    title: document.getElementById('setupTitle').value, full: document.getElementById('setupFull').value,
-                    soprano: document.getElementById('setupSop').value, alto: document.getElementById('setupAlto').value,
-                    tenor: document.getElementById('setupTenor').value, bass: document.getElementById('setupBass').value,
-                    sheetMusicUrl: finalPdfUrl, sheetMusicImages: finalImages
-                });
+                const payload = await buildWeeklyPayload(date);
+                if (!payload) return;
+                await setDoc(doc(db, WEEKLY_COL, date), payload);
                 alert('성공적으로 저장되었습니다.'); loadSetupForDate();
             } catch (e) { alert("저장 실패"); } finally { btn.innerHTML = '<i class="fas fa-save mr-2"></i> 주일 찬양 및 악보 저장'; btn.disabled = false; }
+        };
+
+        window.openDateEditPanel = () => {
+            const current = document.getElementById('setupDate').value;
+            if (!current) { alert('먼저 날짜를 선택해주세요.'); return; }
+            document.getElementById('dateEditOldLabel').textContent = current;
+            document.getElementById('setupDateEditTarget').value = current;
+            document.getElementById('dateEditPanel').classList.remove('hidden');
+        };
+        window.closeDateEditPanel = () => {
+            document.getElementById('dateEditPanel').classList.add('hidden');
+        };
+
+        // 화면에 입력된(아직 저장 전일 수도 있는) 곡 정보를 새 날짜로 옮기고, 기존 날짜의 데이터는 삭제한다.
+        // 예: 11/1에 등록했던 곡이 실제로는 10/25에 부르는 걸로 바뀐 경우 사용.
+        window.moveWeeklyDate = async () => {
+            const oldDate = document.getElementById('setupDate').value;
+            const newDate = document.getElementById('setupDateEditTarget').value;
+            if (!oldDate) { alert('먼저 날짜를 선택해주세요.'); return; }
+            if (!newDate) { alert('새 날짜를 선택해주세요.'); return; }
+            if (newDate === oldDate) { alert('기존 날짜와 동일한 날짜입니다.'); return; }
+
+            try {
+                const existingSnap = await getDoc(doc(db, WEEKLY_COL, newDate));
+                if (existingSnap.exists() && !confirm(`${newDate}에는 이미 "${existingSnap.data().title || '다른 곡'}" 정보가 등록되어 있습니다.\n덮어쓰시겠습니까?`)) return;
+            } catch (e) { alert('날짜 확인 중 오류가 발생했습니다.'); return; }
+
+            if (!confirm(`${oldDate}의 곡 정보를 ${newDate}(으)로 옮길까요?\n화면에 입력된 내용 그대로 저장되며, ${oldDate}의 데이터는 삭제됩니다.`)) return;
+
+            const btn = document.getElementById('moveDateBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> 이동 중...'; btn.disabled = true;
+            try {
+                const payload = await buildWeeklyPayload(newDate);
+                if (!payload) return;
+                await setDoc(doc(db, WEEKLY_COL, newDate), payload);
+                await deleteDoc(doc(db, WEEKLY_COL, oldDate));
+                document.getElementById('setupDate').value = newDate;
+                closeDateEditPanel();
+                alert(`${oldDate} → ${newDate}로 곡 정보를 옮겼습니다.`);
+                loadSetupForDate();
+            } catch (e) { alert('날짜 이동 중 오류가 발생했습니다.'); }
+            finally { btn.innerHTML = '이동 저장'; btn.disabled = false; }
         };
 
         window.saveFixedLinks = async () => {
