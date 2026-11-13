@@ -1421,6 +1421,12 @@
             const coverHtml = song.imageUrl
                 ? `<img src="${escapeHtml(song.imageUrl)}" class="w-full aspect-square object-cover" alt="cover">`
                 : `<div class="w-full aspect-square bg-indigo-100 text-indigo-500 flex items-center justify-center font-black text-6xl">${getCoverSongTitleInitial(song.title)}</div>`;
+            // 쇼케이스 카드는 이미 정사각형 부모(aspect-square)가 비율을 강제하므로, 이미지는 자체 비율
+            // 계산 없이 절대위치로 100% 채운다 — "정사각형 부모 + 정사각형 자식" 중첩을 피해
+            // 실기기에서 퍼센트 높이(h-[15%]) 캔버스가 자리를 못 잡는 문제를 방지한다.
+            const coverHtmlAbsolute = song.imageUrl
+                ? `<img src="${escapeHtml(song.imageUrl)}" class="absolute inset-0 w-full h-full object-cover" alt="cover">`
+                : `<div class="absolute inset-0 w-full h-full bg-indigo-100 text-indigo-500 flex items-center justify-center font-black text-6xl">${getCoverSongTitleInitial(song.title)}</div>`;
 
             // ===== [임시] 이퀄라이저 스타일 비교용 =====
             // 요청에 따라 "부드러운 음파현" 스타일을 고르기 위해, 앨범 이미지 6개를 세로로 나열하고
@@ -1440,9 +1446,9 @@
                        ${EQ_SHOWCASE_STYLES.map(s => `
                        <div>
                            <div class="text-xs font-bold text-gray-500 mb-1.5">${s.label}</div>
-                           <div class="relative w-full aspect-square rounded-xl overflow-hidden shadow-sm">
-                               ${coverHtml}
-                               <canvas data-eq-style="${s.id}" class="cover-eq-canvas absolute inset-x-0 bottom-0 w-full h-[15%] pointer-events-none"></canvas>
+                           <div class="relative w-full aspect-square rounded-xl overflow-hidden shadow-sm bg-gray-900">
+                               ${coverHtmlAbsolute}
+                               <canvas data-eq-style="${s.id}" class="cover-eq-canvas absolute inset-0 w-full h-full pointer-events-none"></canvas>
                            </div>
                        </div>`).join('')}
                    </div>`
@@ -1703,13 +1709,23 @@
 
                 renderers.forEach(r => {
                     resizeCanvasIfNeeded(r.canvas);
+                    // 캔버스를 카드와 동일한 전체 정사각형 크기로 두고(퍼센트 높이로 절대위치시키는
+                    // 방식은 실기기에서 자리를 못 잡는 문제가 있었다), 좌표계만 아래쪽 15% 띠로
+                    // 이동(translate)시켜 그 안에만 그린다 — 나머지 85%는 매 프레임 투명하게 비워
+                    // 앨범 이미지가 그대로 보이게 한다.
                     const w = r.canvas.width, h = r.canvas.height;
-                    if (r.style === 'smoothsiri') drawSmoothSiri(r.ctx, w, h, t, smoothedLevel);
-                    else if (r.style === 'string') drawString(r.ctx, w, h, t, smoothedLevel);
-                    else if (r.style === 'ribbon') drawRibbon(r.ctx, w, h, t, smoothedLevel);
-                    else if (r.style === 'harp') drawHarp(r.ctx, w, h, t, freqData, r.harpSmooth);
-                    else if (r.style === 'dots') drawDots(r.ctx, w, h, t, smoothedLevel);
-                    else if (r.style === 'liquid') drawLiquid(r.ctx, w, h, t, smoothedLevel);
+                    const bandH = h * 0.15;
+                    const bandY0 = h - bandH;
+                    r.ctx.clearRect(0, 0, w, h);
+                    r.ctx.save();
+                    r.ctx.translate(0, bandY0);
+                    if (r.style === 'smoothsiri') drawSmoothSiri(r.ctx, w, bandH, t, smoothedLevel);
+                    else if (r.style === 'string') drawString(r.ctx, w, bandH, t, smoothedLevel);
+                    else if (r.style === 'ribbon') drawRibbon(r.ctx, w, bandH, t, smoothedLevel);
+                    else if (r.style === 'harp') drawHarp(r.ctx, w, bandH, t, freqData, r.harpSmooth);
+                    else if (r.style === 'dots') drawDots(r.ctx, w, bandH, t, smoothedLevel);
+                    else if (r.style === 'liquid') drawLiquid(r.ctx, w, bandH, t, smoothedLevel);
+                    r.ctx.restore();
                 });
 
                 coverSongEqRAF = requestAnimationFrame(tick);
