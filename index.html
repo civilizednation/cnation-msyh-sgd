@@ -1418,16 +1418,26 @@
                    </label>`
                 : '';
             const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '';
-            const coverHtml = song.imageUrl
-                ? `<img src="${escapeHtml(song.imageUrl)}" class="w-full aspect-square object-cover" alt="cover">`
-                : `<div class="w-full aspect-square bg-indigo-100 text-indigo-500 flex items-center justify-center font-black text-6xl">${getCoverSongTitleInitial(song.title)}</div>`;
-            // 앨범 이미지(또는 기본 화면) 하단에, 그 세로폭의 15% 높이로 반투명 흰색 시리 스타일 음파를 겹쳐 보여준다.
-            const equalizerHtml = song.mp3Url
-                ? `<canvas id="coverSongEqualizer" class="absolute inset-x-0 bottom-0 w-full h-[15%] pointer-events-none"></canvas>`
-                : '';
+            // 캔버스는 앨범 이미지와 동일한 전체 정사각형 크기로 두고, 그릴 때만 좌표를 하단 15%
+            // 띠로 이동(translate)시킨다 — 퍼센트 높이(h-[15%])로 절대위치시키는 방식은 일부
+            // 기기에서 자리를 못 잡아 이미지 하단이 흰색으로 덮이는 문제가 있었다.
+            const coverHtml = song.mp3Url
+                ? (song.imageUrl
+                    ? `<img src="${escapeHtml(song.imageUrl)}" class="absolute inset-0 w-full h-full object-cover" alt="cover">`
+                    : `<div class="absolute inset-0 w-full h-full bg-indigo-100 text-indigo-500 flex items-center justify-center font-black text-6xl">${getCoverSongTitleInitial(song.title)}</div>`)
+                : (song.imageUrl
+                    ? `<img src="${escapeHtml(song.imageUrl)}" class="w-full aspect-square object-cover" alt="cover">`
+                    : `<div class="w-full aspect-square bg-indigo-100 text-indigo-500 flex items-center justify-center font-black text-6xl">${getCoverSongTitleInitial(song.title)}</div>`);
+            // 앨범 이미지(또는 기본 화면) 하단에, 그 세로폭의 15% 높이로 반투명 흰색 음파를 겹쳐 보여준다.
+            const coverBlockHtml = song.mp3Url
+                ? `<div class="relative w-full aspect-square overflow-hidden bg-gray-900">
+                       ${coverHtml}
+                       <canvas id="coverSongEqualizer" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+                   </div>`
+                : `<div class="relative">${coverHtml}</div>`;
 
             document.getElementById('coverSongDetailContent').innerHTML = `
-                <div class="relative">${coverHtml}${equalizerHtml}</div>
+                ${coverBlockHtml}
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-1">
                         <h2 class="text-2xl font-bold text-gray-800">${escapeHtml(song.title || '')}</h2>
@@ -1454,7 +1464,11 @@
             document.getElementById('coverSongDetailContent').innerHTML = '';
         };
 
-        // ===== 실시간 이퀄라이저 (Web Audio API) =====
+        // ===== 실시간 이퀄라이저 (Web Audio API) — 부드러운 시리웨이브 스타일 =====
+        // 매 프레임 원본 파형 샘플을 그대로 그리면 움직임이 뚝뚝 끊겨 보인다. 그래서 오디오
+        // 레벨(RMS)을 프레임 간 보간(lerp)해 부드럽게 만든 뒤, 그 값으로 서로 다른 속도/위상의
+        // 사인파 3겹을 합성한 곡선의 진폭만 조절한다 — 실제 Siri 웨이브 라이브러리와 동일한 접근으로,
+        // 원본 파형을 직접 그리지 않기 때문에 끊김 없이 매끄럽게 흐른다.
         // AudioContext는 브라우저당 개수 제한이 있을 수 있어 앱 전체에서 하나만 만들어 재사용하고,
         // 곡을 바꿀 때마다 새 <audio> 엘리먼트에 맞는 MediaElementSourceNode만 새로 연결한다.
         let coverSongAudioCtx = null;
@@ -1468,6 +1482,8 @@
             if (!audioEl || !canvas) return;
             const ctx = canvas.getContext('2d');
             let graphReady = false;
+            let smoothedLevel = 0;
+            let startTime = null;
 
             function ensureAudioGraph() {
                 if (graphReady) return true;
@@ -1479,8 +1495,7 @@
                     if (coverSongSourceNode) { try { coverSongSourceNode.disconnect(); } catch (e) { } }
                     coverSongSourceNode = coverSongAudioCtx.createMediaElementSource(audioEl);
                     coverSongAnalyser = coverSongAudioCtx.createAnalyser();
-                    coverSongAnalyser.fftSize = 128; // 시간 축 파형 샘플 128개 -> 부드러운 음파 곡선에 사용
-                    coverSongAnalyser.smoothingTimeConstant = 0.8;
+                    coverSongAnalyser.fftSize = 1024;
                     coverSongSourceNode.connect(coverSongAnalyser);
                     coverSongAnalyser.connect(coverSongAudioCtx.destination);
                     graphReady = true;
@@ -1502,61 +1517,81 @@
                 }
             }
 
-            // 중심선을 기준으로 위/아래가 서로 거울상인 "리본" 모양을 그려, 소리가 커질수록 굵어지는
-            // 시리(Siri) 스타일 음파를 만든다. 옅은 레이어를 먼저, 또렷한 레이어를 나중에 겹쳐 그려
-            // 입체감을 준다.
-            function drawWaveLayer(data, h, w, gain, alpha) {
-                const n = data.length;
-                const centerY = h / 2;
-                const top = new Array(n);
-                for (let i = 0; i < n; i++) {
-                    const amp = Math.abs(data[i] - 128) / 128; // 0..1, 무음에서도 살짝 보이게 최소값 둠
-                    const dy = Math.max(0.05, amp) * centerY * gain;
-                    top[i] = { x: (i / (n - 1)) * w, y: centerY - dy };
-                }
-                ctx.beginPath();
-                ctx.moveTo(top[0].x, top[0].y);
-                for (let i = 0; i < n - 1; i++) {
-                    const midX = (top[i].x + top[i + 1].x) / 2;
-                    const midY = (top[i].y + top[i + 1].y) / 2;
-                    ctx.quadraticCurveTo(top[i].x, top[i].y, midX, midY);
-                }
-                ctx.lineTo(top[n - 1].x, top[n - 1].y);
-                // 아래쪽 경로는 위쪽을 중심선 기준으로 대칭시켜 역순으로 그린다.
-                for (let i = n - 1; i > 0; i--) {
-                    const bx1 = top[i].x, by1 = centerY + (centerY - top[i].y);
-                    const bx0 = top[i - 1].x, by0 = centerY + (centerY - top[i - 1].y);
-                    const midX = (bx1 + bx0) / 2, midY = (by1 + by0) / 2;
-                    ctx.quadraticCurveTo(bx1, by1, midX, midY);
-                }
-                ctx.closePath();
-                ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-                ctx.fill();
+            // 서로 다른 속도/위상으로 흐르는 사인파 3겹을 합성해 부드러운 음파 리본을 그린다.
+            // h는 캔버스 전체 높이가 아니라, 그리려는 하단 띠(밴드)의 높이다 — 호출하는 쪽에서
+            // 좌표를 이미 그 띠의 위치로 이동(translate)시켜 둔다.
+            function drawSmoothSiriWave(w, h, t, level) {
+                const mid = h / 2;
+                const amp = h * 0.38 * (0.22 + level * 1.3);
+                const layers = [
+                    { freq: 1.6, speed: 1.0, alpha: 0.9, widthMul: 1.0 },
+                    { freq: 1.1, speed: 0.6, alpha: 0.5, widthMul: 0.75 },
+                    { freq: 2.1, speed: 1.5, alpha: 0.3, widthMul: 0.55 },
+                ];
+                layers.forEach(layer => {
+                    ctx.beginPath();
+                    const n = 70;
+                    for (let i = 0; i <= n; i++) {
+                        const x = (i / n) * w;
+                        const phase = t * layer.speed + (i / n) * Math.PI * 2 * layer.freq;
+                        const envelope = Math.sin((i / n) * Math.PI); // 양 끝으로 갈수록 옅어지게
+                        const y = mid + Math.sin(phase) * amp * layer.widthMul * envelope;
+                        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                    }
+                    ctx.strokeStyle = `rgba(255,255,255,${layer.alpha})`;
+                    ctx.lineWidth = Math.max(1, h * 0.06);
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                });
             }
 
-            function drawSiriWave() {
+            const timeData = new Uint8Array(1024);
+
+            function tick(now) {
                 if (!coverSongAnalyser) return;
+                if (startTime === null) startTime = now;
+                const t = (now - startTime) / 1000;
+
+                coverSongAnalyser.getByteTimeDomainData(timeData);
+                let sumSq = 0;
+                for (let i = 0; i < timeData.length; i++) {
+                    const v = (timeData[i] - 128) / 128;
+                    sumSq += v * v;
+                }
+                const rawLevel = Math.sqrt(sumSq / timeData.length);
+                // 소리가 커질 때는 빠르게, 작아질 때는 천천히 따라가게 해 자연스러운 "부드러움"을 만든다.
+                const attack = rawLevel > smoothedLevel ? 0.3 : 0.06;
+                smoothedLevel += (rawLevel - smoothedLevel) * attack;
+
                 resizeCanvasIfNeeded();
-                const data = new Uint8Array(coverSongAnalyser.fftSize);
-                coverSongAnalyser.getByteTimeDomainData(data);
                 const w = canvas.width, h = canvas.height;
+                const bandH = h * 0.15;
+                const bandY0 = h - bandH;
                 ctx.clearRect(0, 0, w, h);
-                drawWaveLayer(data, h, w, 0.65, 0.25); // 배경 — 더 크고 흐릿하게
-                drawWaveLayer(data, h, w, 0.9, 0.55);  // 전경 — 더 선명하게
-                coverSongEqRAF = requestAnimationFrame(drawSiriWave);
+                ctx.save();
+                ctx.translate(0, bandY0);
+                drawSmoothSiriWave(w, bandH, t, smoothedLevel);
+                ctx.restore();
+
+                coverSongEqRAF = requestAnimationFrame(tick);
             }
 
-            function stopSiriWave() {
+            function stopTick() {
                 if (coverSongEqRAF) { cancelAnimationFrame(coverSongEqRAF); coverSongEqRAF = null; }
+                startTime = null;
+                smoothedLevel = 0;
                 resizeCanvasIfNeeded();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
 
             audioEl.addEventListener('play', () => {
-                if (ensureAudioGraph()) drawSiriWave();
+                if (ensureAudioGraph()) {
+                    startTime = null;
+                    coverSongEqRAF = requestAnimationFrame(tick);
+                }
             });
-            audioEl.addEventListener('pause', stopSiriWave);
-            audioEl.addEventListener('ended', stopSiriWave);
+            audioEl.addEventListener('pause', stopTick);
+            audioEl.addEventListener('ended', stopTick);
         }
 
         function teardownCoverSongEqualizer() {
