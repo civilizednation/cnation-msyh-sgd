@@ -1007,6 +1007,16 @@
                         class="w-full text-sm file:mr-4 file:py-3 file:px-6 file:rounded-[1rem] file:border-0 file:font-black file:bg-indigo-50 file:text-indigo-600 cursor-pointer">
                     <p id="coverSongUploadFileName" class="text-xs font-bold text-stone-400 mt-2">선택한 파일 없음</p>
                 </div>
+                <div>
+                    <label class="block text-sm font-black text-indigo-600 mb-2">앨범 이미지 (선택, jpg / png)</label>
+                    <input type="file" id="coverSongUploadImage" accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+                        onchange="onCoverSongUploadImageSelected()"
+                        class="w-full text-sm file:mr-4 file:py-3 file:px-6 file:rounded-[1rem] file:border-0 file:font-black file:bg-indigo-50 file:text-indigo-600 cursor-pointer">
+                    <div class="flex items-center gap-3 mt-2">
+                        <img id="coverSongUploadImagePreview" class="hidden w-14 h-14 rounded-xl object-cover border-2 border-indigo-100" alt="">
+                        <p id="coverSongUploadImageName" class="text-xs font-bold text-stone-400">선택 안 함 — 추가하지 않으면 기본 화면으로 재생됩니다.</p>
+                    </div>
+                </div>
             </div>
             <div class="p-4 bg-white border-t border-stone-200 shrink-0">
                 <button id="coverSongUploadBtn" onclick="uploadCoverSong()"
@@ -1398,16 +1408,24 @@
                 }
             }
             const audioMimeType = /\.wav(\?|$)/i.test(song.mp3Url || '') ? 'audio/wav' : 'audio/mp3';
+            // crossorigin="anonymous"는 실시간 이퀄라이저(Web Audio AnalyserNode)가 Firebase Storage의
+            // 음원 데이터를 분석할 수 있게 하기 위해 필요하다 — 없으면 분석값이 전부 0으로만 나온다.
             const audioPlayer = song.mp3Url
-                ? `<audio controls class="w-full mt-2 mb-4"><source src="${escapeHtml(song.mp3Url)}" type="${audioMimeType}"></audio>`
+                ? `<audio id="coverSongAudio" controls crossorigin="anonymous" class="w-full mt-2 mb-4"><source src="${escapeHtml(song.mp3Url)}" type="${audioMimeType}"></audio>`
                 : '';
             const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '';
             const coverHtml = song.imageUrl
                 ? `<img src="${escapeHtml(song.imageUrl)}" class="w-full aspect-square object-cover" alt="cover">`
                 : `<div class="w-full aspect-square bg-indigo-100 text-indigo-500 flex items-center justify-center font-black text-6xl">${getCoverSongTitleInitial(song.title)}</div>`;
+            // 앨범 이미지가 있으면 그 위에, 없으면 기본 화면(이니셜 placeholder) 위에 그대로 이퀄라이저를 겹쳐 보여준다.
+            const equalizerBars = Array.from({ length: 20 }, () =>
+                '<div class="eq-bar flex-1 bg-white rounded-t-sm" style="height:6%"></div>').join('');
+            const equalizerHtml = song.mp3Url
+                ? `<div id="coverSongEqualizer" class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 via-black/15 to-transparent flex items-end justify-between gap-[2px] px-3 pb-3 pointer-events-none">${equalizerBars}</div>`
+                : '';
 
             document.getElementById('coverSongDetailContent').innerHTML = `
-                <div>${coverHtml}</div>
+                <div class="relative">${coverHtml}${equalizerHtml}</div>
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-1">
                         <h2 class="text-2xl font-bold text-gray-800">${escapeHtml(song.title || '')}</h2>
@@ -1422,6 +1440,7 @@
                     </div>
                 </div>`;
             document.getElementById('coverSongDetailModal').classList.remove('hidden');
+            setupCoverSongEqualizer();
         };
 
         window.closeCoverSongDetail = () => {
@@ -1429,8 +1448,77 @@
             modal.classList.add('hidden');
             const audio = modal.querySelector('audio');
             if (audio) audio.pause();
+            teardownCoverSongEqualizer();
             document.getElementById('coverSongDetailContent').innerHTML = '';
         };
+
+        // ===== 실시간 이퀄라이저 (Web Audio API) =====
+        // AudioContext는 브라우저당 개수 제한이 있을 수 있어 앱 전체에서 하나만 만들어 재사용하고,
+        // 곡을 바꿀 때마다 새 <audio> 엘리먼트에 맞는 MediaElementSourceNode만 새로 연결한다.
+        let coverSongAudioCtx = null;
+        let coverSongSourceNode = null;
+        let coverSongAnalyser = null;
+        let coverSongEqRAF = null;
+
+        function setupCoverSongEqualizer() {
+            const audioEl = document.getElementById('coverSongAudio');
+            const eqContainer = document.getElementById('coverSongEqualizer');
+            if (!audioEl || !eqContainer) return;
+            const bars = Array.from(eqContainer.querySelectorAll('.eq-bar'));
+            let graphReady = false;
+
+            function ensureAudioGraph() {
+                if (graphReady) return true;
+                try {
+                    if (!coverSongAudioCtx) {
+                        coverSongAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    if (coverSongAudioCtx.state === 'suspended') coverSongAudioCtx.resume();
+                    if (coverSongSourceNode) { try { coverSongSourceNode.disconnect(); } catch (e) { } }
+                    coverSongSourceNode = coverSongAudioCtx.createMediaElementSource(audioEl);
+                    coverSongAnalyser = coverSongAudioCtx.createAnalyser();
+                    coverSongAnalyser.fftSize = 64; // 32개 주파수 구간 -> 막대 20개로 추려서 사용
+                    coverSongAnalyser.smoothingTimeConstant = 0.75;
+                    coverSongSourceNode.connect(coverSongAnalyser);
+                    coverSongAnalyser.connect(coverSongAudioCtx.destination);
+                    graphReady = true;
+                    return true;
+                } catch (error) {
+                    console.error('이퀄라이저 연결 에러:', error);
+                    return false;
+                }
+            }
+
+            function animateBars() {
+                if (!coverSongAnalyser) return;
+                const data = new Uint8Array(coverSongAnalyser.frequencyBinCount);
+                coverSongAnalyser.getByteFrequencyData(data);
+                for (let i = 0; i < bars.length; i++) {
+                    // 고음 쪽은 데이터가 희박해서, 앞쪽 70% 구간 안에서만 20개 막대에 매핑한다.
+                    const idx = Math.min(data.length - 1, Math.floor(i * (data.length * 0.7) / bars.length));
+                    const pct = Math.max(6, Math.round((data[idx] / 255) * 100));
+                    bars[i].style.height = pct + '%';
+                }
+                coverSongEqRAF = requestAnimationFrame(animateBars);
+            }
+
+            function stopBars() {
+                if (coverSongEqRAF) { cancelAnimationFrame(coverSongEqRAF); coverSongEqRAF = null; }
+                bars.forEach(b => b.style.height = '6%');
+            }
+
+            audioEl.addEventListener('play', () => {
+                if (ensureAudioGraph()) animateBars();
+            });
+            audioEl.addEventListener('pause', stopBars);
+            audioEl.addEventListener('ended', stopBars);
+        }
+
+        function teardownCoverSongEqualizer() {
+            if (coverSongEqRAF) { cancelAnimationFrame(coverSongEqRAF); coverSongEqRAF = null; }
+            if (coverSongSourceNode) { try { coverSongSourceNode.disconnect(); } catch (e) { } coverSongSourceNode = null; }
+            coverSongAnalyser = null;
+        }
 
         // ===== 커버송 관리(관리자모드) — 비밀번호 없이 접근, 추가/삭제/순서변경 =====
         async function saveCoverSongsOrder() {
@@ -1615,6 +1703,9 @@
             document.getElementById('coverSongUploadDate').value = '';
             document.getElementById('coverSongUploadFile').value = '';
             document.getElementById('coverSongUploadFileName').textContent = '선택한 파일 없음';
+            document.getElementById('coverSongUploadImage').value = '';
+            document.getElementById('coverSongUploadImagePreview').classList.add('hidden');
+            document.getElementById('coverSongUploadImageName').textContent = '선택 안 함 — 추가하지 않으면 기본 화면으로 재생됩니다.';
             document.getElementById('coverSongsUploadModal').classList.remove('hidden');
         };
         window.closeCoverSongsUploadModal = () => {
@@ -1624,16 +1715,31 @@
             const f = document.getElementById('coverSongUploadFile').files[0];
             document.getElementById('coverSongUploadFileName').textContent = f ? f.name : '선택한 파일 없음';
         };
+        window.onCoverSongUploadImageSelected = () => {
+            const f = document.getElementById('coverSongUploadImage').files[0];
+            const preview = document.getElementById('coverSongUploadImagePreview');
+            const nameEl = document.getElementById('coverSongUploadImageName');
+            if (!f) {
+                preview.classList.add('hidden');
+                nameEl.textContent = '선택 안 함 — 추가하지 않으면 기본 화면으로 재생됩니다.';
+                return;
+            }
+            nameEl.textContent = f.name;
+            const reader = new FileReader();
+            reader.onload = (e) => { preview.src = e.target.result; preview.classList.remove('hidden'); };
+            reader.readAsDataURL(f);
+        };
 
-        // 음원 파일(mp3/wav)을 직접 업로드해서 커버송 목록에 추가한다.
+        // 음원 파일(mp3/wav, 선택적으로 앨범 이미지)을 직접 업로드해서 커버송 목록에 추가한다.
         // cnation-ccm-list 컬렉션에 새 문서로 등록하는 건 picker로 추가하는 경우와 동일 —
-        // 그래야 목록/상세보기 렌더링 로직을 그대로 재사용할 수 있다(상세보기는 이미 mp3Url이 있으면
-        // 오디오 플레이어를 보여주도록 되어 있다).
+        // 그래야 목록/상세보기 렌더링 로직을 그대로 재사용할 수 있다(상세보기는 이미 imageUrl이 있으면
+        // 앨범 이미지를, mp3Url이 있으면 오디오 플레이어를 보여주도록 되어 있다).
         window.uploadCoverSong = async () => {
             const title = document.getElementById('coverSongUploadTitle').value.trim();
             const date = document.getElementById('coverSongUploadDate').value;
             const fileInput = document.getElementById('coverSongUploadFile');
             const file = fileInput.files[0];
+            const imageFile = document.getElementById('coverSongUploadImage').files[0];
             if (!title) { alert('제목을 입력해주세요.'); return; }
             if (!date) { alert('성가대에서 부른 날짜를 선택해주세요.'); return; }
             if (!file) { alert('음원 파일을 선택해주세요.'); return; }
@@ -1648,7 +1754,18 @@
                 await uploadBytes(storageRef, file);
                 const mp3Url = await getDownloadURL(storageRef);
 
-                const newSongData = { title, creationDate: date, mp3Url, creator: '', type: '성가대 커버', createdAt: serverTimestamp() };
+                let imageUrl = '';
+                if (imageFile) {
+                    const safeImageName = imageFile.name.replace(/[^\w.\-가-힣]/g, '_');
+                    const imageRef = ref(storage, `cover-songs-audio/images/${Date.now()}_${safeImageName}`);
+                    await uploadBytes(imageRef, imageFile);
+                    imageUrl = await getDownloadURL(imageRef);
+                }
+
+                const newSongData = {
+                    title, creationDate: date, mp3Url, imageUrl, thumbnailUrl: imageUrl,
+                    creator: '', type: '성가대 커버', createdAt: serverTimestamp()
+                };
                 const newDocRef = await addDoc(collection(db, COVER_SONGS_COL), newSongData);
 
                 coverSongsCache = [{ id: newDocRef.id, ...newSongData }, ...coverSongsCache]; // 새로 추가한 곡이 위로
