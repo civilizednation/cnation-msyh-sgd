@@ -1411,17 +1411,19 @@
             // crossorigin="anonymous"는 실시간 이퀄라이저(Web Audio AnalyserNode)가 Firebase Storage의
             // 음원 데이터를 분석할 수 있게 하기 위해 필요하다 — 없으면 분석값이 전부 0으로만 나온다.
             const audioPlayer = song.mp3Url
-                ? `<audio id="coverSongAudio" controls crossorigin="anonymous" class="w-full mt-2 mb-4"><source src="${escapeHtml(song.mp3Url)}" type="${audioMimeType}"></audio>`
+                ? `<audio id="coverSongAudio" controls crossorigin="anonymous" class="w-full mt-2"><source src="${escapeHtml(song.mp3Url)}" type="${audioMimeType}"></audio>
+                   <label class="flex items-center gap-2 text-xs font-bold text-indigo-500 mt-2 mb-4 cursor-pointer select-none w-fit">
+                       <input type="checkbox" id="coverSongLoopToggle" onchange="document.getElementById('coverSongAudio').loop = this.checked" class="w-4 h-4 accent-indigo-600 cursor-pointer">
+                       반복재생
+                   </label>`
                 : '';
             const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '';
             const coverHtml = song.imageUrl
                 ? `<img src="${escapeHtml(song.imageUrl)}" class="w-full aspect-square object-cover" alt="cover">`
                 : `<div class="w-full aspect-square bg-indigo-100 text-indigo-500 flex items-center justify-center font-black text-6xl">${getCoverSongTitleInitial(song.title)}</div>`;
-            // 앨범 이미지가 있으면 그 위에, 없으면 기본 화면(이니셜 placeholder) 위에 그대로 이퀄라이저를 겹쳐 보여준다.
-            const equalizerBars = Array.from({ length: 20 }, () =>
-                '<div class="eq-bar flex-1 bg-white rounded-t-sm" style="height:6%"></div>').join('');
+            // 앨범 이미지(또는 기본 화면) 하단에, 그 세로폭의 15% 높이로 반투명 흰색 스펙트럼을 겹쳐 보여준다.
             const equalizerHtml = song.mp3Url
-                ? `<div id="coverSongEqualizer" class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 via-black/15 to-transparent flex items-end justify-between gap-[2px] px-3 pb-3 pointer-events-none">${equalizerBars}</div>`
+                ? `<canvas id="coverSongEqualizer" class="absolute inset-x-0 bottom-0 w-full h-[15%] pointer-events-none"></canvas>`
                 : '';
 
             document.getElementById('coverSongDetailContent').innerHTML = `
@@ -1462,9 +1464,9 @@
 
         function setupCoverSongEqualizer() {
             const audioEl = document.getElementById('coverSongAudio');
-            const eqContainer = document.getElementById('coverSongEqualizer');
-            if (!audioEl || !eqContainer) return;
-            const bars = Array.from(eqContainer.querySelectorAll('.eq-bar'));
+            const canvas = document.getElementById('coverSongEqualizer');
+            if (!audioEl || !canvas) return;
+            const ctx = canvas.getContext('2d');
             let graphReady = false;
 
             function ensureAudioGraph() {
@@ -1477,8 +1479,8 @@
                     if (coverSongSourceNode) { try { coverSongSourceNode.disconnect(); } catch (e) { } }
                     coverSongSourceNode = coverSongAudioCtx.createMediaElementSource(audioEl);
                     coverSongAnalyser = coverSongAudioCtx.createAnalyser();
-                    coverSongAnalyser.fftSize = 64; // 32개 주파수 구간 -> 막대 20개로 추려서 사용
-                    coverSongAnalyser.smoothingTimeConstant = 0.75;
+                    coverSongAnalyser.fftSize = 128; // 64개 주파수 구간 -> 부드러운 스펙트럼 곡선에 사용
+                    coverSongAnalyser.smoothingTimeConstant = 0.8;
                     coverSongSourceNode.connect(coverSongAnalyser);
                     coverSongAnalyser.connect(coverSongAudioCtx.destination);
                     graphReady = true;
@@ -1489,29 +1491,62 @@
                 }
             }
 
-            function animateBars() {
-                if (!coverSongAnalyser) return;
-                const data = new Uint8Array(coverSongAnalyser.frequencyBinCount);
-                coverSongAnalyser.getByteFrequencyData(data);
-                for (let i = 0; i < bars.length; i++) {
-                    // 고음 쪽은 데이터가 희박해서, 앞쪽 70% 구간 안에서만 20개 막대에 매핑한다.
-                    const idx = Math.min(data.length - 1, Math.floor(i * (data.length * 0.7) / bars.length));
-                    const pct = Math.max(6, Math.round((data[idx] / 255) * 100));
-                    bars[i].style.height = pct + '%';
+            function resizeCanvasIfNeeded() {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                const targetW = Math.max(1, Math.round(rect.width * dpr));
+                const targetH = Math.max(1, Math.round(rect.height * dpr));
+                if (canvas.width !== targetW || canvas.height !== targetH) {
+                    canvas.width = targetW;
+                    canvas.height = targetH;
                 }
-                coverSongEqRAF = requestAnimationFrame(animateBars);
             }
 
-            function stopBars() {
+            function drawSpectrum() {
+                if (!coverSongAnalyser) return;
+                resizeCanvasIfNeeded();
+                const data = new Uint8Array(coverSongAnalyser.frequencyBinCount);
+                coverSongAnalyser.getByteFrequencyData(data);
+                const w = canvas.width, h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+
+                // 고음 쪽은 데이터가 희박해서, 앞쪽 75% 구간만 스펙트럼 곡선에 사용한다.
+                const usableCount = Math.max(2, Math.floor(data.length * 0.75));
+                const points = [];
+                for (let i = 0; i < usableCount; i++) {
+                    const x = (i / (usableCount - 1)) * w;
+                    const amp = Math.max(0.04, data[i] / 255);
+                    points.push({ x, y: h - amp * h });
+                }
+
+                // 점 사이를 2차 베지어로 이어 각진 막대 대신 부드러운 스펙트럼 곡선으로 채운다.
+                ctx.beginPath();
+                ctx.moveTo(0, h);
+                ctx.lineTo(points[0].x, points[0].y);
+                for (let i = 0; i < points.length - 1; i++) {
+                    const midX = (points[i].x + points[i + 1].x) / 2;
+                    const midY = (points[i].y + points[i + 1].y) / 2;
+                    ctx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+                }
+                ctx.lineTo(w, h);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(255,255,255,0.55)'; // 흰색 + 반투명 — 배경 앨범 이미지와 어우러지도록
+                ctx.fill();
+
+                coverSongEqRAF = requestAnimationFrame(drawSpectrum);
+            }
+
+            function stopSpectrum() {
                 if (coverSongEqRAF) { cancelAnimationFrame(coverSongEqRAF); coverSongEqRAF = null; }
-                bars.forEach(b => b.style.height = '6%');
+                resizeCanvasIfNeeded();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
 
             audioEl.addEventListener('play', () => {
-                if (ensureAudioGraph()) animateBars();
+                if (ensureAudioGraph()) drawSpectrum();
             });
-            audioEl.addEventListener('pause', stopBars);
-            audioEl.addEventListener('ended', stopBars);
+            audioEl.addEventListener('pause', stopSpectrum);
+            audioEl.addEventListener('ended', stopSpectrum);
         }
 
         function teardownCoverSongEqualizer() {
