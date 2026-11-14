@@ -1408,10 +1408,12 @@
                 }
             }
             const audioMimeType = /\.wav(\?|$)/i.test(song.mp3Url || '') ? 'audio/wav' : 'audio/mp3';
-            // crossorigin="anonymous"는 실시간 이퀄라이저(Web Audio AnalyserNode)가 Firebase Storage의
-            // 음원 데이터를 분석할 수 있게 하기 위해 필요하다 — 없으면 분석값이 전부 0으로만 나온다.
+            // <audio> 엘리먼트는 Web Audio API로 경유시키지 않고 자체 재생 경로를 그대로 쓴다 —
+            // 화면이 꺼졌을 때도 재생이 끊기지 않으려면(모바일 브라우저가 기본 보장하는 배경 재생),
+            // 오디오 출력이 AudioContext에 의존하지 않아야 한다. 이퀄라이저는 실제 음량을 분석하는
+            // 대신 시간 기반으로 합성한 "숨쉬는" 애니메이션으로 대체했다.
             const audioPlayer = song.mp3Url
-                ? `<audio id="coverSongAudio" controls crossorigin="anonymous" class="w-full mt-2"><source src="${escapeHtml(song.mp3Url)}" type="${audioMimeType}"></audio>
+                ? `<audio id="coverSongAudio" controls class="w-full mt-2"><source src="${escapeHtml(song.mp3Url)}" type="${audioMimeType}"></audio>
                    <label class="flex items-center gap-2 text-xs font-bold text-indigo-500 mt-2 mb-4 cursor-pointer select-none w-fit">
                        <input type="checkbox" id="coverSongLoopToggle" onchange="document.getElementById('coverSongAudio').loop = this.checked" class="w-4 h-4 accent-indigo-600 cursor-pointer">
                        반복재생
@@ -1464,27 +1466,23 @@
             document.getElementById('coverSongDetailContent').innerHTML = '';
         };
 
-        // ===== 실시간 이퀄라이저 (Web Audio API) — 부드러운 시리웨이브 스타일 =====
-        // 매 프레임 원본 파형 샘플을 그대로 그리면 움직임이 뚝뚝 끊겨 보인다. 그래서 오디오
-        // 레벨(RMS)을 프레임 간 보간(lerp)해 부드럽게 만든 뒤, 그 값으로 서로 다른 속도/위상의
-        // 사인파 3겹을 합성한 곡선의 진폭만 조절한다 — 실제 Siri 웨이브 라이브러리와 동일한 접근으로,
-        // 원본 파형을 직접 그리지 않기 때문에 끊김 없이 매끄럽게 흐른다.
-        // AudioContext는 브라우저당 개수 제한이 있을 수 있어 앱 전체에서 하나만 만들어 재사용하고,
-        // 곡을 바꿀 때마다 새 <audio> 엘리먼트에 맞는 MediaElementSourceNode만 새로 연결한다.
-        let coverSongAudioCtx = null;
-        let coverSongSourceNode = null;
-        let coverSongAnalyser = null;
+        // ===== 이퀄라이저 — 부드러운 시리웨이브 스타일 (실제 음량과 무관한 시간 기반 애니메이션) =====
+        // 예전에는 Web Audio API(AnalyserNode)로 실제 파형을 분석해 진폭을 결정했다. 하지만
+        // <audio> 엘리먼트를 createMediaElementSource로 Web Audio 그래프에 연결하면, 그 순간부터
+        // 소리는 AudioContext를 통해서만 난다 — 화면이 꺼지며 브라우저가 AudioContext를
+        // 일시정지(suspended)시키면 음악도 함께 끊긴다(화면이 꺼진 동안은 JS도 멈춰 있어
+        // 코드로 되살릴 수도 없다). 음악이 중간에 끊기지 않는 것이 최우선이므로, <audio>는
+        // Web Audio를 전혀 거치지 않는 자체 재생 경로 그대로 두고, 이퀄라이저는 실제 음량 대신
+        // 시간에 따라 서로 다른 속도로 오르내리는 여러 사인파를 합쳐 만든 "숨쉬는" 값으로
+        // 움직인다 — 소리와는 분리되어 있어 화면이 꺼지고 다시 켜져도 항상 똑같이 매끄럽다.
         let coverSongEqRAF = null;
 
         // ===== 화면이 꺼져도 음악이 끊기지 않게 =====
         // 화면을 강제로 켜두지 않고, 각자 폰 설정대로 화면이 꺼지더라도 음악 재생은 계속되게 한다.
-        // 1) Media Session API로 "지금 재생 중" 정보(제목/앨범 이미지)와 재생/일시정지 제어를 OS에
-        //    등록한다 — 브라우저가 이 탭을 단순 배경 탭이 아니라 미디어 재생 세션으로 인식해 화면이
-        //    꺼져도 재생을 이어가게 하는 핵심 장치다(잠금화면에 곡 정보/컨트롤도 함께 표시됨).
-        // 2) 이퀄라이저가 오디오를 Web Audio API(AnalyserNode)로 경유시키는데, 화면이 꺼지며
-        //    브라우저가 AudioContext를 일시정지(suspended)시키면 소리가 끊길 수 있다 — 상태가
-        //    바뀌거나 화면이 다시 보일 때마다 재생 중이면 자동으로 resume()해 복구한다.
-        // 미지원 브라우저에서는 각 기능이 조용히 무시된다.
+        // Media Session API로 "지금 재생 중" 정보(제목/앨범 이미지)와 재생/일시정지 제어를 OS에
+        // 등록한다 — 브라우저가 이 탭을 단순 배경 탭이 아니라 미디어 재생 세션으로 인식해 화면이
+        // 꺼져도 재생을 이어가게 하는 핵심 장치다(잠금화면에 곡 정보/컨트롤도 함께 표시됨).
+        // 미지원 브라우저에서는 조용히 무시된다.
         function setCoverSongMediaSessionMetadata(song) {
             if (!('mediaSession' in navigator)) return;
             try {
@@ -1499,54 +1497,17 @@
             }
         }
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState !== 'visible') return;
-            if (!coverSongAudioCtx || coverSongAudioCtx.state !== 'suspended') return;
-            const audioEl = document.getElementById('coverSongAudio');
-            if (audioEl && !audioEl.paused) coverSongAudioCtx.resume().catch(() => { });
-        });
-
         function setupCoverSongEqualizer(song) {
             const audioEl = document.getElementById('coverSongAudio');
             const canvas = document.getElementById('coverSongEqualizer');
             if (!audioEl || !canvas) return;
             const ctx = canvas.getContext('2d');
-            let graphReady = false;
-            let smoothedLevel = 0;
             let startTime = null;
 
             if ('mediaSession' in navigator) {
                 setCoverSongMediaSessionMetadata(song);
                 navigator.mediaSession.setActionHandler('play', () => audioEl.play());
                 navigator.mediaSession.setActionHandler('pause', () => audioEl.pause());
-            }
-
-            function ensureAudioGraph() {
-                if (graphReady) return true;
-                try {
-                    if (!coverSongAudioCtx) {
-                        coverSongAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        // 화면이 꺼지는 등의 이유로 브라우저가 컨텍스트를 일시정지시키면, 그 즉시
-                        // (현재 재생 중인 곡이 있다면) 자동으로 재개를 시도한다.
-                        coverSongAudioCtx.addEventListener('statechange', () => {
-                            if (coverSongAudioCtx.state !== 'suspended') return;
-                            const el = document.getElementById('coverSongAudio');
-                            if (el && !el.paused) coverSongAudioCtx.resume().catch(() => { });
-                        });
-                    }
-                    if (coverSongAudioCtx.state === 'suspended') coverSongAudioCtx.resume();
-                    if (coverSongSourceNode) { try { coverSongSourceNode.disconnect(); } catch (e) { } }
-                    coverSongSourceNode = coverSongAudioCtx.createMediaElementSource(audioEl);
-                    coverSongAnalyser = coverSongAudioCtx.createAnalyser();
-                    coverSongAnalyser.fftSize = 1024;
-                    coverSongSourceNode.connect(coverSongAnalyser);
-                    coverSongAnalyser.connect(coverSongAudioCtx.destination);
-                    graphReady = true;
-                    return true;
-                } catch (error) {
-                    console.error('이퀄라이저 연결 에러:', error);
-                    return false;
-                }
             }
 
             function resizeCanvasIfNeeded() {
@@ -1588,23 +1549,20 @@
                 });
             }
 
-            const timeData = new Uint8Array(1024);
+            // 실제 음량 대신, 서로 다른 느린 주기의 사인파 3개를 더해 자연스럽게 오르내리는
+            // "숨쉬는" 레벨(0~1)을 만든다 — 오디오 신호와 완전히 분리되어 있다.
+            function syntheticBreathingLevel(t) {
+                const v = 0.55
+                    + 0.3 * Math.sin(t * 0.55)
+                    + 0.15 * Math.sin(t * 1.3 + 1.4)
+                    + 0.1 * Math.sin(t * 2.4 + 2.1);
+                return Math.max(0, Math.min(1, v));
+            }
 
             function tick(now) {
-                if (!coverSongAnalyser) return;
                 if (startTime === null) startTime = now;
                 const t = (now - startTime) / 1000;
-
-                coverSongAnalyser.getByteTimeDomainData(timeData);
-                let sumSq = 0;
-                for (let i = 0; i < timeData.length; i++) {
-                    const v = (timeData[i] - 128) / 128;
-                    sumSq += v * v;
-                }
-                const rawLevel = Math.sqrt(sumSq / timeData.length);
-                // 소리가 커질 때는 빠르게, 작아질 때는 천천히 따라가게 해 자연스러운 "부드러움"을 만든다.
-                const attack = rawLevel > smoothedLevel ? 0.3 : 0.06;
-                smoothedLevel += (rawLevel - smoothedLevel) * attack;
+                const level = syntheticBreathingLevel(t);
 
                 resizeCanvasIfNeeded();
                 const w = canvas.width, h = canvas.height;
@@ -1613,7 +1571,7 @@
                 ctx.clearRect(0, 0, w, h);
                 ctx.save();
                 ctx.translate(0, bandY0);
-                drawSmoothSiriWave(w, bandH, t, smoothedLevel);
+                drawSmoothSiriWave(w, bandH, t, level);
                 ctx.restore();
 
                 coverSongEqRAF = requestAnimationFrame(tick);
@@ -1622,17 +1580,14 @@
             function stopTick() {
                 if (coverSongEqRAF) { cancelAnimationFrame(coverSongEqRAF); coverSongEqRAF = null; }
                 startTime = null;
-                smoothedLevel = 0;
                 resizeCanvasIfNeeded();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
 
             audioEl.addEventListener('play', () => {
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-                if (ensureAudioGraph()) {
-                    startTime = null;
-                    coverSongEqRAF = requestAnimationFrame(tick);
-                }
+                startTime = null;
+                coverSongEqRAF = requestAnimationFrame(tick);
             });
             audioEl.addEventListener('pause', () => {
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
@@ -1646,8 +1601,6 @@
 
         function teardownCoverSongEqualizer() {
             if (coverSongEqRAF) { cancelAnimationFrame(coverSongEqRAF); coverSongEqRAF = null; }
-            if (coverSongSourceNode) { try { coverSongSourceNode.disconnect(); } catch (e) { } coverSongSourceNode = null; }
-            coverSongAnalyser = null;
             if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
         }
 
