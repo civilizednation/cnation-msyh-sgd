@@ -1476,6 +1476,37 @@
         let coverSongAnalyser = null;
         let coverSongEqRAF = null;
 
+        // ===== 화면 꺼짐 방지 (Screen Wake Lock) =====
+        // 곡이 재생되는 동안 스마트폰이 슬립모드로 들어가 재생이 끊기지 않도록, 재생 시작하면
+        // 화면 잠금을 걸고 일시정지/종료 시 해제한다. 브라우저가 탭을 백그라운드로 보내면 잠금이
+        // 자동 해제되므로, 다시 보일 때 아직 재생 중이면 재요청한다. 미지원 브라우저에서는
+        // 조용히 무시된다.
+        let coverSongWakeLock = null;
+        let coverSongIsPlaying = false;
+
+        async function requestCoverSongWakeLock() {
+            if (!('wakeLock' in navigator)) return;
+            try {
+                coverSongWakeLock = await navigator.wakeLock.request('screen');
+                coverSongWakeLock.addEventListener('release', () => { coverSongWakeLock = null; });
+            } catch (error) {
+                console.error('화면 꺼짐 방지 설정 에러:', error);
+            }
+        }
+
+        function releaseCoverSongWakeLock() {
+            if (coverSongWakeLock) {
+                coverSongWakeLock.release().catch(() => { });
+                coverSongWakeLock = null;
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && coverSongIsPlaying) {
+                requestCoverSongWakeLock();
+            }
+        });
+
         function setupCoverSongEqualizer() {
             const audioEl = document.getElementById('coverSongAudio');
             const canvas = document.getElementById('coverSongEqualizer');
@@ -1585,19 +1616,31 @@
             }
 
             audioEl.addEventListener('play', () => {
+                coverSongIsPlaying = true;
+                requestCoverSongWakeLock();
                 if (ensureAudioGraph()) {
                     startTime = null;
                     coverSongEqRAF = requestAnimationFrame(tick);
                 }
             });
-            audioEl.addEventListener('pause', stopTick);
-            audioEl.addEventListener('ended', stopTick);
+            audioEl.addEventListener('pause', () => {
+                coverSongIsPlaying = false;
+                releaseCoverSongWakeLock();
+                stopTick();
+            });
+            audioEl.addEventListener('ended', () => {
+                coverSongIsPlaying = false;
+                releaseCoverSongWakeLock();
+                stopTick();
+            });
         }
 
         function teardownCoverSongEqualizer() {
             if (coverSongEqRAF) { cancelAnimationFrame(coverSongEqRAF); coverSongEqRAF = null; }
             if (coverSongSourceNode) { try { coverSongSourceNode.disconnect(); } catch (e) { } coverSongSourceNode = null; }
             coverSongAnalyser = null;
+            coverSongIsPlaying = false;
+            releaseCoverSongWakeLock();
         }
 
         // ===== 커버송 관리(관리자모드) — 비밀번호 없이 접근, 추가/삭제/순서변경 =====
