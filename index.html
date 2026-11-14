@@ -1452,7 +1452,7 @@
                     </div>
                 </div>`;
             document.getElementById('coverSongDetailModal').classList.remove('hidden');
-            setupCoverSongEqualizer();
+            setupCoverSongEqualizer(song);
         };
 
         window.closeCoverSongDetail = () => {
@@ -1476,38 +1476,37 @@
         let coverSongAnalyser = null;
         let coverSongEqRAF = null;
 
-        // ===== 화면 꺼짐 방지 (Screen Wake Lock) =====
-        // 곡이 재생되는 동안 스마트폰이 슬립모드로 들어가 재생이 끊기지 않도록, 재생 시작하면
-        // 화면 잠금을 걸고 일시정지/종료 시 해제한다. 브라우저가 탭을 백그라운드로 보내면 잠금이
-        // 자동 해제되므로, 다시 보일 때 아직 재생 중이면 재요청한다. 미지원 브라우저에서는
-        // 조용히 무시된다.
-        let coverSongWakeLock = null;
-        let coverSongIsPlaying = false;
-
-        async function requestCoverSongWakeLock() {
-            if (!('wakeLock' in navigator)) return;
+        // ===== 화면이 꺼져도 음악이 끊기지 않게 =====
+        // 화면을 강제로 켜두지 않고, 각자 폰 설정대로 화면이 꺼지더라도 음악 재생은 계속되게 한다.
+        // 1) Media Session API로 "지금 재생 중" 정보(제목/앨범 이미지)와 재생/일시정지 제어를 OS에
+        //    등록한다 — 브라우저가 이 탭을 단순 배경 탭이 아니라 미디어 재생 세션으로 인식해 화면이
+        //    꺼져도 재생을 이어가게 하는 핵심 장치다(잠금화면에 곡 정보/컨트롤도 함께 표시됨).
+        // 2) 이퀄라이저가 오디오를 Web Audio API(AnalyserNode)로 경유시키는데, 화면이 꺼지며
+        //    브라우저가 AudioContext를 일시정지(suspended)시키면 소리가 끊길 수 있다 — 상태가
+        //    바뀌거나 화면이 다시 보일 때마다 재생 중이면 자동으로 resume()해 복구한다.
+        // 미지원 브라우저에서는 각 기능이 조용히 무시된다.
+        function setCoverSongMediaSessionMetadata(song) {
+            if (!('mediaSession' in navigator)) return;
             try {
-                coverSongWakeLock = await navigator.wakeLock.request('screen');
-                coverSongWakeLock.addEventListener('release', () => { coverSongWakeLock = null; });
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: song.title || '성가대 커버송',
+                    artist: song.creator || '무석교회 성가대',
+                    album: song.type || '성가대 커버',
+                    artwork: song.imageUrl ? [{ src: song.imageUrl, sizes: '512x512', type: 'image/png' }] : [],
+                });
             } catch (error) {
-                console.error('화면 꺼짐 방지 설정 에러:', error);
-            }
-        }
-
-        function releaseCoverSongWakeLock() {
-            if (coverSongWakeLock) {
-                coverSongWakeLock.release().catch(() => { });
-                coverSongWakeLock = null;
+                console.error('미디어 세션 메타데이터 설정 에러:', error);
             }
         }
 
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && coverSongIsPlaying) {
-                requestCoverSongWakeLock();
-            }
+            if (document.visibilityState !== 'visible') return;
+            if (!coverSongAudioCtx || coverSongAudioCtx.state !== 'suspended') return;
+            const audioEl = document.getElementById('coverSongAudio');
+            if (audioEl && !audioEl.paused) coverSongAudioCtx.resume().catch(() => { });
         });
 
-        function setupCoverSongEqualizer() {
+        function setupCoverSongEqualizer(song) {
             const audioEl = document.getElementById('coverSongAudio');
             const canvas = document.getElementById('coverSongEqualizer');
             if (!audioEl || !canvas) return;
@@ -1516,11 +1515,24 @@
             let smoothedLevel = 0;
             let startTime = null;
 
+            if ('mediaSession' in navigator) {
+                setCoverSongMediaSessionMetadata(song);
+                navigator.mediaSession.setActionHandler('play', () => audioEl.play());
+                navigator.mediaSession.setActionHandler('pause', () => audioEl.pause());
+            }
+
             function ensureAudioGraph() {
                 if (graphReady) return true;
                 try {
                     if (!coverSongAudioCtx) {
                         coverSongAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        // 화면이 꺼지는 등의 이유로 브라우저가 컨텍스트를 일시정지시키면, 그 즉시
+                        // (현재 재생 중인 곡이 있다면) 자동으로 재개를 시도한다.
+                        coverSongAudioCtx.addEventListener('statechange', () => {
+                            if (coverSongAudioCtx.state !== 'suspended') return;
+                            const el = document.getElementById('coverSongAudio');
+                            if (el && !el.paused) coverSongAudioCtx.resume().catch(() => { });
+                        });
                     }
                     if (coverSongAudioCtx.state === 'suspended') coverSongAudioCtx.resume();
                     if (coverSongSourceNode) { try { coverSongSourceNode.disconnect(); } catch (e) { } }
@@ -1616,21 +1628,18 @@
             }
 
             audioEl.addEventListener('play', () => {
-                coverSongIsPlaying = true;
-                requestCoverSongWakeLock();
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
                 if (ensureAudioGraph()) {
                     startTime = null;
                     coverSongEqRAF = requestAnimationFrame(tick);
                 }
             });
             audioEl.addEventListener('pause', () => {
-                coverSongIsPlaying = false;
-                releaseCoverSongWakeLock();
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
                 stopTick();
             });
             audioEl.addEventListener('ended', () => {
-                coverSongIsPlaying = false;
-                releaseCoverSongWakeLock();
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
                 stopTick();
             });
         }
@@ -1639,8 +1648,7 @@
             if (coverSongEqRAF) { cancelAnimationFrame(coverSongEqRAF); coverSongEqRAF = null; }
             if (coverSongSourceNode) { try { coverSongSourceNode.disconnect(); } catch (e) { } coverSongSourceNode = null; }
             coverSongAnalyser = null;
-            coverSongIsPlaying = false;
-            releaseCoverSongWakeLock();
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
         }
 
         // ===== 커버송 관리(관리자모드) — 비밀번호 없이 접근, 추가/삭제/순서변경 =====
