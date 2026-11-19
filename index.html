@@ -927,6 +927,10 @@
                 <p class="text-center text-xs font-bold text-indigo-500 bg-indigo-50 border-2 border-indigo-100 rounded-2xl px-4 py-3 shadow-sm mb-4">
                     <i class="fas fa-circle-info mr-1"></i> 성가대에서 불렀던 찬양을 직접 편곡해서 커버송으로 만들었습니다.
                 </p>
+                <button onclick="openCoverSongsPlaylistPicker()"
+                    class="w-full mb-4 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-repeat"></i> 여러곡 반복 듣기
+                </button>
                 <div id="coverSongsList" class="space-y-3"></div>
                 <div class="text-center mt-8">
                     <button onclick="openCoverSongsAdmin()"
@@ -1038,6 +1042,34 @@
                 </button>
             </div>
             <div id="coverSongDetailContent" class="flex-1 overflow-y-auto bg-white"></div>
+        </div>
+
+        <div id="coverSongsPlaylistPickerModal"
+            class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end md:items-center justify-center">
+            <div class="bg-white w-full md:max-w-md md:rounded-[2rem] rounded-t-[2rem] max-h-[85vh] flex flex-col shadow-2xl">
+                <div class="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
+                    <h3 class="font-black text-lg text-gray-800">여러곡 반복 듣기</h3>
+                    <button onclick="closeCoverSongsPlaylistPicker()"
+                        class="w-9 h-9 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center shrink-0">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="px-5 pt-3 shrink-0">
+                    <label class="flex items-center gap-2 text-xs font-bold text-indigo-600 cursor-pointer select-none w-fit">
+                        <input type="checkbox" id="coverSongsPlaylistSelectAll"
+                            onchange="toggleCoverSongsPlaylistSelectAll(this.checked)"
+                            class="w-4 h-4 accent-indigo-600 cursor-pointer">
+                        전체 선택
+                    </label>
+                </div>
+                <div id="coverSongsPlaylistPickerList" class="flex-1 overflow-y-auto px-5 py-3 space-y-1"></div>
+                <div class="p-5 border-t border-gray-100 shrink-0">
+                    <button id="coverSongsPlaylistStartBtn" onclick="startCoverSongsPlaylist()" disabled
+                        class="w-full py-3 rounded-2xl bg-indigo-600 text-white font-black shadow-md disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-play"></i> 선택한 곡 반복 재생 시작
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div id="statsView" class="hidden flex flex-col min-h-screen bg-transparent pb-10">
@@ -1257,6 +1289,9 @@
         let coverSongsLoadToken = 0;
         let coverSongsSlowTimer = null;
         let coverSongsNextPromptDelay = 5000;
+        // 여러곡 반복 듣기 모드일 때만 값을 가진다 — 선택한 곡 id 목록과 현재 재생 위치.
+        let coverSongPlaylist = null;
+        let coverSongPlaylistIndex = 0;
 
         function getCoverSongTitleInitial(title) {
             const t = (title || '').replace(/\s/g, '');
@@ -1392,9 +1427,60 @@
             }).join('');
         }
 
+        // ===== 여러곡 반복 듣기 =====
+        // 음원이 있는 곡 중 원하는 곡들을 고르면, 고른 순서(=목록 순서)대로 이어서 재생하고
+        // 마지막 곡이 끝나면 다시 처음 곡으로 돌아가 끝없이 반복한다.
+        window.openCoverSongsPlaylistPicker = () => {
+            const playable = coverSongsCache.filter(s => s.mp3Url);
+            const listEl = document.getElementById('coverSongsPlaylistPickerList');
+            if (playable.length === 0) {
+                listEl.innerHTML = '<p class="text-center text-stone-400 font-bold py-10">재생 가능한 음원이 없습니다.</p>';
+            } else {
+                listEl.innerHTML = playable.map(song => {
+                    const thumb = song.thumbnailUrl
+                        ? `<img src="${escapeHtml(song.thumbnailUrl)}" loading="lazy" class="w-11 h-11 rounded-xl object-cover shadow-sm shrink-0" alt="">`
+                        : `<div class="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-700 text-white flex items-center justify-center font-black text-sm shrink-0">${getCoverSongTitleInitial(song.title)}</div>`;
+                    return `
+                        <label class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-indigo-50 cursor-pointer select-none transition-colors">
+                            <input type="checkbox" class="cover-song-playlist-check w-4 h-4 accent-indigo-600 cursor-pointer shrink-0" value="${song.id}" onchange="updateCoverSongsPlaylistStartBtn()">
+                            ${thumb}
+                            <span class="font-bold text-sm text-gray-800 truncate">${escapeHtml(song.title || '')}</span>
+                        </label>`;
+                }).join('');
+            }
+            document.getElementById('coverSongsPlaylistSelectAll').checked = false;
+            updateCoverSongsPlaylistStartBtn();
+            document.getElementById('coverSongsPlaylistPickerModal').classList.remove('hidden');
+        };
+
+        window.closeCoverSongsPlaylistPicker = () => {
+            document.getElementById('coverSongsPlaylistPickerModal').classList.add('hidden');
+        };
+
+        window.toggleCoverSongsPlaylistSelectAll = (checked) => {
+            document.querySelectorAll('.cover-song-playlist-check').forEach(cb => { cb.checked = checked; });
+            updateCoverSongsPlaylistStartBtn();
+        };
+
+        window.updateCoverSongsPlaylistStartBtn = () => {
+            const checkedCount = document.querySelectorAll('.cover-song-playlist-check:checked').length;
+            document.getElementById('coverSongsPlaylistStartBtn').disabled = checkedCount === 0;
+        };
+
+        window.startCoverSongsPlaylist = () => {
+            const ids = Array.from(document.querySelectorAll('.cover-song-playlist-check:checked')).map(cb => cb.value);
+            if (ids.length === 0) return;
+            coverSongPlaylist = ids;
+            coverSongPlaylistIndex = 0;
+            closeCoverSongsPlaylistPicker();
+            renderCoverSongDetail(coverSongPlaylist[0], true);
+        };
+
         // cnation-ccm-list 앱의 곡 상세 화면과 동일한 구성(앨범 이미지, 제목/작사작곡, 오디오 플레이어,
-        // 유튜브 임베드, 곡 설명, 가사, 제작 정보)으로 보여준다.
-        window.openCoverSongDetail = (id) => {
+        // 유튜브 임베드, 곡 설명, 가사, 제작 정보)으로 보여준다. isPlaylistMode가 true면
+        // "여러곡 반복 듣기"에서 호출된 것으로, 개별 곡의 반복재생 토글 대신 재생목록 위치/이전·다음
+        // 버튼을 보여주고, 곡이 끝나면 자동으로 다음 곡(마지막이면 처음으로)을 이어서 재생한다.
+        function renderCoverSongDetail(id, isPlaylistMode) {
             const song = coverSongsCache.find(s => s.id === id);
             if (!song) return;
 
@@ -1412,12 +1498,26 @@
             // 화면이 꺼졌을 때도 재생이 끊기지 않으려면(모바일 브라우저가 기본 보장하는 배경 재생),
             // 오디오 출력이 AudioContext에 의존하지 않아야 한다. 이퀄라이저는 실제 음량을 분석하는
             // 대신 시간 기반으로 합성한 "숨쉬는" 애니메이션으로 대체했다.
-            const audioPlayer = song.mp3Url
-                ? `<audio id="coverSongAudio" controls class="w-full mt-2"><source src="${escapeHtml(song.mp3Url)}" type="${audioMimeType}"></audio>
-                   <label class="flex items-center gap-2 text-xs font-bold text-indigo-500 mt-2 mb-4 cursor-pointer select-none w-fit">
+            const playlistBar = isPlaylistMode
+                ? `<div class="flex items-center justify-between gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 rounded-xl px-3 py-2 mt-2">
+                       <button onclick="playCoverSongPlaylistIndex(${coverSongPlaylistIndex - 1})" class="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-indigo-100 shrink-0">
+                           <i class="fas fa-backward-step"></i>
+                       </button>
+                       <span><i class="fas fa-repeat mr-1"></i>재생목록 ${coverSongPlaylistIndex + 1} / ${coverSongPlaylist.length}</span>
+                       <button onclick="playCoverSongPlaylistIndex(${coverSongPlaylistIndex + 1})" class="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-indigo-100 shrink-0">
+                           <i class="fas fa-forward-step"></i>
+                       </button>
+                   </div>`
+                : '';
+            const loopToggleHtml = isPlaylistMode
+                ? ''
+                : `<label class="flex items-center gap-2 text-xs font-bold text-indigo-500 mt-2 mb-4 cursor-pointer select-none w-fit">
                        <input type="checkbox" id="coverSongLoopToggle" onchange="document.getElementById('coverSongAudio').loop = this.checked" class="w-4 h-4 accent-indigo-600 cursor-pointer">
                        반복재생
-                   </label>`
+                   </label>`;
+            const audioPlayer = song.mp3Url
+                ? `${playlistBar}<audio id="coverSongAudio" controls class="w-full mt-2"><source src="${escapeHtml(song.mp3Url)}" type="${audioMimeType}"></audio>
+                   ${loopToggleHtml}`
                 : '';
             const dateStr = song.creationDate ? song.creationDate.split('-').join('. ') + '.' : '';
             // 캔버스는 앨범 이미지와 동일한 전체 정사각형 크기로 두고, 그릴 때만 좌표를 하단 15%
@@ -1455,6 +1555,15 @@
                 </div>`;
             document.getElementById('coverSongDetailModal').classList.remove('hidden');
             setupCoverSongEqualizer(song);
+            if (isPlaylistMode) {
+                const audioEl = document.getElementById('coverSongAudio');
+                if (audioEl) audioEl.play().catch(() => { });
+            }
+        }
+
+        window.openCoverSongDetail = (id) => {
+            coverSongPlaylist = null;
+            renderCoverSongDetail(id, false);
         };
 
         window.closeCoverSongDetail = () => {
@@ -1464,6 +1573,17 @@
             if (audio) audio.pause();
             teardownCoverSongEqualizer();
             document.getElementById('coverSongDetailContent').innerHTML = '';
+            coverSongPlaylist = null;
+            coverSongPlaylistIndex = 0;
+        };
+
+        // 여러곡 반복 듣기: idx를 재생목록 범위 안으로(음수/초과 모두) 순환시켜 그 곡을 재생한다 —
+        // 마지막 곡 다음은 다시 처음 곡으로 돌아가 재생목록이 끝없이 반복된다.
+        window.playCoverSongPlaylistIndex = (idx) => {
+            if (!coverSongPlaylist || coverSongPlaylist.length === 0) return;
+            const n = coverSongPlaylist.length;
+            coverSongPlaylistIndex = ((idx % n) + n) % n;
+            renderCoverSongDetail(coverSongPlaylist[coverSongPlaylistIndex], true);
         };
 
         // ===== 이퀄라이저 — 부드러운 시리웨이브 스타일 (실제 음량과 무관한 시간 기반 애니메이션) =====
@@ -1508,6 +1628,9 @@
                 setCoverSongMediaSessionMetadata(song);
                 navigator.mediaSession.setActionHandler('play', () => audioEl.play());
                 navigator.mediaSession.setActionHandler('pause', () => audioEl.pause());
+                // 재생목록 모드일 때만 잠금화면/이어폰의 다음·이전 곡 버튼을 활성화한다.
+                navigator.mediaSession.setActionHandler('nexttrack', coverSongPlaylist ? () => playCoverSongPlaylistIndex(coverSongPlaylistIndex + 1) : null);
+                navigator.mediaSession.setActionHandler('previoustrack', coverSongPlaylist ? () => playCoverSongPlaylistIndex(coverSongPlaylistIndex - 1) : null);
             }
 
             function resizeCanvasIfNeeded() {
@@ -1596,6 +1719,10 @@
             audioEl.addEventListener('ended', () => {
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
                 stopTick();
+                // 여러곡 반복 듣기 중이면 곡이 끝나는 즉시 다음 곡으로(마지막이면 처음으로) 이어서 재생한다.
+                if (coverSongPlaylist && coverSongPlaylist.length > 0) {
+                    playCoverSongPlaylistIndex(coverSongPlaylistIndex + 1);
+                }
             });
         }
 
