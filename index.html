@@ -1383,7 +1383,14 @@
                     if (myToken !== coverSongsLoadToken) return;
 
                     const songsById = new Map(
-                        snaps.filter(s => s.exists()).map(s => [s.id, { id: s.id, ...s.data() }])
+                        snaps.filter(s => s.exists()).map(s => {
+                            const data = s.data();
+                            // 조합형(NFD)으로 입력된 한글은 완성형(NFC)과 같은 글자처럼 보여도
+                            // 일부 기기/폰트에서 font-black(900) 굵기가 적용되지 않아 유독 가늘게
+                            // 보일 수 있다 — 표시 전 완성형으로 정규화해 굵기를 통일한다.
+                            if (typeof data.title === 'string') data.title = data.title.normalize('NFC');
+                            return [s.id, { id: s.id, ...data }];
+                        })
                     );
                     const songs = ids.map(id => songsById.get(id)).filter(Boolean);
                     if (songs.length === ids.length) {
